@@ -130,59 +130,59 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | TBD | Pending |
-| AUTH-02 | TBD | Pending |
-| AUTH-03 | TBD | Pending |
-| AUTH-04 | TBD | Pending |
-| CONT-01 | TBD | Pending |
-| CONT-02 | TBD | Pending |
-| CONT-03 | TBD | Pending |
-| CONT-04 | TBD | Pending |
-| CONT-05 | TBD | Pending |
-| CONT-06 | TBD | Pending |
-| CONT-07 | TBD | Pending |
-| CONT-08 | TBD | Pending |
-| QUES-01 | TBD | Pending |
-| QUES-02 | TBD | Pending |
-| QUES-03 | TBD | Pending |
-| QUES-04 | TBD | Pending |
-| QUES-05 | TBD | Pending |
-| QUES-06 | TBD | Pending |
-| QUES-07 | TBD | Pending |
-| DELV-01 | TBD | Pending |
-| DELV-02 | TBD | Pending |
-| DELV-03 | TBD | Pending |
-| DELV-04 | TBD | Pending |
-| DELV-05 | TBD | Pending |
-| DELV-06 | TBD | Pending |
-| DELV-07 | TBD | Pending |
-| GRAD-01 | TBD | Pending |
-| GRAD-02 | TBD | Pending |
-| GRAD-03 | TBD | Pending |
-| GRAD-04 | TBD | Pending |
-| GRAD-05 | TBD | Pending |
-| GRAD-06 | TBD | Pending |
-| GRAD-07 | TBD | Pending |
-| GOOG-01 | TBD | Pending |
-| GOOG-02 | TBD | Pending |
-| GOOG-03 | TBD | Pending |
-| GOOG-04 | TBD | Pending |
-| GOOG-05 | TBD | Pending |
-| PLAT-01 | TBD | Pending |
-| PLAT-02 | TBD | Pending |
-| PLAT-03 | TBD | Pending |
-| PLAT-04 | TBD | Pending |
-| PLAT-05 | TBD | Pending |
-| TIER-01 | TBD | Pending |
-| TIER-02 | TBD | Pending |
-| TIER-03 | TBD | Pending |
-| TIER-04 | TBD | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 7 | Pending |
+| AUTH-03 | Phase 7 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| CONT-01 | Phase 2 | Pending |
+| CONT-02 | Phase 2 | Pending |
+| CONT-03 | Phase 2 | Pending |
+| CONT-04 | Phase 2 | Pending |
+| CONT-05 | Phase 2 | Pending |
+| CONT-06 | Phase 3 | Pending |
+| CONT-07 | Phase 3 | Pending |
+| CONT-08 | Phase 3 | Pending |
+| QUES-01 | Phase 3 | Pending |
+| QUES-02 | Phase 3 | Pending |
+| QUES-03 | Phase 3 | Pending |
+| QUES-04 | Phase 3 | Pending |
+| QUES-05 | Phase 3 | Pending |
+| QUES-06 | Phase 3 | Pending |
+| QUES-07 | Phase 3 | Pending |
+| DELV-01 | Phase 4 | Pending |
+| DELV-02 | Phase 5 | Pending |
+| DELV-03 | Phase 5 | Pending |
+| DELV-04 | Phase 4 | Pending |
+| DELV-05 | Phase 4 | Pending |
+| DELV-06 | Phase 4 | Pending |
+| DELV-07 | Phase 4 | Pending |
+| GRAD-01 | Phase 6 | Pending |
+| GRAD-02 | Phase 6 | Pending |
+| GRAD-03 | Phase 6 | Pending |
+| GRAD-04 | Phase 6 | Pending |
+| GRAD-05 | Phase 6 | Pending |
+| GRAD-06 | Phase 6 | Pending |
+| GRAD-07 | Phase 6 | Pending |
+| GOOG-01 | Phase 7 | Pending |
+| GOOG-02 | Phase 7 | Pending |
+| GOOG-03 | Phase 7 | Pending |
+| GOOG-04 | Phase 7 | Pending |
+| GOOG-05 | Phase 7 | Pending |
+| PLAT-01 | Phase 1 | Pending |
+| PLAT-02 | Phase 1 | Pending |
+| PLAT-03 | Phase 1 | Pending |
+| PLAT-04 | Phase 1 | Pending |
+| PLAT-05 | Phase 8 | Pending |
+| TIER-01 | Phase 8 | Pending |
+| TIER-02 | Phase 8 | Pending |
+| TIER-03 | Phase 8 | Pending |
+| TIER-04 | Phase 8 | Pending |
 
 **Coverage:**
-- v1 requirements: 43 total
-- Mapped to phases: 0 (pending roadmap creation)
-- Unmapped: 43
+- v1 requirements: 47 total
+- Mapped to phases: 47
+- Unmapped: 0
 
 ---
 *Requirements defined: 2025-01-23*
-*Last updated: 2025-01-23 after initial definition*
+*Last updated: 2025-01-23 after roadmap creation*
