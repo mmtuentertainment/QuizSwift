@@ -1,26 +1,26 @@
 # Project State: QuizSwift
 
 **Last Updated:** 2026-01-23
-**Session:** Plan 01-01 execution
+**Session:** Plan 01-02 execution
 
 ## Project Reference
 
 **Core Value:** 100% factual accuracy - every question extracted from source material, never generated
 
-**Current Focus:** Phase 1 - Foundation & Compliance (Plan 01 complete)
+**Current Focus:** Phase 1 - Foundation & Compliance (Plan 02 complete)
 
 ## Current Position
 
 **Phase:** 1 of 8 - Foundation & Compliance
-**Plan:** 1 of 5 complete
+**Plan:** 2 of 5 complete
 **Status:** IN_PROGRESS
-**Last activity:** 2026-01-23 - Completed 01-01-PLAN.md
+**Last activity:** 2026-01-23 - Completed 01-02-PLAN.md
 
 **Progress:**
 ```
 [========================================] Roadmap: 100%
-[########                                ] Phase 1: 20% (1/5 plans)
-[##                                      ] Overall: 2%
+[################                        ] Phase 1: 40% (2/5 plans)
+[####                                    ] Overall: 4%
 ```
 
 **Phases Overview:**
@@ -38,14 +38,14 @@
 ## Performance Metrics
 
 **Session Stats:**
-- Plans completed: 1
-- Tasks completed: 2
-- Blockers resolved: 3 (auto-fixed)
+- Plans completed: 2
+- Tasks completed: 4
+- Blockers resolved: 3 (auto-fixed in 01-01)
 
 **Cumulative Stats:**
 - Total phases: 8
 - Total requirements: 47
-- Requirements completed: 0 (foundation plan, no requirements closed yet)
+- Requirements completed: 2 (AUTH-01, AUTH-04 ready for verification)
 
 ## Accumulated Context
 
@@ -63,12 +63,15 @@
 | Prisma client in src/generated/prisma | Works with @/ import alias, keeps generated code in src | 1-01 |
 | Soft delete on User model | COPPA/GDPR compliance - deletedAt instead of hard delete | 1-01 |
 | AuditLog with snake_case mapping | FERPA queries on table_name, actor_id, created_at indexes | 1-01 |
+| Split auth config pattern | Edge-compatible for middleware, full config for server components | 1-02 |
+| Database sessions over JWT | Persistence + auditability for FERPA compliance | 1-02 |
+| Session includes user.id | Required for audit logging | 1-02 |
 
-### Technical Stack (from research + 01-01)
+### Technical Stack (from research + implementation)
 
 - **Framework:** Next.js 16.1.4 + TypeScript 5 + React 19.2.3
 - **Database:** PostgreSQL + Prisma 7.3.0 with PrismaPg adapter
-- **Auth:** Auth.js v5 (next-auth@5.0.0-beta.30) + @auth/prisma-adapter
+- **Auth:** Auth.js v5 (next-auth@5.0.0-beta.30) + @auth/prisma-adapter + Google OAuth
 - **AI:** Ollama (free) + OpenAI (paid) via Vercel AI SDK
 - **PDF:** unpdf + Tesseract.js
 - **UI:** shadcn/ui + Tailwind CSS 4
@@ -92,49 +95,57 @@ None currently.
 - npm naming restrictions prevent capital letters - create in temp dir if needed
 - Prisma 7 exports from `client.ts` not index file - adjust imports accordingly
 - dotenv must be installed explicitly for prisma.config.ts
+- Auth.js v5 requires split config for edge middleware compatibility
+- Next.js 16 shows middleware deprecation warning (still works, may need migration later)
 
 ## Session Continuity
 
 ### What Just Happened
 
-Executed plan 01-01 (Project Foundation):
-- Initialized Next.js 16 with TypeScript, Tailwind CSS, ESLint
-- Configured Prisma 7 with PostgreSQL adapter
-- Created Auth.js v5 schema (User, Account, Session, VerificationToken)
-- Added AuditLog model for FERPA compliance
-- Established Prisma singleton pattern
+Executed plan 01-02 (Google OAuth Authentication):
+- Configured Auth.js v5 with split configuration pattern
+- Added Google OAuth provider
+- Enabled database sessions for persistence + auditability
+- Created login page with Google sign-in button
+- Created protected dashboard with user info
+- Added middleware for route protection
 
 Commits:
-- `c96ad4f` - feat(01-01): Initialize Next.js 16 project with auth dependencies
-- `ce4faa6` - feat(01-01): Configure Prisma 7 with Auth.js schema and AuditLog
+- `274d331` - feat(01-02): Configure Auth.js v5 with split configuration pattern
+- `f6b8fa3` - feat(01-02): Create login page and protected dashboard
 
 ### What Happens Next
 
-1. User configures DATABASE_URL in .env.local
-2. User runs `npx prisma migrate dev` to create database tables
-3. Execute plan 01-02: Auth.js configuration with Google OAuth
+1. User configures Google OAuth credentials (see user_setup in plan)
+2. User sets AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET, AUTH_SECRET in .env.local
+3. Test authentication flow: login -> OAuth -> dashboard -> logout
+4. Execute plan 01-03: Consent flow and DPA compliance
 
 ### Context for Next Session
 
 If starting fresh:
 1. Read this file for current position
-2. Read `.planning/phases/01-foundation-compliance/01-01-SUMMARY.md` for plan details
-3. Ensure DATABASE_URL is configured
-4. Run `npx prisma migrate dev` before plan 01-02
-5. Execute plan 01-02 for Auth.js setup
+2. Read `.planning/phases/01-foundation-compliance/01-02-SUMMARY.md` for plan details
+3. Configure Google OAuth in Google Cloud Console
+4. Set environment variables in .env.local
+5. Test authentication flow
+6. Execute plan 01-03 for consent and DPA
 
-### Files Modified This Session
+### Files Created This Session
 
-- `package.json` - Created (Next.js 16, Auth.js, Prisma)
-- `prisma/schema.prisma` - Created (Auth.js models + AuditLog)
-- `prisma.config.ts` - Created (Prisma 7 config)
-- `src/lib/prisma.ts` - Created (Prisma singleton)
-- `.env.local.example` - Created (env template)
-- `tsconfig.json` - Modified (exclude experiments)
-- `.gitignore` - Modified (prisma SQLite)
-- `.planning/phases/01-foundation-compliance/01-01-SUMMARY.md` - Created
+- `src/lib/auth.config.ts` - Edge-compatible auth config
+- `src/lib/auth.ts` - Full auth config with PrismaAdapter
+- `src/app/api/auth/[...nextauth]/route.ts` - Auth.js API handlers
+- `src/middleware.ts` - Route protection middleware
+- `src/types/next-auth.d.ts` - TypeScript augmentation
+- `src/components/auth/sign-in-button.tsx` - Google sign-in button
+- `src/components/auth/sign-out-button.tsx` - Sign-out button
+- `src/app/(auth)/login/page.tsx` - Login page
+- `src/app/(dashboard)/layout.tsx` - Dashboard layout
+- `src/app/(dashboard)/dashboard/page.tsx` - Dashboard page
+- `.planning/phases/01-foundation-compliance/01-02-SUMMARY.md` - Plan summary
 
 ---
 
 *State captured: 2026-01-23*
-*Next command: Configure DATABASE_URL, then execute plan 01-02*
+*Next command: Configure Google OAuth, then execute plan 01-03*
