@@ -5,14 +5,21 @@ import { authConfig } from "./auth.config"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "database" }, // Database sessions for persistence + auditability
+  session: { strategy: "jwt" }, // JWT sessions for Edge middleware compatibility
   ...authConfig,
   callbacks: {
     ...authConfig.callbacks,
-    session({ session, user }) {
-      // Include user ID in session for audit logging
-      if (session.user) {
-        session.user.id = user.id
+    jwt({ token, user }) {
+      // Include user ID in JWT token for audit logging
+      if (user) {
+        token.id = user.id
+      }
+      return token
+    },
+    session({ session, token }) {
+      // Include user ID in session from JWT token
+      if (session.user && token.id) {
+        session.user.id = token.id as string
       }
       return session
     },
