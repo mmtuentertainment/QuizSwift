@@ -1,7 +1,7 @@
 # Project State: QuizSwift
 
 **Last Updated:** 2026-01-23
-**Session:** Phase 2 Plan 1 complete - Database models & file storage
+**Session:** Phase 2 Plan 3 complete - Inngest background processing pipeline
 
 ## Project Reference
 
@@ -12,16 +12,14 @@
 ## Current Position
 
 **Phase:** 2 of 8 - Content & AI Extraction (IN PROGRESS)
-**Plan:** 1 of 4 complete
+**Plan:** 3 of 4 complete
 **Status:** In progress
-**Last activity:** 2026-01-23 - Completed 02-01-PLAN.md (Database models & file storage)
+**Last activity:** 2026-01-23 - Completed 02-03-PLAN.md (Inngest background processing)
 
 **Progress:**
-```
-[========================================] Phase 1: 100% (5/5 plans)
-[==========                              ] Phase 2: 25% (1/4 plans)
-[========                                ] Overall: 18.75%
-```
+Phase 1: 100% (5/5 plans) [========================================]
+Phase 2: 75% (3/4 plans)  [==============================          ]
+Overall: 25%              [================                        ]
 
 **Phases Overview:**
 | Phase | Name | Status | Requirements |
@@ -38,9 +36,9 @@
 ## Performance Metrics
 
 **Session Stats:**
-- Plans completed: 1 (02-01)
-- Tasks completed: 2
-- Blockers resolved: 1 (Inngest stub client)
+- Plans completed: 3 (02-01, 02-02, 02-03)
+- Tasks completed: 7
+- Blockers resolved: 2 (DOMMatrix build error, Inngest onFailure event type)
 
 **Cumulative Stats:**
 - Total phases: 8
@@ -71,10 +69,14 @@
 | Soft delete with anonymization | Preserves referential integrity while removing all PII | 1-04 |
 | DPA as Markdown | Easier to maintain/version; schools convert to PDF as needed | 1-04 |
 | Paginated audit API (max 1000) | Prevents memory issues with large datasets | 1-04 |
-| pgvector with 1536 dimensions | Matches OpenAI ada-002 embedding model output size | 2-01 |
-| Inngest stub client | Allows wave 1 plans to compile independently; full implementation in 02-03 | 2-01 |
+| pgvector with 1536 dimensions | Matches OpenAI text-embedding-3-small output size | 2-01 |
 | Public blob access for PDFs | URLs need to be accessible for processing; security via unguessable paths | 2-01 |
 | 50MB PDF size limit | Reasonable for educational PDFs; prevents abuse | 2-01 |
+| pdfjs-dist v5 canvas property | New API in v5 requires canvas element in render params | 2-02 |
+| Worker-per-page for Tesseract | Prevents memory leaks by creating/terminating worker for each page | 2-02 |
+| Dynamic imports for PDF modules | pdfjs-dist references DOMMatrix (browser API) causing build errors | 2-03 |
+| text-embedding-3-small model | 1536 dimensions; good balance of quality and cost | 2-03 |
+| Raw SQL for vector inserts | Prisma doesn't natively support vector type in createMany | 2-03 |
 
 ### Technical Stack (from research + implementation)
 
@@ -84,9 +86,9 @@
 - **Audit:** PostgreSQL triggers + application context helpers + query API
 - **Compliance:** User deletion with anonymization, DPA template, admin dashboard
 - **Storage:** Vercel Blob for PDF files
-- **AI:** Ollama (free) + OpenAI (paid) via Vercel AI SDK
-- **PDF:** unpdf + Tesseract.js
-- **Background Jobs:** Inngest (stub client, full setup in 02-03)
+- **AI:** OpenAI via Vercel AI SDK (ai@6.0.49, @ai-sdk/openai@3.0.18)
+- **PDF:** unpdf + pdfjs-dist + Tesseract.js + canvas
+- **Background Jobs:** Inngest 3.49.3 (full implementation)
 - **UI:** shadcn/ui + Tailwind CSS 4
 - **Math:** KaTeX
 
@@ -106,47 +108,52 @@ None currently.
 ### Lessons Learned
 
 - npm naming restrictions prevent capital letters - create in temp dir if needed
-- Prisma 7 exports from `client.ts` not index file - adjust imports accordingly
+- Prisma 7 exports from client.ts not index file - adjust imports accordingly
 - dotenv must be installed explicitly for prisma.config.ts
 - Auth.js v5 requires split config for edge middleware compatibility
 - Next.js 16 shows middleware deprecation warning (still works, may need migration later)
 - PostgreSQL table names from Prisma are quoted and case-sensitive ("User" not "users")
 - pgvector extension requires previewFeatures = ["postgresqlExtensions"] in generator
+- pdfjs-dist v5 requires canvas property in RenderParameters (not just canvasContext)
+- Tesseract.js recognize() expects Buffer type, not Uint8Array - use Buffer.from()
+- pdfjs-dist references DOMMatrix which doesn't exist in Node.js - use dynamic imports
+- Inngest onFailure handler receives wrapped event in event.data.event
 
 ## Session Continuity
 
 ### What Just Happened
 
-Completed Phase 2 Plan 1 (02-01-PLAN.md):
-- Added Document, SourceChunk, ExtractedQuestion models to Prisma schema
-- Enabled pgvector extension for vector similarity search
-- Created Vercel Blob storage wrapper with PDF validation
-- Built upload API endpoint with Inngest event trigger
-- Created Inngest stub client (full implementation in 02-03)
+Completed Phase 2 Plan 3 (02-03-PLAN.md):
+- Replaced Inngest stub client with full implementation
+- Created multi-step PDF processing pipeline (9 steps)
+- Added embedding utilities using OpenAI text-embedding-3-small
+- Document status transitions: pending -> processing -> extracting
+- SourceChunks created with embeddings for vector similarity search
 
 ### What Happens Next
 
-1. Continue Phase 2 execution
-2. Plan 02-02: PDF text extraction with unpdf
-3. Plan 02-03: Inngest background processing functions
-4. Plan 02-04: AI extraction pipeline
+1. Execute Plan 02-04 (AI question extraction)
+2. Complete Phase 2
+3. Begin Phase 3 (Question Bank & Teacher Workflow)
 
 ### Context for Next Session
 
 If starting fresh:
 1. Read this file for current position
-2. Phase 2 Plan 1 is complete
-3. Execute Plan 02-02 with `/gsd:execute-phase 02-02-PLAN.md`
+2. Phase 2 Plans 1-3 are complete
+3. Execute Plan 02-04 with /gsd:execute-phase 02-04-PLAN.md
 
 ### Files Created This Session
 
-- `prisma/schema.prisma` - Updated with Document, SourceChunk, ExtractedQuestion models
-- `src/lib/storage/blob.ts` - Vercel Blob upload wrapper
-- `src/app/api/upload/route.ts` - PDF upload API endpoint
-- `src/inngest/client.ts` - Stub Inngest client
-- `.planning/phases/02-content-ai-extraction/02-01-SUMMARY.md` - Plan summary
+- src/inngest/client.ts - Full Inngest client with typed events
+- src/inngest/functions/process-pdf.ts - Multi-step processing pipeline
+- src/inngest/functions/index.ts - Function re-exports
+- src/inngest/types.ts - Type re-exports
+- src/app/api/inngest/route.ts - Webhook handler
+- src/lib/ai/embed.ts - Embedding utilities
+- .planning/phases/02-content-ai-extraction/02-03-SUMMARY.md - Plan summary
 
 ---
 
 *State captured: 2026-01-23*
-*Next command: Execute plan 02-02*
+*Next command: Execute plan 02-04*
