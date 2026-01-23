@@ -24,6 +24,15 @@
 
 **Goal:** Teachers can sign in securely with compliance infrastructure in place from day one.
 
+**Plans:** 5 plans
+
+Plans:
+- [ ] 01-01-PLAN.md - Next.js 16 project setup with Prisma 7 and PostgreSQL schema
+- [ ] 01-02-PLAN.md - Auth.js v5 Google OAuth with database sessions
+- [ ] 01-03-PLAN.md - PostgreSQL audit triggers for FERPA compliance
+- [ ] 01-04-PLAN.md - Data deletion, DPA template, and audit log UI
+- [ ] 01-05-PLAN.md - End-to-end verification of all Phase 1 requirements
+
 **Requirements:**
 - AUTH-01: Teacher can sign in with Google OAuth (SSO)
 - AUTH-04: User sessions persist across browser refresh
@@ -310,4 +319,5 @@ Phase 6 (Grading) ---------> Phase 7 (Google Classroom)
 ---
 
 *Roadmap created: 2025-01-23*
-*Next step: /gsd:plan-phase 1*
+*Phase 1 planned: 2025-01-23*
+*Next step: /gsd:execute-phase 1*
