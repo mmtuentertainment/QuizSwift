@@ -1,13 +1,15 @@
 // QuizSwift Prisma Schema
-// Auth.js v5 compatible models + FERPA audit logging
+// Auth.js v5 compatible models + FERPA audit logging + Content extraction
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [vector]
 }
 
 // Auth.js required models
@@ -21,6 +23,7 @@ model User {
 
   accounts      Account[]
   sessions      Session[]
+  documents     Document[]
 
   // Soft delete support for COPPA/GDPR compliance
   deletedAt     DateTime?
@@ -82,4 +85,70 @@ model AuditLog {
   @@index([actorId])
   @@index([tableName])
   @@map("audit_log")
+}
+
+// Content extraction models for Phase 2
+
+// Document: Uploaded PDF files with processing status
+model Document {
+  id           String   @id @default(cuid())
+  fileName     String
+  fileUrl      String   // Vercel Blob URL
+  fileSize     Int      // bytes
+  mimeType     String   @default("application/pdf")
+  totalPages   Int?
+  status       String   @default("pending") // pending, processing, extracting, completed, failed
+  errorMessage String?
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  chunks       SourceChunk[]
+  questions    ExtractedQuestion[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([uploadedById])
+  @@index([status])
+}
+
+// SourceChunk: Text chunks for RAG/grounding
+model SourceChunk {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  content    String   @db.Text
+  pageNumber Int
+  chunkIndex Int      // Order within page
+  startChar  Int
+  endChar    Int
+  embedding  Unsupported("vector(1536)")?
+  createdAt  DateTime @default(now())
+
+  @@index([documentId])
+  @@index([pageNumber])
+}
+
+// ExtractedQuestion: Questions extracted from source material
+model ExtractedQuestion {
+  id                String   @id @default(cuid())
+  documentId        String
+  document          Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  questionText      String   @db.Text
+  questionType      String   // multiple_choice, true_false, fill_blank, short_answer, matching, show_work, essay
+  options           Json?    // Array of options for MC/matching
+  correctAnswer     String   @db.Text
+  explanation       String?  @db.Text
+  sourceQuote       String   @db.Text  // Exact text from source
+  pageNumber        Int
+  sectionTitle      String?
+  verified          Boolean  @default(false)
+  verificationScore Float?   // Grounding similarity score (0-1)
+  sourceChunkId     String?
+  flagged           Boolean  @default(false) // True if below threshold
+  flagReason        String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([documentId])
+  @@index([verified])
+  @@index([questionType])
 }
