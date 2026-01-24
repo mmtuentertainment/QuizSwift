@@ -6,4 +6,8 @@ export {
   type MathDisplayProps,
 } from "./math-display";
 
-// ShowYourWork will be exported after the file is created in Task 3
+export {
+  ShowYourWork,
+  type ShowYourWorkProps,
+  type ShowYourWorkData,
+} from "./show-your-work";
