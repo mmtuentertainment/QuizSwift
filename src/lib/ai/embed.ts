@@ -1,16 +1,6 @@
 import { embed, embedMany } from 'ai';
-import { openai } from '@ai-sdk/openai';
-
-export type Tier = 'free' | 'paid';
-
-/**
- * Get the embedding model based on user tier
- * For now, always use OpenAI (Ollama embedding setup deferred to Phase 8)
- */
-export function getEmbeddingModel(tier: Tier = 'paid') {
-  // OpenAI text-embedding-3-small: 1536 dimensions
-  return openai.embeddingModel('text-embedding-3-small');
-}
+import { getEmbeddingModel } from './providers';
+import type { Tier } from './providers';
 
 export interface EmbeddingResult {
   embedding: number[];
@@ -82,5 +72,5 @@ export function cosineSimilarity(a: number[], b: number[]): number {
  * Format embedding as PostgreSQL vector string
  */
 export function toVectorString(embedding: number[]): string {
-  return `[${embedding.join(',')}]`;
+  return '[' + embedding.join(',') + ']';
 }
