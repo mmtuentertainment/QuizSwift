@@ -92,6 +92,7 @@ model Document {
   uploadedBy   User                @relation(fields: [uploadedById], references: [id])
   questions    ExtractedQuestion[]
   chunks       SourceChunk[]
+  curatedQuestions CuratedQuestion[]
 
   // Question curation settings
   requestedQuestionCount Int?                           // Teacher's desired count (e.g., 20)
@@ -146,4 +147,47 @@ model ExtractedQuestion {
   @@index([documentId])
   @@index([verified])
   @@index([questionType])
+}
+
+model CuratedQuestion {
+  id                     String   @id @default(cuid())
+  documentId             String
+
+  // Question content
+  questionText           String
+  questionType           String   // multiple_choice, short_answer, show_work, etc.
+  bloomLevel             String   // understand, apply, analyze, evaluate
+  difficulty             String   // easy, medium, hard
+
+  // Answer structure
+  options                Json?    // For multiple choice
+  correctAnswer          String
+  explanation            String
+  workingSteps           Json?    // For show_work questions
+
+  // Curation metadata
+  targetConceptId        String   // Links to concept from Pass 2
+  targetConceptName      String   // Denormalized for display
+  comprehensionRationale String   // Why this tests understanding
+  sourceEvidence         String   // Quote from document
+
+  // Evaluation scores (from Pass 4)
+  evaluationScore        Float?
+  comprehensionDepth     Float?
+  clarity                Float?
+  answerability          Float?
+
+  // Selection status (from Pass 5)
+  rank                   Int?
+  inCurationPool         Boolean  @default(true)  // Selected for 2x pool
+  teacherSelected        Boolean  @default(false) // Teacher's final pick
+
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  document               Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([inCurationPool])
+  @@index([teacherSelected])
+  @@index([bloomLevel])
 }
