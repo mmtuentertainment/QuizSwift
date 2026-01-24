@@ -1,6 +1,7 @@
 import { inngest } from '../client';
 import { prisma } from '@/lib/prisma';
 import { embedBatch, toVectorString } from '@/lib/ai/embed';
+import { detectTier } from '@/lib/ai/providers';
 
 // Types imported for type checking only - actual modules are dynamically imported
 import type { PagedText, PageText } from '@/lib/pdf/extract-text';
@@ -130,11 +131,18 @@ export const processPdf = inngest.createFunction(
 
       // Extract chunk contents for batch embedding
       const chunkTexts = chunks.map((c) => c.content);
+      console.log(`[process-pdf] Generating embeddings for ${chunkTexts.length} chunks using tier: ${detectTier()}`);
 
-      // Generate embeddings in batch (more efficient than one-by-one)
-      const embeddings = await embedBatch(chunkTexts, 'paid');
-
-      return embeddings;
+      try {
+        // Generate embeddings in batch (more efficient than one-by-one)
+        // Use detectTier() to automatically select Ollama (free) or OpenAI (paid)
+        const embeddings = await embedBatch(chunkTexts, detectTier());
+        console.log(`[process-pdf] Generated ${embeddings.length} embeddings, first has ${embeddings[0]?.length || 0} dimensions`);
+        return embeddings;
+      } catch (embeddingError) {
+        console.error('[process-pdf] Embedding generation failed:', embeddingError);
+        throw embeddingError;
+      }
     });
 
     // Step 8: Store chunks with embeddings in database
@@ -150,7 +158,7 @@ export const processPdf = inngest.createFunction(
         const chunk = chunks[i];
         const embedding = chunkEmbeddings[i];
 
-        if (embedding) {
+        if (embedding && embedding.length > 0) {
           // Insert with embedding using raw SQL
           await prisma.$executeRaw`
             INSERT INTO "SourceChunk" (
@@ -198,14 +206,30 @@ export const processPdf = inngest.createFunction(
       });
     });
 
-    // Trigger next step in pipeline
-    await step.sendEvent('trigger-extraction', {
-      name: 'pdf/processing.complete',
-      data: {
-        documentId,
-        chunksCreated: storedChunks,
-        totalPages: textResult.totalPages,
-      },
+    // Trigger next step in pipeline - route based on requestedQuestionCount
+    await step.run('trigger-next-step', async () => {
+      const doc = await prisma.document.findUnique({
+        where: { id: documentId },
+        select: { requestedQuestionCount: true },
+      });
+
+      if (doc?.requestedQuestionCount) {
+        // New curation pipeline for documents with question count
+        await inngest.send({
+          name: 'pdf/curation.ready',
+          data: { documentId },
+        });
+      } else {
+        // Legacy extraction pipeline for backward compatibility
+        await inngest.send({
+          name: 'pdf/processing.complete',
+          data: {
+            documentId,
+            chunksCreated: storedChunks,
+            totalPages: textResult.totalPages,
+          },
+        });
+      }
     });
 
     return {
