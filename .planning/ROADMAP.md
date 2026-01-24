@@ -1,8 +1,8 @@
 # Roadmap: QuizSwift
 
 **Created:** 2025-01-23
-**Phases:** 8
-**Requirements:** 47 mapped
+**Phases:** 9 (including 2.1)
+**Requirements:** 47 mapped + 5 new
 **Depth:** Comprehensive
 
 ## Phase Overview
@@ -11,7 +11,8 @@
 |---|-------|------|--------------|------------------|
 | 1 | Foundation & Compliance | Teachers can sign in securely with compliance infrastructure in place | AUTH-01, AUTH-04, PLAT-01, PLAT-02, PLAT-03, PLAT-04 | 4 |
 | 2 | Content & AI Extraction | Teachers can upload textbooks and receive accurately extracted questions | CONT-01, CONT-02, CONT-03, CONT-04, CONT-05 | 4 |
-| 3 | Question Bank & Teacher Workflow | Teachers can review, edit, and approve extracted questions for use | CONT-06, CONT-07, CONT-08, QUES-01, QUES-02, QUES-03, QUES-04, QUES-05, QUES-06, QUES-07 | 5 |
+| 2.1 | Intelligent Question Curation | AI generates pedagogically-sound comprehension questions with teacher selection | CONT-04-ENH, QUES-05-EARLY, CUR-01, CUR-02, CUR-03 | 5 |
+| 3 | Question Bank & Teacher Workflow | Teachers can review, edit, and approve extracted questions for use | CONT-06, CONT-07, CONT-08, QUES-01, QUES-02, QUES-03, QUES-04, QUES-06, QUES-07 | 5 |
 | 4 | Quiz Delivery & Student Experience | Students can take quizzes on any device with clear progress tracking | DELV-01, DELV-04, DELV-05, DELV-06, DELV-07 | 4 |
 | 5 | Anti-Cheating & Randomization | Each student receives a unique quiz experience to prevent answer sharing | DELV-02, DELV-03 | 3 |
 | 6 | Grading & Analytics | Teachers can review auto-graded results and gain insights into student performance | GRAD-01, GRAD-02, GRAD-03, GRAD-04, GRAD-05, GRAD-06, GRAD-07 | 5 |
@@ -57,14 +58,16 @@ Plans:
 
 **Goal:** Teachers can upload textbook chapters and receive accurately extracted quiz questions with source citations.
 
+**Status:** COMPLETE
+
 **Plans:** 5 plans
 
 Plans:
-- [ ] 02-01-PLAN.md - Database schema for documents/chunks/questions and Vercel Blob storage
-- [ ] 02-02-PLAN.md - PDF text extraction with unpdf and Tesseract.js OCR
-- [ ] 02-03-PLAN.md - Inngest background job processing pipeline
-- [ ] 02-04-PLAN.md - AI question extraction with grounding verification
-- [ ] 02-05-PLAN.md - Upload UI, document pages, and E2E verification
+- [x] 02-01-PLAN.md - Database schema for documents/chunks/questions and Vercel Blob storage
+- [x] 02-02-PLAN.md - PDF text extraction with unpdf and Tesseract.js OCR
+- [x] 02-03-PLAN.md - Inngest background job processing pipeline
+- [x] 02-04-PLAN.md - AI question extraction with grounding verification
+- [x] 02-05-PLAN.md - Upload UI, document pages, and E2E verification
 
 **Requirements:**
 - CONT-01: Teacher can upload PDF files (textbook chapters)
@@ -85,6 +88,46 @@ Plans:
 
 ---
 
+## Phase 2.1: Intelligent Question Curation
+
+**Goal:** Replace chunk-by-chunk extraction with a pedagogically-sound 5-pass reasoning pipeline that generates comprehension questions and allows teacher selection from a curated pool.
+
+**Status:** PLANNED
+
+**Plans:** 6 plans
+
+Plans:
+- [ ] 02.1-01-PLAN.md - Schema updates and upload UI question count input
+- [ ] 02.1-02-PLAN.md - Zod schemas for 5-pass reasoning pipeline
+- [ ] 02.1-03-PLAN.md - 5-pass reasoning pipeline implementation
+- [ ] 02.1-04-PLAN.md - Inngest curation job replacing extraction
+- [ ] 02.1-05-PLAN.md - Show-your-work canvas with tldraw and KaTeX
+- [ ] 02.1-06-PLAN.md - Teacher curation UI for question selection
+
+**Requirements:**
+- CONT-04-ENH: AI generates comprehension questions (not just extraction) following Bloom's Taxonomy
+- QUES-05-EARLY: Show-your-work questions with canvas (pulled forward from Phase 3)
+- CUR-01: Teacher specifies desired question count when uploading
+- CUR-02: AI generates 2x requested count for teacher selection
+- CUR-03: 5-pass reasoning pipeline (analyze -> concepts -> generate -> evaluate -> select)
+
+**Success Criteria:**
+1. Teacher can specify question count (5-50) when uploading
+2. AI reads full document and reasons about content before generating questions
+3. Generated questions test comprehension using Bloom's Taxonomy distribution
+4. Teacher sees 2x questions with quality scores and can select final set
+5. Show-your-work questions render with drawing canvas and math support
+
+**Dependencies:** Phase 2 (PDF processing, chunk storage, Inngest infrastructure)
+
+**Research Notes:**
+- 5 sequential generateText calls with structured output
+- Bloom's distribution: Understand 40%, Apply 30%, Analyze 20%, Evaluate 10%
+- Use tldraw for canvas, KaTeX for math rendering
+- Qwen3:8b needs custom Modelfile with num_ctx 32768 for full document context
+
+---
+
 ## Phase 3: Question Bank & Teacher Workflow
 
 **Goal:** Teachers can review, edit, and approve extracted questions across all question types before students see them.
@@ -97,7 +140,7 @@ Plans:
 - QUES-02: True/false
 - QUES-03: Fill-in-the-blank
 - QUES-04: Matching
-- QUES-05: Show-your-work (math/science)
+- ~~QUES-05: Show-your-work (math/science)~~ (Moved to Phase 2.1)
 - QUES-06: Essay/short answer
 - QUES-07: Image support in questions
 
@@ -108,7 +151,7 @@ Plans:
 4. Teacher can create questions of all 7 types (MC, T/F, fill-blank, matching, show-work, essay, image-based)
 5. Questions with images render correctly in preview and quiz modes
 
-**Dependencies:** Phase 2 (extraction pipeline, question storage)
+**Dependencies:** Phase 2.1 (curation pipeline, curated question storage)
 
 **Research Notes:** Teacher-takes-quiz workflow builds trust and catches bad extractions. Question bank enables reuse across multiple quizzes and semesters.
 
@@ -238,19 +281,23 @@ Plans:
 | AUTH-02 | Phase 7 | Pending |
 | AUTH-03 | Phase 7 | Pending |
 | AUTH-04 | Phase 1 | Complete |
-| CONT-01 | Phase 2 | Pending |
-| CONT-02 | Phase 2 | Pending |
-| CONT-03 | Phase 2 | Pending |
-| CONT-04 | Phase 2 | Pending |
-| CONT-05 | Phase 2 | Pending |
+| CONT-01 | Phase 2 | Complete |
+| CONT-02 | Phase 2 | Complete |
+| CONT-03 | Phase 2 | Complete |
+| CONT-04 | Phase 2 | Complete |
+| CONT-04-ENH | Phase 2.1 | Pending |
+| CONT-05 | Phase 2 | Complete |
 | CONT-06 | Phase 3 | Pending |
 | CONT-07 | Phase 3 | Pending |
 | CONT-08 | Phase 3 | Pending |
+| CUR-01 | Phase 2.1 | Pending |
+| CUR-02 | Phase 2.1 | Pending |
+| CUR-03 | Phase 2.1 | Pending |
 | QUES-01 | Phase 3 | Pending |
 | QUES-02 | Phase 3 | Pending |
 | QUES-03 | Phase 3 | Pending |
 | QUES-04 | Phase 3 | Pending |
-| QUES-05 | Phase 3 | Pending |
+| QUES-05 | Phase 2.1 | Pending |
 | QUES-06 | Phase 3 | Pending |
 | QUES-07 | Phase 3 | Pending |
 | DELV-01 | Phase 4 | Pending |
@@ -285,13 +332,15 @@ Plans:
 ## Coverage Summary
 
 - v1 requirements: 47
-- Mapped: 47
+- New requirements: 5 (CUR-01, CUR-02, CUR-03, CONT-04-ENH, QUES-05 moved)
+- Mapped: 52
 - Unmapped: 0
 
 **Phase Distribution:**
 - Phase 1: 6 requirements (Foundation & Compliance) - COMPLETE
-- Phase 2: 5 requirements (Content & AI Extraction)
-- Phase 3: 10 requirements (Question Bank & Teacher Workflow)
+- Phase 2: 5 requirements (Content & AI Extraction) - COMPLETE
+- Phase 2.1: 5 requirements (Intelligent Question Curation) - PLANNED
+- Phase 3: 9 requirements (Question Bank & Teacher Workflow)
 - Phase 4: 5 requirements (Quiz Delivery & Student Experience)
 - Phase 5: 2 requirements (Anti-Cheating & Randomization)
 - Phase 6: 7 requirements (Grading & Analytics)
@@ -306,7 +355,10 @@ Plans:
 Phase 1 (Foundation) - COMPLETE
     |
     v
-Phase 2 (Content & AI) -----> Phase 8 (Dual-Tier AI)
+Phase 2 (Content & AI) - COMPLETE -----> Phase 8 (Dual-Tier AI)
+    |
+    v
+Phase 2.1 (Intelligent Curation) - PLANNED
     |
     v
 Phase 3 (Question Bank)
@@ -321,7 +373,7 @@ Phase 5 (Anti-Cheating)
 Phase 6 (Grading) ---------> Phase 7 (Google Classroom)
 ```
 
-**Critical Path:** 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
+**Critical Path:** 1 -> 2 -> 2.1 -> 3 -> 4 -> 5 -> 6 -> 7
 
 **Parallel Opportunity:** Phase 8 can begin after Phase 2 (AI pipeline exists)
 
@@ -329,5 +381,6 @@ Phase 6 (Grading) ---------> Phase 7 (Google Classroom)
 
 *Roadmap created: 2025-01-23*
 *Phase 1 completed: 2026-01-23*
-*Phase 2 planned: 2026-01-23*
-*Next step: /gsd:execute-phase 2*
+*Phase 2 completed: 2026-01-23*
+*Phase 2.1 planned: 2026-01-24*
+*Next step: /gsd:execute-phase 2.1*
