@@ -13,6 +13,7 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [questionCount, setQuestionCount] = useState(15);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -41,6 +42,7 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
     try {
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('questionCount', questionCount.toString());
 
       setProgress(30);
 
@@ -96,6 +98,31 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
           </p>
         )}
       </div>
+
+      {file && (
+        <div className="space-y-2">
+          <label htmlFor="question-count" className="block text-sm font-medium text-gray-700">
+            How many questions do you want?
+          </label>
+          <div className="flex items-center gap-4">
+            <input
+              type="range"
+              id="question-count"
+              min={5}
+              max={50}
+              step={5}
+              value={questionCount}
+              onChange={(e) => setQuestionCount(parseInt(e.target.value))}
+              disabled={uploading}
+              className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+            />
+            <span className="w-12 text-center font-medium text-gray-900">{questionCount}</span>
+          </div>
+          <p className="text-xs text-gray-500">
+            AI will generate {questionCount * 2} questions. You&apos;ll select the best {questionCount}.
+          </p>
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm">

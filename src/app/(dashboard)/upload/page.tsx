@@ -7,8 +7,9 @@ export default function UploadPage() {
 
       <div className="bg-white rounded-lg shadow p-6">
         <p className="text-gray-600 mb-6">
-          Upload a PDF file to extract quiz questions. The system will analyze
-          the content and identify existing questions and testable facts.
+          Upload a PDF file to extract quiz questions. Choose how many questions
+          you want, and AI will generate twice that number for you to curate and
+          select the best ones.
         </p>
 
         <UploadForm />
