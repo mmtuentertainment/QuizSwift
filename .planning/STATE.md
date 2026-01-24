@@ -12,15 +12,15 @@
 ## Current Position
 
 **Phase:** 2.1 of 8 - Intelligent Question Curation
-**Plan:** 3 of 5 complete
+**Plan:** 4 of 5 complete
 **Status:** In progress
-**Last activity:** 2026-01-24 - Completed 02.1-03-PLAN.md (Multi-pass AI pipeline)
+**Last activity:** 2026-01-24 - Completed 02.1-04-PLAN.md (Inngest curation job)
 
 **Progress:**
 Phase 1: 100% (5/5 plans)   [========================================]
 Phase 2: 100% (4/4 plans)   [========================================]
-Phase 2.1: 60% (3/5 plans)  [========================                ]
-Overall: 32%                [====================                    ]
+Phase 2.1: 80% (4/5 plans)  [================================        ]
+Overall: 36%                [======================                  ]
 
 **Phases Overview:**
 | Phase | Name | Status | Requirements |
@@ -38,8 +38,8 @@ Overall: 32%                [====================                    ]
 ## Performance Metrics
 
 **Session Stats:**
-- Plans completed: 3 (02.1-01, 02.1-02, 02.1-03)
-- Tasks completed: 9
+- Plans completed: 4 (02.1-01, 02.1-02, 02.1-03, 02.1-04)
+- Tasks completed: 12
 - Blockers resolved: 0
 
 **Cumulative Stats:**
@@ -60,6 +60,8 @@ Overall: 32%                [====================                    ]
 | Flag-not-reject pattern | ALL questions stored, flagged ones have flagReason | 2-04 |
 | 5-pass sequential AI pipeline | Each pass builds on previous for holistic understanding | 2.1-03 |
 | 2x question generation | Generate double for selection flexibility | 2.1-03 |
+| Separate CuratedQuestion model | Parallel systems during transition without data migration | 2.1-04 |
+| Event-based routing | pdf/curation.ready vs pdf/processing.complete for clean separation | 2.1-04 |
 
 ### Technical Stack
 
@@ -79,19 +81,18 @@ Overall: 32%                [====================                    ]
 
 ### What Just Happened
 
-Completed Phase 2.1 Plan 3 (02.1-03-PLAN.md):
-- Created 5 prompt templates for multi-pass AI pipeline
-- Implemented curateQuestions() function with 5 sequential passes
-- Added progress callback for real-time UI updates
-- Integrated Bloom's Taxonomy distribution (40/30/20/10)
-- Added self-evaluation quality metrics
+Completed Phase 2.1 Plan 4 (02.1-04-PLAN.md):
+- Added CuratedQuestion model with evaluation scores and selection status
+- Created Inngest curateQuestionsJob for 5-pass pipeline
+- Implemented event-based routing for curation vs legacy extraction
+- Documents with requestedQuestionCount trigger curation pipeline
 
 ### What Happens Next
 
-1. Continue with 02.1-04: Integrate curation into Inngest pipeline
-2. Complete remaining Phase 2.1 plans (04, 05)
+1. Continue with 02.1-05: Show-your-work canvas integration (if not already done)
+2. Complete Phase 2.1 and proceed to Phase 3
 
 ---
 
 *State captured: 2026-01-24*
-*Next command: Execute 02.1-04-PLAN.md*
+*Next command: Execute 02.1-05-PLAN.md or proceed to Phase 3*
