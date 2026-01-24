@@ -9,6 +9,10 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
+    // Use pooler URL for queries
     url: process.env["DATABASE_URL"],
-  },
+    // Use direct URL for migrations/DDL (Neon requires this for schema changes)
+    // Note: directUrl is a valid Prisma feature but not yet in TypeScript types
+    ...(process.env["DIRECT_URL"] && { directUrl: process.env["DIRECT_URL"] }),
+  } as { url?: string; shadowDatabaseUrl?: string; directUrl?: string },
 });
