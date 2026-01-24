@@ -26,6 +26,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Extract and validate question count
+    const questionCountStr = formData.get('questionCount') as string | null;
+    const requestedQuestionCount = questionCountStr ? parseInt(questionCountStr, 10) : 15;
+
+    if (requestedQuestionCount < 5 || requestedQuestionCount > 50) {
+      return NextResponse.json(
+        { error: 'Question count must be between 5 and 50' },
+        { status: 400 }
+      );
+    }
+
     // Upload to Vercel Blob
     const uploadResult = await uploadPdf(file, session.user.id);
 
@@ -38,6 +49,8 @@ export async function POST(request: NextRequest) {
         mimeType: uploadResult.contentType,
         status: 'pending',
         uploadedById: session.user.id,
+        requestedQuestionCount,
+        curationStatus: 'pending',
       },
     });
 
@@ -49,6 +62,7 @@ export async function POST(request: NextRequest) {
         fileUrl: document.fileUrl,
         fileName: document.fileName,
         userId: session.user.id,
+        requestedQuestionCount,
       },
     });
 
