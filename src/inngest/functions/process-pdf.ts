@@ -33,7 +33,22 @@ export const processPdf = inngest.createFunction(
   },
   { event: 'pdf/uploaded' },
   async ({ event, step }) => {
-    const { documentId, fileUrl } = event.data;
+    const { documentId } = event.data;
+    let { fileUrl } = event.data;
+
+    // Step 0: Validate fileUrl - fetch from database if not in event
+    if (!fileUrl) {
+      const doc = await prisma.document.findUnique({
+        where: { id: documentId },
+        select: { fileUrl: true },
+      });
+
+      if (!doc?.fileUrl) {
+        throw new Error(`Document ${documentId} has no fileUrl. Upload may have failed.`);
+      }
+
+      fileUrl = doc.fileUrl;
+    }
 
     // Step 1: Update status to processing
     await step.run('update-status-processing', async () => {
