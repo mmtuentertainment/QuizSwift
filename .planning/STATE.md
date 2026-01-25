@@ -1,33 +1,33 @@
 # Project State: QuizSwift
 
-**Last Updated:** 2026-01-24
-**Session:** Phase 2.1 - Intelligent Question Curation
+**Last Updated:** 2026-01-25
+**Session:** Phase 2.1 Complete - Ready for Phase 3
 
 ## Project Reference
 
 **Core Value:** 100% factual accuracy - every question extracted from source material, never generated
 
-**Current Focus:** Phase 2.1 - Intelligent Question Curation (IN PROGRESS)
+**Current Focus:** Phase 3 - Question Bank & Teacher Workflow (NEXT)
 
 ## Current Position
 
 **Phase:** 2.1 of 8 - Intelligent Question Curation
-**Plan:** 4 of 5 complete
-**Status:** In progress
-**Last activity:** 2026-01-24 - Completed 02.1-04-PLAN.md (Inngest curation job)
+**Plan:** 6 of 6 complete
+**Status:** COMPLETE
+**Last activity:** 2026-01-25 - Completed 02.1-06-PLAN.md (Teacher curation UI)
 
 **Progress:**
 Phase 1: 100% (5/5 plans)   [========================================]
 Phase 2: 100% (4/4 plans)   [========================================]
-Phase 2.1: 80% (4/5 plans)  [================================        ]
-Overall: 36%                [======================                  ]
+Phase 2.1: 100% (6/6 plans) [========================================]
+Overall: 42%                [==========================              ]
 
 **Phases Overview:**
 | Phase | Name | Status | Requirements |
 |-------|------|--------|--------------|
 | 1 | Foundation & Compliance | COMPLETE | 6 |
 | 2 | Content & AI Extraction | COMPLETE | 5 |
-| 2.1 | Intelligent Question Curation | IN PROGRESS | 5 |
+| 2.1 | Intelligent Question Curation | COMPLETE | 5 |
 | 3 | Question Bank & Teacher Workflow | Pending | 10 |
 | 4 | Quiz Delivery & Student Experience | Pending | 5 |
 | 5 | Anti-Cheating & Randomization | Pending | 2 |
@@ -38,9 +38,9 @@ Overall: 36%                [======================                  ]
 ## Performance Metrics
 
 **Session Stats:**
-- Plans completed: 4 (02.1-01, 02.1-02, 02.1-03, 02.1-04)
-- Tasks completed: 12
-- Blockers resolved: 0
+- Plans completed: 6 (02.1-01 through 02.1-06)
+- Tasks completed: 18+
+- Blockers resolved: 3 (document page display, star rating, preview UX)
 
 **Cumulative Stats:**
 - Total phases: 8 (+ 2.1 sub-phase)
@@ -81,18 +81,28 @@ Overall: 36%                [======================                  ]
 
 ### What Just Happened
 
-Completed Phase 2.1 Plan 4 (02.1-04-PLAN.md):
-- Added CuratedQuestion model with evaluation scores and selection status
-- Created Inngest curateQuestionsJob for 5-pass pipeline
-- Implemented event-based routing for curation vs legacy extraction
-- Documents with requestedQuestionCount trigger curation pipeline
+Completed Phase 2.1 (all 6 plans):
+- 02.1-01: Schema updates and question count input
+- 02.1-02: Zod schemas for 5-pass reasoning pipeline
+- 02.1-03: 5-pass reasoning pipeline implementation
+- 02.1-04: Inngest curation job with event routing
+- 02.1-05: Show-your-work canvas with tldraw + KaTeX
+- 02.1-06: Teacher curation UI with selection persistence
+
+Bug fixes applied:
+- Document page now displays curated questions correctly
+- Star rating calculation fixed (0-5 scale)
+- Removed dead-end preview, clean stats + CTA approach
 
 ### What Happens Next
 
-1. Continue with 02.1-05: Show-your-work canvas integration (if not already done)
-2. Complete Phase 2.1 and proceed to Phase 3
+Phase 3: Question Bank & Teacher Workflow
+- Quiz creation from selected questions
+- Teacher preview/take quiz workflow
+- Question editing before publish
+- Question bank for reuse
 
 ---
 
-*State captured: 2026-01-24*
-*Next command: Execute 02.1-05-PLAN.md or proceed to Phase 3*
+*State captured: 2026-01-25*
+*Next command: /gsd:plan-phase 3 or /gsd:discuss-phase 3*
