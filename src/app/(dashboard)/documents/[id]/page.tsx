@@ -25,6 +25,10 @@ export default async function DocumentDetailPage({ params }: PageProps) {
       questions: {
         orderBy: [{ pageNumber: 'asc' }, { createdAt: 'asc' }],
       },
+      curatedQuestions: {
+        where: { inCurationPool: true },
+        orderBy: { rank: 'asc' },
+      },
     },
   });
 
@@ -32,7 +36,14 @@ export default async function DocumentDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const isProcessing = ['pending', 'processing', 'extracting'].includes(document.status);
+  // Check if using new curation pipeline or legacy extraction
+  const usesCuration = document.requestedQuestionCount !== null && document.requestedQuestionCount > 0;
+  const isProcessing = ['pending', 'processing', 'extracting'].includes(document.status) ||
+    (usesCuration && document.curationStatus && !['complete', 'failed'].includes(document.curationStatus));
+
+  // Counts from appropriate source
+  const curatedCount = document.curatedQuestions.length;
+  const selectedCount = document.curatedQuestions.filter((q) => q.teacherSelected).length;
   const verifiedCount = document.questions.filter((q) => q.verified).length;
   const flaggedCount = document.questions.filter((q) => q.flagged).length;
 
@@ -54,10 +65,37 @@ export default async function DocumentDetailPage({ params }: PageProps) {
         {isProcessing ? (
           <div className="mt-6">
             <UploadProgress documentId={document.id} />
+            {usesCuration && document.curationStatus && (
+              <p className="mt-2 text-sm text-gray-500">
+                Curation status: {document.curationStatus}
+              </p>
+            )}
           </div>
-        ) : document.status === 'failed' ? (
+        ) : document.status === 'failed' || document.curationStatus === 'failed' ? (
           <div className="mt-4 bg-red-50 text-red-700 p-3 rounded-md">
             Processing failed: {document.errorMessage || 'Unknown error'}
+          </div>
+        ) : usesCuration ? (
+          <div className="mt-4 space-y-3">
+            <div className="flex gap-4 text-sm">
+              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                {curatedCount} curated questions
+              </span>
+              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                {selectedCount} selected
+              </span>
+              <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
+                Target: {document.requestedQuestionCount}
+              </span>
+            </div>
+            {document.curationStatus === 'complete' && curatedCount > 0 && (
+              <Link
+                href={`/documents/${document.id}/curate`}
+                className="inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Review & Select Questions
+              </Link>
+            )}
           </div>
         ) : (
           <div className="mt-4 flex gap-4 text-sm">
@@ -132,9 +170,17 @@ export default async function DocumentDetailPage({ params }: PageProps) {
         </div>
       )}
 
-      {document.status === 'completed' && document.questions.length === 0 && (
+
+      {/* Show "no questions" only when appropriate */}
+      {document.status === 'completed' && !usesCuration && document.questions.length === 0 && (
         <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
           No quiz questions were found in this document.
+        </div>
+      )}
+
+      {usesCuration && document.curationStatus === 'complete' && curatedCount === 0 && (
+        <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+          No questions could be generated from this document. The content may not be suitable for quiz extraction.
         </div>
       )}
     </div>

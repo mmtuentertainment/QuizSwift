@@ -27,7 +27,8 @@ const difficultyColors: Record<string, { bg: string; text: string }> = {
 function ScoreStars({ score }: { score: number | null }) {
   if (score === null) return <span className="text-gray-400">--</span>;
 
-  const stars = Math.round(score * 5);
+  // Score is already on 0-5 scale, clamp to valid range
+  const stars = Math.min(5, Math.max(0, Math.round(score)));
   return (
     <span className="text-yellow-500">
       {'★'.repeat(stars)}
