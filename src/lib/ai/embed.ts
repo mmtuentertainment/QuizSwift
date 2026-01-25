@@ -1,6 +1,5 @@
 import { embed, embedMany } from 'ai';
 import { getEmbeddingModel } from './providers';
-import type { Tier } from './providers';
 
 export interface EmbeddingResult {
   embedding: number[];
@@ -10,11 +9,8 @@ export interface EmbeddingResult {
 /**
  * Embed a single text string
  */
-export async function embedText(
-  text: string,
-  tier: Tier = 'paid'
-): Promise<number[]> {
-  const model = getEmbeddingModel(tier);
+export async function embedText(text: string): Promise<number[]> {
+  const model = getEmbeddingModel();
 
   const { embedding } = await embed({
     model,
@@ -26,21 +22,46 @@ export async function embedText(
 
 /**
  * Embed multiple texts in batch
+ * Ollama works better with smaller batches, so we process in chunks of 10
  */
-export async function embedBatch(
-  texts: string[],
-  tier: Tier = 'paid'
-): Promise<number[][]> {
+export async function embedBatch(texts: string[]): Promise<number[][]> {
   if (texts.length === 0) return [];
 
-  const model = getEmbeddingModel(tier);
+  const model = getEmbeddingModel();
 
-  const { embeddings } = await embedMany({
-    model,
-    values: texts,
-  });
+  // Ollama works better with smaller batches
+  const BATCH_SIZE = 10;
+  const allEmbeddings: number[][] = [];
 
-  return embeddings;
+  for (let i = 0; i < texts.length; i += BATCH_SIZE) {
+    const batch = texts.slice(i, i + BATCH_SIZE);
+
+    try {
+      const { embeddings } = await embedMany({
+        model,
+        values: batch,
+      });
+      allEmbeddings.push(...embeddings);
+    } catch (error) {
+      console.error(`Embedding batch ${i}-${i + batch.length} failed:`, error);
+      // Fall back to one-by-one for this batch
+      for (const text of batch) {
+        try {
+          const { embedding } = await embed({
+            model,
+            value: text,
+          });
+          allEmbeddings.push(embedding);
+        } catch (singleError) {
+          console.error('Single embedding failed:', singleError);
+          // Push empty embedding to maintain alignment
+          allEmbeddings.push([]);
+        }
+      }
+    }
+  }
+
+  return allEmbeddings;
 }
 
 /**

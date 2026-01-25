@@ -1,6 +1,6 @@
-import { generateObject } from 'ai';
+import { generateText, Output } from 'ai';
 import { z } from 'zod';
-import { getExtractionModel, Tier } from './providers';
+import { getExtractionModel } from './providers';
 
 // Schema for a single extracted question
 export const ExtractedQuestionSchema = z.object({
@@ -70,14 +70,16 @@ For each extraction, you MUST provide:
  */
 export async function extractQuestionsFromChunk(
   chunkContent: string,
-  pageNumber: number,
-  tier: Tier = 'paid'
+  pageNumber: number
 ): Promise<ExtractionResult> {
-  const model = getExtractionModel(tier);
+  const model = getExtractionModel();
 
-  const { object } = await generateObject({
+  // AI SDK v6: Use generateText with Output.object for structured data
+  const { output } = await generateText({
     model,
-    schema: ExtractionResultSchema,
+    output: Output.object({
+      schema: ExtractionResultSchema,
+    }),
     prompt: `${EXTRACTION_PROMPT}
 
 Text from page ${pageNumber}:
@@ -85,10 +87,16 @@ Text from page ${pageNumber}:
 ${chunkContent}
 ---
 
-Extract all quiz-worthy questions and facts from this text.`,
+Extract all quiz-worthy questions and facts from this text. Respond with a JSON object containing a "questions" array and "noQuestionsFound" boolean.`,
   });
 
-  return object;
+  // Handle case where output parsing fails
+  if (!output) {
+    console.warn(`[extract-questions] No structured output from model for page ${pageNumber}`);
+    return { questions: [], noQuestionsFound: true };
+  }
+
+  return output;
 }
 
 /**
@@ -96,7 +104,6 @@ Extract all quiz-worthy questions and facts from this text.`,
  */
 export async function extractQuestionsFromChunks(
   chunks: Array<{ content: string; pageNumber: number; chunkIndex: number }>,
-  tier: Tier = 'paid',
   onProgress?: (current: number, total: number) => void
 ): Promise<Array<{ chunkIndex: number; pageNumber: number; result: ExtractionResult }>> {
   const results: Array<{ chunkIndex: number; pageNumber: number; result: ExtractionResult }> = [];
@@ -109,11 +116,14 @@ export async function extractQuestionsFromChunks(
     }
 
     try {
+      console.log(`[extract-questions] Processing chunk ${i + 1}/${chunks.length} (page ${chunk.pageNumber}), content length: ${chunk.content.length}`);
+
       const result = await extractQuestionsFromChunk(
         chunk.content,
-        chunk.pageNumber,
-        tier
+        chunk.pageNumber
       );
+
+      console.log(`[extract-questions] Chunk ${i + 1} extracted ${result.questions.length} questions`);
 
       results.push({
         chunkIndex: chunk.chunkIndex,
@@ -121,7 +131,7 @@ export async function extractQuestionsFromChunks(
         result,
       });
     } catch (error) {
-      console.error(`Extraction failed for chunk ${chunk.chunkIndex}:`, error);
+      console.error(`[extract-questions] Extraction FAILED for chunk ${chunk.chunkIndex}:`, error);
       // Continue with other chunks on error
       results.push({
         chunkIndex: chunk.chunkIndex,

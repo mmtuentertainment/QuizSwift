@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma';
 import { embedText, toVectorString } from './embed';
-import type { Tier } from './providers';
 import type { ExtractedQuestion } from './extract-questions';
 
 export const GROUNDING_THRESHOLD = 0.85;
@@ -24,14 +23,13 @@ export interface VerificationResult {
  */
 export async function verifyGrounding(
   question: ExtractedQuestion,
-  documentId: string,
-  tier: Tier = 'paid'
+  documentId: string
 ): Promise<VerificationResult> {
   // Combine question and source quote for embedding
   const textToEmbed = `${question.questionText} ${question.sourceQuote}`;
 
   // Get embedding for the question
-  const embedding = await embedText(textToEmbed, tier);
+  const embedding = await embedText(textToEmbed);
 
   // Convert to Postgres vector format
   const vectorString = toVectorString(embedding);
@@ -179,13 +177,12 @@ async function verifyGroundingTextBased(
  */
 export async function verifyQuestionsGrounding(
   questions: ExtractedQuestion[],
-  documentId: string,
-  tier: Tier = 'paid'
+  documentId: string
 ): Promise<Array<{ question: ExtractedQuestion; verification: VerificationResult }>> {
   const results: Array<{ question: ExtractedQuestion; verification: VerificationResult }> = [];
 
   for (const question of questions) {
-    const verification = await verifyGrounding(question, documentId, tier);
+    const verification = await verifyGrounding(question, documentId);
     results.push({ question, verification });
   }
 

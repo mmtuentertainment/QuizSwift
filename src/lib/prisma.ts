@@ -35,18 +35,15 @@ export function getPrisma(): PrismaClient {
   return globalForPrisma.prisma
 }
 
-// For backward compatibility - lazy getter
-export const prisma = {
-  get client() {
-    return getPrisma()
-  }
-} as unknown as PrismaClient
-
-// Make all PrismaClient methods available on the export
+// Make all PrismaClient methods available via proxy
 const handler: ProxyHandler<object> = {
   get(_, prop) {
     return getPrisma()[prop as keyof PrismaClient]
   }
 }
 
-export default new Proxy({}, handler) as PrismaClient
+// Named export for compatibility - uses proxy for lazy initialization
+export const prisma = new Proxy({}, handler) as PrismaClient
+
+// Default export (same proxy)
+export default prisma

@@ -1,16 +1,29 @@
 import { inngest } from '../client';
 import { prisma } from '@/lib/prisma';
-import { curateQuestions, CurationProgress } from '@/lib/ai';
-import { detectTier } from '@/lib/ai/providers';
+import {
+  runPass1ContentAnalysis,
+  runPass2ConceptExtraction,
+  runPass3QuestionGeneration,
+  runPass4Evaluation,
+  runPass5FinalSelection,
+  buildCuratedQuestions,
+} from '@/lib/ai/curate-questions';
 
 /**
  * Intelligent Question Curation Job
  *
- * Replaces the old chunk-by-chunk extraction with a 5-pass reasoning pipeline:
- * 1. Assembles full document text from chunks
- * 2. Runs 5-pass curation (analyze -> extract concepts -> generate -> evaluate -> select)
- * 3. Stores curated questions with evaluation scores
- * 4. Updates document status
+ * 5-pass reasoning pipeline with Inngest checkpointing:
+ * Each AI pass is a separate step.run() call, allowing:
+ * - Independent timeout per pass (up to 5 minutes each)
+ * - Automatic checkpointing between passes
+ * - Retry individual passes without rerunning entire pipeline
+ *
+ * Pass flow:
+ * 1. Content Analysis - Understand document structure and content
+ * 2. Concept Extraction - Identify key concepts and prerequisites
+ * 3. Question Generation - Generate 2x requested questions
+ * 4. Self-Evaluation - Score and evaluate each question
+ * 5. Final Selection - Rank and select best questions for curation pool
  */
 export const curateQuestionsJob = inngest.createFunction(
   {
@@ -33,9 +46,7 @@ export const curateQuestionsJob = inngest.createFunction(
   async ({ event, step }) => {
     const { documentId } = event.data;
 
-    // Determine tier and get document settings
-    const tier = detectTier();
-    console.log(`[curate-questions] Using tier: ${tier}`);
+    console.log(`[curate-questions] Starting curation for document ${documentId}`);
 
     // Step 1: Load document and chunks
     const { fullText, requestedCount } = await step.run('load-document', async () => {
@@ -84,51 +95,107 @@ export const curateQuestionsJob = inngest.createFunction(
       });
     });
 
-    // Step 3: Run 5-pass curation pipeline
-    const curationResult = await step.run('run-curation-pipeline', async () => {
-      console.log(`[curate-questions] Starting 5-pass curation for ${requestedCount} questions (generating ${requestedCount * 2})`);
+    // Initialize timing stats
+    const passTimings: Record<string, number> = {};
+    let totalTokens = 0;
 
-      const result = await curateQuestions(
-        fullText,
-        requestedCount,
-        tier,
-        (progress: CurationProgress) => {
-          console.log(`[curate-questions] Pass ${progress.pass} (${progress.passName}): ${progress.status}${progress.durationMs ? ` - ${progress.durationMs}ms` : ''}`);
-        }
-      );
-
-      console.log(`[curate-questions] Pipeline complete in ${result.stats.totalDurationMs}ms, ${result.stats.totalTokens} tokens`);
+    // Step 3: Pass 1 - Content Analysis
+    console.log(`[curate-questions] Starting Pass 1: Content Analysis`);
+    const pass1 = await step.run('pass-1-content-analysis', async () => {
+      const result = await runPass1ContentAnalysis(fullText);
+      console.log(`[curate-questions] Pass 1 complete in ${result.durationMs}ms`);
       return result;
     });
+    passTimings.pass1 = pass1.durationMs;
+    totalTokens += pass1.tokens;
 
-    // Step 4: Store curation metadata on document
+    // Step 4: Pass 2 - Concept Extraction
+    console.log(`[curate-questions] Starting Pass 2: Concept Extraction`);
+    const pass2 = await step.run('pass-2-concept-extraction', async () => {
+      const result = await runPass2ConceptExtraction(fullText, pass1.output);
+      console.log(`[curate-questions] Pass 2 complete in ${result.durationMs}ms`);
+      return result;
+    });
+    passTimings.pass2 = pass2.durationMs;
+    totalTokens += pass2.tokens;
+
+    // Step 5: Pass 3 - Question Generation (2x count)
+    console.log(`[curate-questions] Starting Pass 3: Question Generation for ${requestedCount * 2} questions`);
+    const pass3 = await step.run('pass-3-question-generation', async () => {
+      const result = await runPass3QuestionGeneration(
+        fullText,
+        pass1.output,
+        pass2.output,
+        requestedCount
+      );
+      console.log(`[curate-questions] Pass 3 complete in ${result.durationMs}ms, generated ${result.output.questions.length} questions`);
+      return result;
+    });
+    passTimings.pass3 = pass3.durationMs;
+    totalTokens += pass3.tokens;
+
+    // Step 6: Pass 4 - Self-Evaluation
+    console.log(`[curate-questions] Starting Pass 4: Self-Evaluation`);
+    const pass4 = await step.run('pass-4-evaluation', async () => {
+      const result = await runPass4Evaluation(pass1.output, pass3.output);
+      console.log(`[curate-questions] Pass 4 complete in ${result.durationMs}ms`);
+      return result;
+    });
+    passTimings.pass4 = pass4.durationMs;
+    totalTokens += pass4.tokens;
+
+    // Step 7: Pass 5 - Final Selection
+    console.log(`[curate-questions] Starting Pass 5: Final Selection`);
+    const pass5 = await step.run('pass-5-final-selection', async () => {
+      const result = await runPass5FinalSelection(
+        pass1.output,
+        pass2.output,
+        pass3.output,
+        pass4.output,
+        requestedCount
+      );
+      console.log(`[curate-questions] Pass 5 complete in ${result.durationMs}ms, selected ${result.output.selectedForPool.length} questions`);
+      return result;
+    });
+    passTimings.pass5 = pass5.durationMs;
+    totalTokens += pass5.tokens;
+
+    // Step 8: Store curation metadata on document
     await step.run('store-curation-metadata', async () => {
       await prisma.document.update({
         where: { id: documentId },
         data: {
           curationStatus: 'curating',
-          contentAnalysis: curationResult.contentAnalysis as object,
-          conceptExtraction: curationResult.conceptExtraction as object,
-          bloomDistribution: curationResult.questionGeneration.bloomDistribution as object,
+          contentAnalysis: pass1.output as object,
+          conceptExtraction: pass2.output as object,
+          bloomDistribution: pass3.output.bloomDistribution as object,
         },
       });
     });
 
-    // Step 5: Store curated questions
+    // Step 9: Build and store curated questions
     const storedCount = await step.run('store-curated-questions', async () => {
       // Delete any existing curated questions (in case of retry)
       await prisma.curatedQuestion.deleteMany({
         where: { documentId },
       });
 
+      // Build final curated questions from pass results
+      const curatedQuestions = buildCuratedQuestions(
+        pass2.output,
+        pass3.output,
+        pass4.output,
+        pass5.output
+      );
+
       // Get concept names for denormalization
       const conceptMap = new Map(
-        curationResult.conceptExtraction.concepts.map(c => [c.id, c.name])
+        pass2.output.concepts.map(c => [c.id, c.name])
       );
 
       // Store all curated questions
-      const questionsToCreate = curationResult.curatedQuestions.map(q => {
-        const evaluation = curationResult.questionEvaluation.evaluations.find(
+      const questionsToCreate = curatedQuestions.map(q => {
+        const evaluation = pass4.output.evaluations.find(
           e => e.questionId === q.id
         );
 
@@ -166,7 +233,7 @@ export const curateQuestionsJob = inngest.createFunction(
       };
     });
 
-    // Step 6: Update document status to complete
+    // Step 10: Update document status to complete
     await step.run('update-status-complete', async () => {
       await prisma.document.update({
         where: { id: documentId },
@@ -178,12 +245,19 @@ export const curateQuestionsJob = inngest.createFunction(
       });
     });
 
+    const totalDurationMs = Object.values(passTimings).reduce((a, b) => a + b, 0);
+    console.log(`[curate-questions] Pipeline complete in ${totalDurationMs}ms, ${totalTokens} tokens`);
+
     return {
       documentId,
       questionsGenerated: storedCount.total,
       questionsInPool: storedCount.inPool,
       requestedCount,
-      stats: curationResult.stats,
+      stats: {
+        passTimings,
+        totalTokens,
+        totalDurationMs,
+      },
     };
   }
 );

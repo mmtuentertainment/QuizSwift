@@ -1,7 +1,6 @@
 import { inngest } from '../client';
 import { prisma } from '@/lib/prisma';
 import { embedBatch, toVectorString } from '@/lib/ai/embed';
-import { detectTier } from '@/lib/ai/providers';
 
 // Types imported for type checking only - actual modules are dynamically imported
 import type { PagedText, PageText } from '@/lib/pdf/extract-text';
@@ -146,12 +145,11 @@ export const processPdf = inngest.createFunction(
 
       // Extract chunk contents for batch embedding
       const chunkTexts = chunks.map((c) => c.content);
-      console.log(`[process-pdf] Generating embeddings for ${chunkTexts.length} chunks using tier: ${detectTier()}`);
+      console.log(`[process-pdf] Generating embeddings for ${chunkTexts.length} chunks`);
 
       try {
-        // Generate embeddings in batch (more efficient than one-by-one)
-        // Use detectTier() to automatically select Ollama (free) or OpenAI (paid)
-        const embeddings = await embedBatch(chunkTexts, detectTier());
+        // Generate embeddings in batch using Ollama mxbai-embed-large
+        const embeddings = await embedBatch(chunkTexts);
         console.log(`[process-pdf] Generated ${embeddings.length} embeddings, first has ${embeddings[0]?.length || 0} dimensions`);
         return embeddings;
       } catch (embeddingError) {

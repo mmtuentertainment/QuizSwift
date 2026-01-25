@@ -2,7 +2,6 @@ import { inngest } from '../client';
 import { prisma } from '@/lib/prisma';
 import { extractQuestionsFromChunks } from '@/lib/ai/extract-questions';
 import { verifyGrounding } from '@/lib/ai/verify-grounding';
-import type { Tier } from '@/lib/ai/providers';
 
 /**
  * CONT-05 Clarification: "Reject" means flagged=true, NOT deleted
@@ -40,9 +39,7 @@ export const extractQuestionsJob = inngest.createFunction(
   async ({ event, step }) => {
     const { documentId } = event.data;
 
-    // Determine tier from user (default to paid for now)
-    // TODO: Look up user's subscription tier in Phase 8
-    const tier: Tier = 'paid';
+    console.log(`[extract-questions] Starting extraction for document ${documentId}`);
 
     // Step 1: Load chunks from database
     const chunks = await step.run('load-chunks', async () => {
@@ -73,7 +70,7 @@ export const extractQuestionsJob = inngest.createFunction(
 
     // Step 2: Extract questions from each chunk
     const extractions = await step.run('extract-from-chunks', async () => {
-      return extractQuestionsFromChunks(chunks, tier);
+      return extractQuestionsFromChunks(chunks);
     });
 
     // Step 3: Flatten all questions
@@ -119,8 +116,7 @@ export const extractQuestionsJob = inngest.createFunction(
             explanation: question.explanation,
             sourceQuote: question.sourceQuote,
           },
-          documentId,
-          tier
+          documentId
         );
 
         results.push({

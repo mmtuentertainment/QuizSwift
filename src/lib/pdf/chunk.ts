@@ -74,12 +74,14 @@ export function chunkTextWithCitations(
       }
 
       // Move forward with overlap
-      start = end - opts.overlap;
+      const nextStart = end - opts.overlap;
 
-      // Prevent infinite loop on very small content
-      if (start <= 0 && pageChunkIndex > 0) {
+      // Prevent infinite loop: break if we're not making forward progress
+      if (nextStart <= start || end >= page.content.length) {
         break;
       }
+
+      start = nextStart;
     }
   }
 
