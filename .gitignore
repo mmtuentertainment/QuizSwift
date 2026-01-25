@@ -45,3 +45,22 @@ prisma/*.db
 prisma/*.db-journal
 
 /src/generated/prisma
+
+# Local development artifacts
+.claude/
+.planning/debug/
+.planning/evaluation/
+test-screenshots/
+*.pdf
+Editor.log
+nul
+
+# Unity projects (should not be in this repo)
+GSD work/
+experiments/
+
+# Research notes (keep locally, don't commit)
+*.research.md
+OLLAMA-STRUCTURED-OUTPUT-RESEARCH.md
+function-calling-7B-8B-models-research.md
+ollama-7b-8b-models-reference.md
