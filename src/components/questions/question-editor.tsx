@@ -15,6 +15,7 @@
 import { useState, useTransition, useCallback } from 'react';
 import { updateQuestion, type UpdateQuestionInput } from '@/actions/questions';
 import { MathText } from '@/components/quiz/math-display';
+import { ImageUpload } from './image-upload';
 import type { QuestionOptions, MultipleChoiceOptions } from '@/lib/questions/types';
 
 interface QuestionData {
@@ -27,6 +28,8 @@ interface QuestionData {
   options: QuestionOptions | null;
   bloomLevel: string;
   difficulty: string;
+  imageUrl?: string | null;
+  imageAltText?: string | null;
 }
 
 interface QuestionEditorProps {
@@ -51,6 +54,8 @@ export function QuestionEditor({
   const [explanation, setExplanation] = useState(question.explanation);
   const [sourceEvidence, setSourceEvidence] = useState(question.sourceEvidence);
   const [options, setOptions] = useState<QuestionOptions | null>(question.options);
+  const [imageUrl, setImageUrl] = useState<string | null>(question.imageUrl ?? null);
+  const [imageAltText, setImageAltText] = useState<string | null>(question.imageAltText ?? null);
 
   // Handle multiple choice option editing
   const updateMCOption = useCallback((index: number, field: 'text' | 'isCorrect', value: string | boolean) => {
@@ -84,6 +89,8 @@ export function QuestionEditor({
       explanation,
       sourceEvidence,
       options,
+      imageUrl,
+      imageAltText,
     };
 
     startTransition(async () => {
@@ -103,6 +110,8 @@ export function QuestionEditor({
           explanation,
           sourceEvidence,
           options,
+          imageUrl,
+          imageAltText,
         });
       }
 
@@ -115,6 +124,8 @@ export function QuestionEditor({
     explanation,
     sourceEvidence,
     options,
+    imageUrl,
+    imageAltText,
     onSave,
     onClose,
   ]);
@@ -339,6 +350,33 @@ export function QuestionEditor({
               This evidence links the question to the original document.
             </p>
           </div>
+
+          {/* Image Upload */}
+          <ImageUpload
+            currentImageUrl={imageUrl}
+            onUpload={(storageKey) => setImageUrl(storageKey)}
+            onRemove={() => setImageUrl(null)}
+            disabled={isPending}
+          />
+
+          {/* Image Alt Text (only shown when image exists) */}
+          {imageUrl && (
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Image Description (Alt Text)
+              </label>
+              <input
+                type="text"
+                value={imageAltText || ''}
+                onChange={(e) => setImageAltText(e.target.value || null)}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                placeholder="Describe the image for accessibility..."
+              />
+              <p className="text-xs text-gray-500">
+                Describe the image content for screen readers and accessibility.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
