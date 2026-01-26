@@ -10,12 +10,6 @@ import { MathText } from '@/components/quiz/math-display';
 import type {
   QuestionOptions,
   MatchingAnswer,
-  isMultipleChoiceOptions,
-  isTrueFalseOptions,
-  isFillInBlankOptions,
-  isMatchingOptions,
-  isEssayOptions,
-  isShowWorkOptions,
 } from '@/lib/questions/types';
 
 // Import type guards
