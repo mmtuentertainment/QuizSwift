@@ -16,14 +16,11 @@ const envSchema = z.object({
   AUTH_GOOGLE_ID: z.string().optional(),
   AUTH_GOOGLE_SECRET: z.string().optional(),
 
-  // Cloudflare R2 Storage
+  // Cloudflare R2 Storage (FERPA-compliant private storage)
   CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
   R2_ACCESS_KEY_ID: z.string().optional(),
   R2_SECRET_ACCESS_KEY: z.string().optional(),
   R2_BUCKET_NAME: z.string().optional(),
-
-  // Legacy Vercel Blob (optional, for migration)
-  BLOB_READ_WRITE_TOKEN: z.string().optional(),
 
   // AI Providers
   OLLAMA_HOST: z.string().default('http://localhost:11434'),
