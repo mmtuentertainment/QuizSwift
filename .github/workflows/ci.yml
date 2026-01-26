@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main, master]
 
+# Least-privilege permissions for GITHUB_TOKEN
+permissions:
+  contents: read
+  packages: read
+  actions: read
+
 # Cancel in-progress runs when a new commit is pushed
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
