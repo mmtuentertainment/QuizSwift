@@ -11,9 +11,10 @@ export interface PdfUploadedEvent {
   name: 'pdf/uploaded';
   data: {
     documentId: string;
-    fileUrl: string;
     fileName: string;
     userId: string;
+    requestedQuestionCount: number;
+    // fileUrl removed - fetch from DB using documentId
   };
 }
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { uploadPdf } from '@/lib/storage/blob';
+import { uploadPdf, deletePdf } from '@/lib/storage/blob';
 import { inngest } from '@/inngest/client';
 
 export async function POST(request: NextRequest) {
@@ -40,26 +40,33 @@ export async function POST(request: NextRequest) {
     // Upload to Vercel Blob
     const uploadResult = await uploadPdf(file, session.user.id);
 
-    // Create Document record
-    const document = await prisma.document.create({
-      data: {
-        fileName: file.name,
-        fileUrl: uploadResult.url,
-        fileSize: uploadResult.size,
-        mimeType: uploadResult.contentType,
-        status: 'pending',
-        uploadedById: session.user.id,
-        requestedQuestionCount,
-        curationStatus: 'pending',
-      },
-    });
+    // Create Document record - cleanup blob on failure
+    let document;
+    try {
+      document = await prisma.document.create({
+        data: {
+          fileName: file.name,
+          storageKey: uploadResult.storageKey,
+          fileSize: uploadResult.size,
+          mimeType: uploadResult.contentType,
+          status: 'pending',
+          uploadedById: session.user.id,
+          requestedQuestionCount,
+          curationStatus: 'pending',
+        },
+      });
+    } catch (dbError) {
+      // Clean up orphaned blob if database insert fails
+      console.error('Database insert failed, cleaning up blob:', dbError);
+      await deletePdf(uploadResult.storageKey);
+      throw dbError;
+    }
 
     // Trigger Inngest background processing
     await inngest.send({
       name: 'pdf/uploaded',
       data: {
         documentId: document.id,
-        fileUrl: document.fileUrl,
         fileName: document.fileName,
         userId: session.user.id,
         requestedQuestionCount,
@@ -71,7 +78,7 @@ export async function POST(request: NextRequest) {
       document: {
         id: document.id,
         fileName: document.fileName,
-        fileUrl: document.fileUrl,
+        storageKey: document.storageKey,
         status: document.status,
       },
     });

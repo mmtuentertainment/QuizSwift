@@ -6,7 +6,7 @@ import prisma from "@/lib/prisma"
  * GET /api/audit
  *
  * Query audit logs with filtering by date range, user, table, and action.
- * Requires authentication. In future phases, will require admin role.
+ * Requires authentication and admin role.
  *
  * Query parameters:
  * - startDate (required): ISO date string for range start
@@ -21,6 +21,7 @@ import prisma from "@/lib/prisma"
  * - 200: { logs: AuditLog[], pagination: { total, limit, offset, hasMore } }
  * - 400: Missing required parameters
  * - 401: Not authenticated
+ * - 403: Not authorized (not admin)
  * - 500: Server error
  */
 export async function GET(request: NextRequest) {
@@ -34,7 +35,13 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // TODO (Phase 1-05): Add role check - only admins can view audit logs
+    // Verify admin role
+    if (session.user.role !== "admin") {
+      return NextResponse.json(
+        { error: "Forbidden: Admin access required" },
+        { status: 403 }
+      )
+    }
 
     // Parse query parameters
     const searchParams = request.nextUrl.searchParams

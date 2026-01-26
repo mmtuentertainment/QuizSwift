@@ -33,21 +33,20 @@ export const processPdf = inngest.createFunction(
   { event: 'pdf/uploaded' },
   async ({ event, step }) => {
     const { documentId } = event.data;
-    let { fileUrl } = event.data;
 
-    // Step 0: Validate fileUrl - fetch from database if not in event
-    if (!fileUrl) {
-      const doc = await prisma.document.findUnique({
-        where: { id: documentId },
-        select: { fileUrl: true },
-      });
+    // Always fetch document to get storageKey
+    const doc = await prisma.document.findUnique({
+      where: { id: documentId },
+      select: { storageKey: true },
+    });
 
-      if (!doc?.fileUrl) {
-        throw new Error(`Document ${documentId} has no fileUrl. Upload may have failed.`);
-      }
-
-      fileUrl = doc.fileUrl;
+    if (!doc?.storageKey) {
+      throw new Error(`Document ${documentId} has no storageKey. Upload may have failed.`);
     }
+
+    // Generate presigned URL for PDF access
+    const { getDownloadUrl } = await import('@/lib/storage/blob');
+    const fileUrl = await getDownloadUrl(doc.storageKey); // Use presigned URL for extraction
 
     // Step 1: Update status to processing
     await step.run('update-status-processing', async () => {
