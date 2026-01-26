@@ -1,0 +1,193 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [vector]
+}
+
+model User {
+  id            String     @id @default(cuid())
+  name          String?
+  email         String?    @unique
+  emailVerified DateTime?
+  image         String?
+  role          String     @default("teacher")
+  deletedAt     DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  accounts      Account[]
+  documents     Document[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  tableName String   @map("table_name")
+  recordId  String   @map("record_id")
+  action    String
+  actorId   String?  @map("actor_id")
+  actorType String?  @map("actor_type")
+  oldData   Json?    @map("old_data")
+  newData   Json?    @map("new_data")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([actorId])
+  @@index([tableName])
+  @@map("audit_log")
+}
+
+model Document {
+  id           String              @id @default(cuid())
+  fileName     String
+  storageKey   String
+  fileSize     Int
+  mimeType     String              @default("application/pdf")
+  totalPages   Int?
+  status       String              @default("pending")
+  errorMessage String?
+  uploadedById String
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  uploadedBy   User                @relation(fields: [uploadedById], references: [id])
+  questions    ExtractedQuestion[]
+  chunks       SourceChunk[]
+  curatedQuestions CuratedQuestion[]
+
+  // Question curation settings
+  requestedQuestionCount Int?                           // Teacher's desired count (e.g., 20)
+  curationStatus         String  @default("pending")    // pending, analyzing, generating, curating, complete, failed
+
+  // 5-pass reasoning metadata (stored for debugging/analytics)
+  contentAnalysis   Json?   // Pass 1 output: keyTopics, learningObjectives
+  conceptExtraction Json?   // Pass 2 output: concepts with importance scores
+  bloomDistribution Json?   // Pass 3 output: actual Bloom's distribution achieved
+
+  @@index([uploadedById])
+  @@index([status])
+  @@index([curationStatus])
+}
+
+model SourceChunk {
+  id         String                 @id @default(cuid())
+  documentId String
+  content    String
+  pageNumber Int
+  chunkIndex Int
+  startChar  Int
+  endChar    Int
+  embedding  Unsupported("vector(1024)")?
+  createdAt  DateTime               @default(now())
+  document   Document               @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([pageNumber])
+}
+
+model ExtractedQuestion {
+  id                String   @id @default(cuid())
+  documentId        String
+  questionText      String
+  questionType      String
+  options           Json?
+  correctAnswer     String
+  explanation       String?
+  sourceQuote       String
+  pageNumber        Int
+  sectionTitle      String?
+  verified          Boolean  @default(false)
+  verificationScore Float?
+  sourceChunkId     String?
+  flagged           Boolean  @default(false)
+  flagReason        String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  document          Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([verified])
+  @@index([questionType])
+}
+
+model CuratedQuestion {
+  id                     String   @id @default(cuid())
+  documentId             String
+
+  // Question content
+  questionText           String
+  questionType           String   // multiple_choice, short_answer, show_work, etc.
+  bloomLevel             String   // understand, apply, analyze, evaluate
+  difficulty             String   // easy, medium, hard
+
+  // Answer structure
+  options                Json?    // For multiple choice
+  correctAnswer          String
+  explanation            String
+  workingSteps           Json?    // For show_work questions
+
+  // Curation metadata
+  targetConceptId        String   // Links to concept from Pass 2
+  targetConceptName      String   // Denormalized for display
+  comprehensionRationale String   // Why this tests understanding
+  sourceEvidence         String   // Quote from document
+
+  // Evaluation scores (from Pass 4)
+  evaluationScore        Float?
+  comprehensionDepth     Float?
+  clarity                Float?
+  answerability          Float?
+
+  // Selection status (from Pass 5)
+  rank                   Int?
+  inCurationPool         Boolean  @default(true)  // Selected for 2x pool
+  teacherSelected        Boolean  @default(false) // Teacher's final pick
+
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  document               Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([inCurationPool])
+  @@index([teacherSelected])
+  @@index([bloomLevel])
+}
