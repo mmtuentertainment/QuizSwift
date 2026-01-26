@@ -1,6 +1,6 @@
-import { auth } from "@/lib/auth"
-import { redirect } from "next/navigation"
-import Link from "next/link"
+import { auth } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
 /**
  * Admin dashboard page for compliance management.
@@ -10,27 +10,23 @@ import Link from "next/link"
  * - User management (coming in future phases)
  */
 export default async function AdminPage() {
-  const session = await auth()
+  const session = await auth();
 
   // Role check: only admins can access this page
-  if (session?.user?.role !== "admin") {
-    redirect("/dashboard")
+  if (session?.user?.role !== 'admin') {
+    redirect('/dashboard');
   }
 
   return (
     <div className="space-y-8">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Admin Dashboard</h2>
-        <p className="mt-1 text-gray-600">
-          Compliance management and audit tools
-        </p>
+        <p className="mt-1 text-gray-600">Compliance management and audit tools</p>
       </div>
 
       {/* Compliance Documents Section */}
       <section className="rounded-lg border bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-gray-900">
-          Compliance Documents
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-900">Compliance Documents</h3>
         <p className="mt-2 text-sm text-gray-600">
           Download required legal documents for school district compliance.
         </p>
@@ -38,9 +34,7 @@ export default async function AdminPage() {
         <div className="mt-4 space-y-3">
           <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4">
             <div>
-              <h4 className="font-medium text-gray-900">
-                Data Processing Agreement (DPA)
-              </h4>
+              <h4 className="font-medium text-gray-900">Data Processing Agreement (DPA)</h4>
               <p className="text-sm text-gray-600">
                 COPPA/FERPA compliant template for school districts
               </p>
@@ -48,7 +42,7 @@ export default async function AdminPage() {
             <a
               href="/legal/dpa-template.md"
               download="QuizSwift-DPA-Template.md"
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
             >
               Download
             </a>
@@ -58,9 +52,7 @@ export default async function AdminPage() {
 
       {/* Audit & Compliance Section */}
       <section className="rounded-lg border bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-gray-900">
-          Audit & Compliance
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-900">Audit & Compliance</h3>
         <p className="mt-2 text-sm text-gray-600">
           Review system audit logs and compliance reports.
         </p>
@@ -77,12 +69,7 @@ export default async function AdminPage() {
               </p>
             </div>
             <span className="text-gray-400">
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -96,29 +83,24 @@ export default async function AdminPage() {
       </section>
 
       {/* User Management Section - Future */}
-      <section className="rounded-lg border bg-white p-6 shadow-sm opacity-60">
+      <section className="rounded-lg border bg-white p-6 opacity-60 shadow-sm">
         <h3 className="text-lg font-semibold text-gray-900">User Management</h3>
         <p className="mt-2 text-sm text-gray-600">
           Manage users and handle data deletion requests.
         </p>
 
         <div className="mt-4">
-          <p className="text-sm italic text-gray-500">
-            User management features coming soon
-          </p>
+          <p className="text-sm text-gray-500 italic">User management features coming soon</p>
         </div>
       </section>
 
       {/* Current User Info */}
       <section className="rounded-lg border border-blue-200 bg-blue-50 p-4">
         <p className="text-sm text-blue-800">
-          <span className="font-medium">Logged in as:</span>{" "}
-          {session?.user?.email}
+          <span className="font-medium">Logged in as:</span> {session?.user?.email}
         </p>
-        <p className="mt-1 text-xs text-blue-600">
-          Role: {session?.user?.role || "user"}
-        </p>
+        <p className="mt-1 text-xs text-blue-600">Role: {session?.user?.role || 'user'}</p>
       </section>
     </div>
-  )
+  );
 }

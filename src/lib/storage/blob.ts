@@ -1,4 +1,9 @@
-import { PutObjectCommand, DeleteObjectCommand, HeadObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import {
+  PutObjectCommand,
+  DeleteObjectCommand,
+  HeadObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { getR2Client, getR2Bucket } from './r2-client';
 
@@ -18,10 +23,7 @@ export interface UploadResult {
  * @param userId - The user ID who owns the file
  * @returns Upload result with storage key and metadata
  */
-export async function uploadPdf(
-  file: File,
-  userId: string
-): Promise<UploadResult> {
+export async function uploadPdf(file: File, userId: string): Promise<UploadResult> {
   // Validate file type
   if (!ALLOWED_TYPES.includes(file.type)) {
     throw new Error(`Invalid file type: ${file.type}. Only PDF files are allowed.`);

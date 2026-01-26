@@ -2,12 +2,7 @@ import { inngest } from '../client';
 import { prisma } from '@/lib/prisma';
 import { embedBatch, toVectorString } from '@/lib/ai/embed';
 
-// Types imported for type checking only - actual modules are dynamically imported
-import type { PagedText, PageText } from '@/lib/pdf/extract-text';
-import type { ScanDetectionResult } from '@/lib/pdf/detect-scanned';
-import type { RenderedPage } from '@/lib/pdf/render-pages';
-import type { OcrResult } from '@/lib/pdf/ocr';
-import type { Chunk } from '@/lib/pdf/chunk';
+import type { PageText } from '@/lib/pdf/extract-text';
 
 export const processPdf = inngest.createFunction(
   {
@@ -114,7 +109,8 @@ export const processPdf = inngest.createFunction(
           await prisma.document.update({
             where: { id: documentId },
             data: {
-              errorMessage: 'Scanned PDF detected. OCR processing was attempted but text extraction may be limited.',
+              errorMessage:
+                'Scanned PDF detected. OCR processing was attempted but text extraction may be limited.',
             },
           });
         });

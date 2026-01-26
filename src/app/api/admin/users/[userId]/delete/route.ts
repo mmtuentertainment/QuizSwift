@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
-import { deleteUserData } from "@/lib/user-deletion"
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { deleteUserData } from '@/lib/user-deletion';
 
 /**
  * DELETE /api/admin/users/[userId]/delete
@@ -21,53 +21,41 @@ export async function DELETE(
 ) {
   try {
     // Verify authentication
-    const session = await auth()
+    const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userId } = await params
+    const { userId } = await params;
 
     // Role check: users can delete themselves (COPPA), admins can delete anyone
-    const isSelfDeletion = userId === session.user.id
-    const isAdmin = session.user.role === "admin"
+    const isSelfDeletion = userId === session.user.id;
+    const isAdmin = session.user.role === 'admin';
 
     if (!isSelfDeletion && !isAdmin) {
       return NextResponse.json(
-        { error: "Forbidden: You can only delete your own account" },
+        { error: 'Forbidden: You can only delete your own account' },
         { status: 403 }
-      )
+      );
     }
 
     // Perform the deletion
-    const result = await deleteUserData(userId, session.user.id, "admin")
+    const result = await deleteUserData(userId, session.user.id, 'admin');
 
-    return NextResponse.json(result)
+    return NextResponse.json(result);
   } catch (error) {
-    console.error("User deletion error:", error)
+    console.error('User deletion error:', error);
 
     if (error instanceof Error) {
       // Handle specific error cases
-      if (error.message.includes("not found")) {
-        return NextResponse.json(
-          { error: error.message },
-          { status: 404 }
-        )
+      if (error.message.includes('not found')) {
+        return NextResponse.json({ error: error.message }, { status: 404 });
       }
-      if (error.message.includes("already been deleted")) {
-        return NextResponse.json(
-          { error: error.message },
-          { status: 409 }
-        )
+      if (error.message.includes('already been deleted')) {
+        return NextResponse.json({ error: error.message }, { status: 409 });
       }
     }
 
-    return NextResponse.json(
-      { error: "Failed to delete user data" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to delete user data' }, { status: 500 });
   }
 }

@@ -28,31 +28,34 @@ Teacher will then choose ${requestedCount} from this curated pool.
 5. **Difficulty Spread**: Include easy, medium, and hard questions
 
 ## Question Pool with Evaluations
-${pass3.questions.map(q => {
-  const evaluation = pass4.evaluations.find(e => e.questionId === q.id);
-  return {
-    id: q.id,
-    text: q.questionText.substring(0, 100) + '...',
-    type: q.questionType,
-    bloom: q.bloomLevel,
-    concept: q.targetConceptId,
-    difficulty: q.difficulty,
-    score: evaluation?.overallScore ?? 0,
-    recommendation: evaluation?.recommendation ?? 'unknown',
-  };
-}).map(q => JSON.stringify(q)).join('\n')}
+${pass3.questions
+  .map((q) => {
+    const evaluation = pass4.evaluations.find((e) => e.questionId === q.id);
+    return {
+      id: q.id,
+      text: q.questionText.substring(0, 100) + '...',
+      type: q.questionType,
+      bloom: q.bloomLevel,
+      concept: q.targetConceptId,
+      difficulty: q.difficulty,
+      score: evaluation?.overallScore ?? 0,
+      recommendation: evaluation?.recommendation ?? 'unknown',
+    };
+  })
+  .map((q) => JSON.stringify(q))
+  .join('\n')}
 
 ## Concept Importance Reference
 ${pass2.concepts
-  .filter(c => c.importance >= 4)
-  .map(c => `- ${c.id}: ${c.name} (importance: ${c.importance})`)
+  .filter((c) => c.importance >= 4)
+  .map((c) => `- ${c.id}: ${c.name} (importance: ${c.importance})`)
   .join('\n')}
 
 ## Target Bloom's Distribution for Pool
-- Understand: ${Math.round(targetPoolSize * 0.40)} questions
-- Apply: ${Math.round(targetPoolSize * 0.30)} questions
-- Analyze: ${Math.round(targetPoolSize * 0.20)} questions
-- Evaluate: ${Math.round(targetPoolSize * 0.10)} questions
+- Understand: ${Math.round(targetPoolSize * 0.4)} questions
+- Apply: ${Math.round(targetPoolSize * 0.3)} questions
+- Analyze: ${Math.round(targetPoolSize * 0.2)} questions
+- Evaluate: ${Math.round(targetPoolSize * 0.1)} questions
 
 ## Output
 1. Rank ALL questions by overall quality

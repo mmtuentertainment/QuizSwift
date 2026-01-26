@@ -4,32 +4,36 @@ import { getExtractionModel } from './providers';
 
 // Schema for a single extracted question
 export const ExtractedQuestionSchema = z.object({
-  questionText: z.string()
-    .describe('The exact question text as it appears in the source material'),
-  questionType: z.enum([
-    'multiple_choice',
-    'true_false',
-    'fill_blank',
-    'short_answer',
-    'matching',
-    'show_work',
-    'essay',
-  ]).describe('The type of question based on its format'),
-  options: z.array(z.string()).nullable()
+  questionText: z.string().describe('The exact question text as it appears in the source material'),
+  questionType: z
+    .enum([
+      'multiple_choice',
+      'true_false',
+      'fill_blank',
+      'short_answer',
+      'matching',
+      'show_work',
+      'essay',
+    ])
+    .describe('The type of question based on its format'),
+  options: z
+    .array(z.string())
+    .nullable()
     .describe('Answer options for multiple choice or matching, null otherwise'),
-  correctAnswer: z.string()
-    .describe('The correct answer from the source material'),
-  explanation: z.string().nullable()
+  correctAnswer: z.string().describe('The correct answer from the source material'),
+  explanation: z
+    .string()
+    .nullable()
     .describe('Explanation or context for the answer if provided in source'),
-  sourceQuote: z.string()
+  sourceQuote: z
+    .string()
     .describe('The exact quote from the source containing this question/answer'),
 });
 
 // Schema for extraction result
 export const ExtractionResultSchema = z.object({
   questions: z.array(ExtractedQuestionSchema),
-  noQuestionsFound: z.boolean()
-    .describe('True if no quiz-worthy questions were found in the text'),
+  noQuestionsFound: z.boolean().describe('True if no quiz-worthy questions were found in the text'),
 });
 
 export type ExtractedQuestion = z.infer<typeof ExtractedQuestionSchema>;
@@ -116,10 +120,7 @@ export async function extractQuestionsFromChunks(
     }
 
     try {
-      const result = await extractQuestionsFromChunk(
-        chunk.content,
-        chunk.pageNumber
-      );
+      const result = await extractQuestionsFromChunk(chunk.content, chunk.pageNumber);
 
       results.push({
         chunkIndex: chunk.chunkIndex,

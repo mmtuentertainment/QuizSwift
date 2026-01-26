@@ -11,8 +11,13 @@ let _r2Client: S3Client | null = null;
 let _r2Bucket: string | null = null;
 
 function validateEnvVars(): void {
-  const requiredEnvVars = ['CLOUDFLARE_ACCOUNT_ID', 'R2_ACCESS_KEY_ID', 'R2_SECRET_ACCESS_KEY', 'R2_BUCKET_NAME'];
-  const missing = requiredEnvVars.filter(v => !process.env[v]);
+  const requiredEnvVars = [
+    'CLOUDFLARE_ACCOUNT_ID',
+    'R2_ACCESS_KEY_ID',
+    'R2_SECRET_ACCESS_KEY',
+    'R2_BUCKET_NAME',
+  ];
+  const missing = requiredEnvVars.filter((v) => !process.env[v]);
   if (missing.length > 0) {
     throw new Error(`Missing required R2 environment variables: ${missing.join(', ')}`);
   }
@@ -48,5 +53,13 @@ export function getR2Bucket(): string {
 }
 
 // Re-export as getters for backward compatibility with direct imports
-export const r2Client = { get current() { return getR2Client(); } };
-export const R2_BUCKET = { get current() { return getR2Bucket(); } };
+export const r2Client = {
+  get current() {
+    return getR2Client();
+  },
+};
+export const R2_BUCKET = {
+  get current() {
+    return getR2Bucket();
+  },
+};

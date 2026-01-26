@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -28,10 +25,7 @@ export async function GET(
 
     const questions = await prisma.extractedQuestion.findMany({
       where: { documentId: id },
-      orderBy: [
-        { pageNumber: 'asc' },
-        { createdAt: 'asc' },
-      ],
+      orderBy: [{ pageNumber: 'asc' }, { createdAt: 'asc' }],
       select: {
         id: true,
         questionText: true,

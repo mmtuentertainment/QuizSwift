@@ -2,14 +2,13 @@ import { UploadForm } from '@/components/upload/upload-form';
 
 export default function UploadPage() {
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4">
-      <h1 className="text-2xl font-bold mb-6">Upload Textbook Chapter</h1>
+    <div className="mx-auto max-w-2xl px-4 py-8">
+      <h1 className="mb-6 text-2xl font-bold">Upload Textbook Chapter</h1>
 
-      <div className="bg-white rounded-lg shadow p-6">
-        <p className="text-gray-600 mb-6">
-          Upload a PDF file to extract quiz questions. Choose how many questions
-          you want, and AI will generate twice that number for you to curate and
-          select the best ones.
+      <div className="rounded-lg bg-white p-6 shadow">
+        <p className="mb-6 text-gray-600">
+          Upload a PDF file to extract quiz questions. Choose how many questions you want, and AI
+          will generate twice that number for you to curate and select the best ones.
         </p>
 
         <UploadForm />

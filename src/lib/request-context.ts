@@ -1,4 +1,4 @@
-import { headers } from "next/headers"
+import { headers } from 'next/headers';
 
 /**
  * Extracts audit-relevant information from the current request.
@@ -15,13 +15,10 @@ import { headers } from "next/headers"
  * @returns Object containing ipAddress and userAgent from request headers
  */
 export async function getRequestContext() {
-  const headersList = await headers()
+  const headersList = await headers();
 
   return {
-    ipAddress:
-      headersList.get("x-forwarded-for") ||
-      headersList.get("x-real-ip") ||
-      "unknown",
-    userAgent: headersList.get("user-agent") || "unknown",
-  }
+    ipAddress: headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || 'unknown',
+    userAgent: headersList.get('user-agent') || 'unknown',
+  };
 }

@@ -6,10 +6,7 @@ import prisma from '@/lib/prisma';
  * GET /api/documents/[id]/curate
  * Returns all curated questions for a document
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -40,10 +37,7 @@ export async function GET(
     return NextResponse.json({ questions });
   } catch (error) {
     console.error('Get curated questions error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch curated questions' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch curated questions' }, { status: 500 });
   }
 }
 
@@ -60,10 +54,7 @@ interface UpdateSelectionRequest {
  * PATCH /api/documents/[id]/curate
  * Updates selection status for questions
  */
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -135,9 +126,6 @@ export async function PATCH(
     });
   } catch (error) {
     console.error('Update selection error:', error);
-    return NextResponse.json(
-      { error: 'Failed to update selection' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to update selection' }, { status: 500 });
   }
 }

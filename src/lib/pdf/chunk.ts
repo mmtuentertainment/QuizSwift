@@ -10,8 +10,8 @@ export interface Chunk {
 }
 
 export interface ChunkOptions {
-  chunkSize?: number;  // Target size in characters
-  overlap?: number;    // Overlap between chunks
+  chunkSize?: number; // Target size in characters
+  overlap?: number; // Overlap between chunks
   minChunkSize?: number; // Minimum chunk size (avoid tiny final chunks)
 }
 
@@ -40,7 +40,6 @@ export function chunkTextWithCitations(
     }
 
     let start = 0;
-    let pageChunkIndex = 0;
 
     while (start < page.content.length) {
       // Calculate end position
@@ -70,7 +69,6 @@ export function chunkTextWithCitations(
           endChar: end,
           documentId,
         });
-        pageChunkIndex++;
       }
 
       // Move forward with overlap

@@ -60,15 +60,11 @@ export function CurationPool({
         result.sort((a, b) => (a.rank ?? 999) - (b.rank ?? 999));
         break;
       case 'score':
-        result.sort(
-          (a, b) => (b.evaluationScore ?? 0) - (a.evaluationScore ?? 0)
-        );
+        result.sort((a, b) => (b.evaluationScore ?? 0) - (a.evaluationScore ?? 0));
         break;
       case 'difficulty':
         result.sort(
-          (a, b) =>
-            (difficultyOrder[a.difficulty] ?? 2) -
-            (difficultyOrder[b.difficulty] ?? 2)
+          (a, b) => (difficultyOrder[a.difficulty] ?? 2) - (difficultyOrder[b.difficulty] ?? 2)
         );
         break;
     }
@@ -143,23 +139,27 @@ export function CurationPool({
   return (
     <div className="space-y-6">
       {/* Header with progress */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="flex items-center justify-between mb-3">
+      <div className="rounded-lg bg-white p-4 shadow">
+        <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold">
             Selected {selectedCount} of {targetCount}
           </h2>
           {selectedCount < targetCount && (
             <button
               onClick={handleSelectTopN}
-              className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 transition-colors"
+              className="rounded bg-blue-100 px-3 py-1 text-sm text-blue-700 transition-colors hover:bg-blue-200"
             >
-              Select Top {Math.min(targetCount - selectedCount, filteredQuestions.filter((q) => !selectedIds.has(q.id)).length)}
+              Select Top{' '}
+              {Math.min(
+                targetCount - selectedCount,
+                filteredQuestions.filter((q) => !selectedIds.has(q.id)).length
+              )}
             </button>
           )}
         </div>
 
         {/* Progress bar */}
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
+        <div className="h-2.5 w-full rounded-full bg-gray-200">
           <div
             className={`h-2.5 rounded-full transition-all duration-300 ${
               selectedCount === targetCount ? 'bg-green-500' : 'bg-blue-500'
@@ -167,25 +167,28 @@ export function CurationPool({
             style={{ width: `${progressPercent}%` }}
           />
         </div>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="mt-1 text-sm text-gray-500">
           {questions.length} questions available (2x your requested count)
         </p>
 
         {/* Bloom's distribution mini-chart */}
         {selectedCount > 0 && (
-          <div className="mt-3 pt-3 border-t">
-            <div className="text-xs text-gray-500 mb-1">Bloom&apos;s Distribution:</div>
-            <div className="flex gap-1 h-4">
+          <div className="mt-3 border-t pt-3">
+            <div className="mb-1 text-xs text-gray-500">Bloom&apos;s Distribution:</div>
+            <div className="flex h-4 gap-1">
               {Object.entries(bloomDistribution).map(([level, count]) => (
                 <div
                   key={level}
-                  className="flex-1 rounded text-xs text-center text-white flex items-center justify-center"
+                  className="flex flex-1 items-center justify-center rounded text-center text-xs text-white"
                   style={{
                     backgroundColor:
-                      level === 'understand' ? '#3b82f6' :
-                      level === 'apply' ? '#10b981' :
-                      level === 'analyze' ? '#f59e0b' :
-                      '#ef4444',
+                      level === 'understand'
+                        ? '#3b82f6'
+                        : level === 'apply'
+                          ? '#10b981'
+                          : level === 'analyze'
+                            ? '#f59e0b'
+                            : '#ef4444',
                     opacity: count > 0 ? 1 : 0.3,
                   }}
                   title={`${level}: ${count} (${selectedCount > 0 ? Math.round((count / selectedCount) * 100) : 0}%)`}
@@ -194,7 +197,7 @@ export function CurationPool({
                 </div>
               ))}
             </div>
-            <div className="flex gap-1 text-xs text-gray-400 mt-0.5">
+            <div className="mt-0.5 flex gap-1 text-xs text-gray-400">
               <span className="flex-1 text-center">Understand</span>
               <span className="flex-1 text-center">Apply</span>
               <span className="flex-1 text-center">Analyze</span>
@@ -205,22 +208,22 @@ export function CurationPool({
 
         {/* Distribution warning */}
         {distributionWarning && (
-          <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-sm text-amber-700">
+          <div className="mt-2 rounded border border-amber-200 bg-amber-50 p-2 text-sm text-amber-700">
             <span className="font-medium">Balance tip:</span> {distributionWarning}
           </div>
         )}
       </div>
 
       {/* Filters and controls */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="flex flex-wrap gap-4 items-center">
+      <div className="rounded-lg bg-white p-4 shadow">
+        <div className="flex flex-wrap items-center gap-4">
           {/* Bloom's level filter */}
           <div className="flex items-center gap-2">
             <label className="text-sm text-gray-600">Bloom&apos;s Level:</label>
             <select
               value={bloomFilter}
               onChange={(e) => setBloomFilter(e.target.value as BloomFilter)}
-              className="text-sm border rounded px-2 py-1"
+              className="rounded border px-2 py-1 text-sm"
             >
               <option value="all">All Levels</option>
               <option value="understand">Understand</option>
@@ -236,7 +239,7 @@ export function CurationPool({
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="text-sm border rounded px-2 py-1"
+              className="rounded border px-2 py-1 text-sm"
             >
               <option value="all">All Types</option>
               {questionTypes.map((type) => (
@@ -253,7 +256,7 @@ export function CurationPool({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="text-sm border rounded px-2 py-1"
+              className="rounded border px-2 py-1 text-sm"
             >
               <option value="rank">Rank (Recommended)</option>
               <option value="score">Evaluation Score</option>
@@ -262,31 +265,41 @@ export function CurationPool({
           </div>
 
           {/* View toggle */}
-          <div className="flex items-center gap-1 ml-auto">
+          <div className="ml-auto flex items-center gap-1">
             <button
               onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded ${
+              className={`rounded p-1.5 ${
                 viewMode === 'list'
                   ? 'bg-gray-200 text-gray-800'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
               title="List view"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                />
               </svg>
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded ${
+              className={`rounded p-1.5 ${
                 viewMode === 'grid'
                   ? 'bg-gray-200 text-gray-800'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
               title="Grid view"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                />
               </svg>
             </button>
           </div>
@@ -301,21 +314,13 @@ export function CurationPool({
       </div>
 
       {/* Questions grid/list */}
-      <div
-        className={
-          viewMode === 'grid'
-            ? 'grid grid-cols-1 md:grid-cols-2 gap-4'
-            : 'space-y-4'
-        }
-      >
+      <div className={viewMode === 'grid' ? 'grid grid-cols-1 gap-4 md:grid-cols-2' : 'space-y-4'}>
         {filteredQuestions.map((question) => (
           <QuestionCard
             key={question.id}
             question={question}
             selected={selectedIds.has(question.id)}
-            onToggleSelect={() =>
-              onSelectionChange(question.id, !selectedIds.has(question.id))
-            }
+            onToggleSelect={() => onSelectionChange(question.id, !selectedIds.has(question.id))}
             showDetails={expandedIds.has(question.id)}
             onToggleDetails={() => handleToggleDetails(question.id)}
           />
@@ -323,7 +328,7 @@ export function CurationPool({
       </div>
 
       {filteredQuestions.length === 0 && (
-        <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+        <div className="rounded-lg bg-white p-8 text-center text-gray-500 shadow">
           No questions match your filters. Try adjusting the filters above.
         </div>
       )}

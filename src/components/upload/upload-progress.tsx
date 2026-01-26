@@ -77,18 +77,19 @@ export function UploadProgress({ documentId, onComplete }: UploadProgressProps) 
         <span>{label}</span>
         <span>{progress}%</span>
       </div>
-      <div className="w-full bg-gray-200 rounded-full h-3">
+      <div className="h-3 w-full rounded-full bg-gray-200">
         <div
           className={`h-3 rounded-full transition-all duration-500 ${
-            status === 'failed' ? 'bg-red-500' :
-            status === 'completed' ? 'bg-green-500' : 'bg-blue-600'
+            status === 'failed'
+              ? 'bg-red-500'
+              : status === 'completed'
+                ? 'bg-green-500'
+                : 'bg-blue-600'
           }`}
           style={{ width: `${progress}%` }}
         />
       </div>
-      {error && (
-        <p className="text-sm text-red-600">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );
 }

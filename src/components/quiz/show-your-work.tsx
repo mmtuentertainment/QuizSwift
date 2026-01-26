@@ -1,15 +1,9 @@
-"use client";
+'use client';
 
-import { useRef, useState, useCallback } from "react";
-import {
-  Tldraw,
-  Editor,
-  TLShapeId,
-  TLEditorSnapshot,
-  getSvgAsImage,
-} from "tldraw";
-import "tldraw/tldraw.css";
-import { MathText } from "./math-display";
+import { useRef, useState, useCallback } from 'react';
+import { Tldraw, Editor, TLShapeId, TLEditorSnapshot, getSvgAsImage } from 'tldraw';
+import 'tldraw/tldraw.css';
+import { MathText } from './math-display';
 
 /**
  * Data captured from the ShowYourWork component when student submits
@@ -59,7 +53,7 @@ export function ShowYourWork({
   onSubmit,
   readOnly = false,
   initialCanvasState,
-  initialAnswer = "",
+  initialAnswer = '',
   canvasHeight = 400,
 }: ShowYourWorkProps) {
   const editorRef = useRef<Editor | null>(null);
@@ -117,7 +111,7 @@ export function ShowYourWork({
         if (svgResult) {
           // Convert SVG to PNG blob
           canvasImage = await getSvgAsImage(svgResult.svg, {
-            type: "png",
+            type: 'png',
             width: svgResult.width,
             height: svgResult.height,
             quality: 1,
@@ -131,7 +125,7 @@ export function ShowYourWork({
         finalAnswer,
       });
     } catch (error) {
-      console.error("Failed to capture canvas:", error);
+      console.error('Failed to capture canvas:', error);
       // Still submit with null image on error
       onSubmit({
         canvasState: editorRef.current?.getSnapshot() ?? null,
@@ -159,23 +153,21 @@ export function ShowYourWork({
   return (
     <div className="space-y-4">
       {/* Question Display */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="text-sm font-medium text-blue-900 mb-2">Question:</h3>
+      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+        <h3 className="mb-2 text-sm font-medium text-blue-900">Question:</h3>
         <div className="text-blue-800">
           <MathText>{questionText}</MathText>
         </div>
       </div>
 
       {/* Canvas Container */}
-      <div className="border rounded-lg overflow-hidden bg-white">
-        <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b">
-          <span className="text-sm font-medium text-gray-700">
-            Show Your Work
-          </span>
+      <div className="overflow-hidden rounded-lg border bg-white">
+        <div className="flex items-center justify-between border-b bg-gray-50 px-3 py-2">
+          <span className="text-sm font-medium text-gray-700">Show Your Work</span>
           {!readOnly && (
             <button
               onClick={handleClear}
-              className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              className="text-sm text-gray-500 transition-colors hover:text-gray-700"
               type="button"
             >
               Clear Canvas
@@ -196,10 +188,7 @@ export function ShowYourWork({
 
       {/* Final Answer Input */}
       <div className="space-y-2">
-        <label
-          htmlFor="final-answer"
-          className="block text-sm font-medium text-gray-700"
-        >
+        <label htmlFor="final-answer" className="block text-sm font-medium text-gray-700">
           Final Answer (use $ for inline math, $$ for block math):
         </label>
         <input
@@ -208,15 +197,13 @@ export function ShowYourWork({
           value={finalAnswer}
           onChange={(e) => setFinalAnswer(e.target.value)}
           disabled={readOnly}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md
-                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                     disabled:bg-gray-100 disabled:text-gray-500"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
           placeholder="Enter your final answer..."
         />
         {/* Live Preview */}
         {finalAnswer && (
-          <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
-            <span className="text-xs text-gray-500 block mb-1">Preview:</span>
+          <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
+            <span className="mb-1 block text-xs text-gray-500">Preview:</span>
             <div className="text-gray-900">
               <MathText>{finalAnswer}</MathText>
             </div>
@@ -226,24 +213,22 @@ export function ShowYourWork({
 
       {/* Expected Steps Toggle (for teacher review or hints) */}
       {workingSteps && workingSteps.length > 0 && (
-        <div className="border rounded-lg overflow-hidden">
+        <div className="overflow-hidden rounded-lg border">
           <button
             onClick={() => setShowSteps(!showSteps)}
-            className="w-full flex items-center justify-between px-4 py-2 bg-gray-50
-                       hover:bg-gray-100 transition-colors text-left"
+            className="flex w-full items-center justify-between bg-gray-50 px-4 py-2 text-left transition-colors hover:bg-gray-100"
             type="button"
           >
             <span className="text-sm font-medium text-gray-700">
-              {readOnly ? "Expected Solution Steps" : "Show Hint (Solution Steps)"}
+              {readOnly ? 'Expected Solution Steps' : 'Show Hint (Solution Steps)'}
             </span>
-            <span className="text-gray-400">{showSteps ? "-" : "+"}</span>
+            <span className="text-gray-400">{showSteps ? '-' : '+'}</span>
           </button>
           {showSteps && (
-            <div className="p-4 space-y-2 bg-yellow-50">
+            <div className="space-y-2 bg-yellow-50 p-4">
               {workingSteps.map((step, index) => (
                 <div key={index} className="flex gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-yellow-200 rounded-full
-                                   flex items-center justify-center text-xs font-medium text-yellow-800">
+                  <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-yellow-200 text-xs font-medium text-yellow-800">
                     {index + 1}
                   </span>
                   <div className="text-sm text-yellow-900">
@@ -261,12 +246,10 @@ export function ShowYourWork({
         <button
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md font-medium
-                     hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed
-                     transition-colors"
+          className="w-full rounded-md bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
           type="button"
         >
-          {isSubmitting ? "Submitting..." : "Submit Work"}
+          {isSubmitting ? 'Submitting...' : 'Submit Work'}
         </button>
       )}
     </div>

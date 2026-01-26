@@ -1,12 +1,12 @@
-"use client"
+'use client';
 
-import { signIn } from "next-auth/react"
+import { signIn } from 'next-auth/react';
 
 export function SignInButton() {
   return (
     <button
-      onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-      className="flex items-center gap-3 rounded-lg border border-gray-300 bg-white px-6 py-3 text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+      className="flex items-center gap-3 rounded-lg border border-gray-300 bg-white px-6 py-3 text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
     >
       <svg className="h-5 w-5" viewBox="0 0 24 24">
         <path
@@ -28,5 +28,5 @@ export function SignInButton() {
       </svg>
       Sign in with Google
     </button>
-  )
+  );
 }

@@ -37,19 +37,9 @@ function ScoreStars({ score }: { score: number | null }) {
   );
 }
 
-function Badge({
-  label,
-  bg,
-  textColor,
-}: {
-  label: string;
-  bg: string;
-  textColor: string;
-}) {
+function Badge({ label, bg, textColor }: { label: string; bg: string; textColor: string }) {
   return (
-    <span className={`px-2 py-0.5 rounded text-xs font-medium ${bg} ${textColor}`}>
-      {label}
-    </span>
+    <span className={`rounded px-2 py-0.5 text-xs font-medium ${bg} ${textColor}`}>{label}</span>
   );
 }
 
@@ -79,26 +69,24 @@ export function QuestionCard({
 
   return (
     <div
-      className={`border rounded-lg p-4 transition-colors cursor-pointer ${
+      className={`cursor-pointer rounded-lg border p-4 transition-colors ${
         selected
           ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
-          : 'border-gray-200 hover:border-gray-300 bg-white'
+          : 'border-gray-200 bg-white hover:border-gray-300'
       }`}
       onClick={onToggleSelect}
     >
       {/* Header row */}
-      <div className="flex items-start justify-between gap-3 mb-3">
+      <div className="mb-3 flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           {/* Selection checkbox */}
           <div
-            className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-              selected
-                ? 'bg-blue-500 border-blue-500 text-white'
-                : 'border-gray-300 bg-white'
+            className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-colors ${
+              selected ? 'border-blue-500 bg-blue-500 text-white' : 'border-gray-300 bg-white'
             }`}
           >
             {selected && (
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
                   d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -110,17 +98,13 @@ export function QuestionCard({
 
           {/* Rank */}
           {question.rank !== null && (
-            <span className="text-sm text-gray-500 font-medium">#{question.rank}</span>
+            <span className="text-sm font-medium text-gray-500">#{question.rank}</span>
           )}
         </div>
 
         {/* Badges */}
         <div className="flex flex-wrap gap-1">
-          <Badge
-            label={question.bloomLevel}
-            bg={bloomStyle.bg}
-            textColor={bloomStyle.text}
-          />
+          <Badge label={question.bloomLevel} bg={bloomStyle.bg} textColor={bloomStyle.text} />
           <Badge
             label={question.difficulty}
             bg={difficultyStyle.bg}
@@ -140,12 +124,12 @@ export function QuestionCard({
       </div>
 
       {/* Score */}
-      <div className="flex items-center justify-between mb-2">
+      <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm">
           <span className="text-gray-500">Score:</span>
           <ScoreStars score={question.evaluationScore} />
           {question.evaluationScore !== null && (
-            <span className="text-gray-400 text-xs">
+            <span className="text-xs text-gray-400">
               ({(question.evaluationScore * 100).toFixed(0)}%)
             </span>
           )}
@@ -166,15 +150,13 @@ export function QuestionCard({
       {/* Expanded details */}
       {showDetails && (
         <div
-          className="mt-4 pt-4 border-t border-gray-200 space-y-4"
+          className="mt-4 space-y-4 border-t border-gray-200 pt-4"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Full question if truncated */}
           {question.questionText.length > 100 && (
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-1">
-                Full Question
-              </h4>
+              <h4 className="mb-1 text-sm font-medium text-gray-700">Full Question</h4>
               <MathText className="text-gray-800">{question.questionText}</MathText>
             </div>
           )}
@@ -182,8 +164,8 @@ export function QuestionCard({
           {/* Options for multiple choice */}
           {options && options.length > 0 && (
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-1">Options</h4>
-              <ul className="list-disc list-inside text-sm text-gray-600">
+              <h4 className="mb-1 text-sm font-medium text-gray-700">Options</h4>
+              <ul className="list-inside list-disc text-sm text-gray-600">
                 {options.map((opt, i) => (
                   <li key={i}>
                     <MathText>{opt}</MathText>
@@ -195,25 +177,21 @@ export function QuestionCard({
 
           {/* Answer */}
           <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-1">Answer</h4>
-            <MathText className="text-green-700 font-medium">
-              {question.correctAnswer}
-            </MathText>
+            <h4 className="mb-1 text-sm font-medium text-gray-700">Answer</h4>
+            <MathText className="font-medium text-green-700">{question.correctAnswer}</MathText>
           </div>
 
           {/* Explanation */}
           <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-1">Explanation</h4>
-            <MathText className="text-gray-600 text-sm">{question.explanation}</MathText>
+            <h4 className="mb-1 text-sm font-medium text-gray-700">Explanation</h4>
+            <MathText className="text-sm text-gray-600">{question.explanation}</MathText>
           </div>
 
           {/* Working steps for show_work questions */}
           {workingSteps && workingSteps.length > 0 && (
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-1">
-                Working Steps
-              </h4>
-              <ol className="list-decimal list-inside text-sm text-gray-600 space-y-1">
+              <h4 className="mb-1 text-sm font-medium text-gray-700">Working Steps</h4>
+              <ol className="list-inside list-decimal space-y-1 text-sm text-gray-600">
                 {workingSteps.map((step, i) => (
                   <li key={i}>
                     <MathText>{step}</MathText>
@@ -225,30 +203,24 @@ export function QuestionCard({
 
           {/* Comprehension rationale */}
           <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-1">
-              Why This Tests Understanding
-            </h4>
+            <h4 className="mb-1 text-sm font-medium text-gray-700">Why This Tests Understanding</h4>
             <p className="text-sm text-gray-600">{question.comprehensionRationale}</p>
           </div>
 
           {/* Source evidence */}
           <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-1">
-              Source Evidence
-            </h4>
-            <blockquote className="text-sm text-gray-500 italic border-l-2 border-gray-300 pl-3">
+            <h4 className="mb-1 text-sm font-medium text-gray-700">Source Evidence</h4>
+            <blockquote className="border-l-2 border-gray-300 pl-3 text-sm text-gray-500 italic">
               &quot;{question.sourceEvidence}&quot;
             </blockquote>
           </div>
 
           {/* Evaluation breakdown */}
           <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-2">
-              Evaluation Breakdown
-            </h4>
+            <h4 className="mb-2 text-sm font-medium text-gray-700">Evaluation Breakdown</h4>
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div className="text-center">
-                <div className="text-gray-500 mb-1">Comprehension</div>
+                <div className="mb-1 text-gray-500">Comprehension</div>
                 <div className="font-medium">
                   {question.comprehensionDepth !== null
                     ? `${(question.comprehensionDepth * 100).toFixed(0)}%`
@@ -256,15 +228,13 @@ export function QuestionCard({
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-gray-500 mb-1">Clarity</div>
+                <div className="mb-1 text-gray-500">Clarity</div>
                 <div className="font-medium">
-                  {question.clarity !== null
-                    ? `${(question.clarity * 100).toFixed(0)}%`
-                    : '--'}
+                  {question.clarity !== null ? `${(question.clarity * 100).toFixed(0)}%` : '--'}
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-gray-500 mb-1">Answerability</div>
+                <div className="mb-1 text-gray-500">Answerability</div>
                 <div className="font-medium">
                   {question.answerability !== null
                     ? `${(question.answerability * 100).toFixed(0)}%`
@@ -275,9 +245,7 @@ export function QuestionCard({
           </div>
 
           {/* Concept tag */}
-          <div className="text-xs text-gray-400">
-            Concept: {question.targetConceptName}
-          </div>
+          <div className="text-xs text-gray-400">Concept: {question.targetConceptName}</div>
         </div>
       )}
     </div>

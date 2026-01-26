@@ -1,9 +1,6 @@
 import type { ContentAnalysis } from '../schemas';
 
-export function buildPass2Prompt(
-  documentText: string,
-  pass1: ContentAnalysis
-): string {
+export function buildPass2Prompt(documentText: string, pass1: ContentAnalysis): string {
   return `You are extracting testable concepts from educational content.
 
 ## Context from Previous Analysis
@@ -11,7 +8,7 @@ export function buildPass2Prompt(
 - Grade Level: ${pass1.gradeLevel}
 - Key Topics: ${pass1.keyTopics.join(', ')}
 - Learning Objectives:
-${pass1.learningObjectives.map(o => `  - ${o.objective} (${o.bloomLevel})`).join('\n')}
+${pass1.learningObjectives.map((o) => `  - ${o.objective} (${o.bloomLevel})`).join('\n')}
 
 ## Your Task
 Extract TESTABLE concepts from this document. For each concept:

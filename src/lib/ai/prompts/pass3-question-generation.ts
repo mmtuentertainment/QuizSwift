@@ -11,10 +11,10 @@ export function buildPass3Prompt(
 
   // Calculate Bloom's distribution targets
   const bloomTargets = {
-    understand: Math.round(targetCount * 0.40),
-    apply: Math.round(targetCount * 0.30),
-    analyze: Math.round(targetCount * 0.20),
-    evaluate: Math.round(targetCount * 0.10),
+    understand: Math.round(targetCount * 0.4),
+    apply: Math.round(targetCount * 0.3),
+    analyze: Math.round(targetCount * 0.2),
+    evaluate: Math.round(targetCount * 0.1),
   };
 
   return `You are an expert educator creating COMPREHENSION-BASED quiz questions.
@@ -32,12 +32,12 @@ Generate questions that test UNDERSTANDING, not just RECALL.
 
 ## Key Concepts to Test (prioritize importance >= 4)
 ${pass2.concepts
-  .filter(c => c.importance >= 3)
-  .map(c => `- ${c.name} (${c.category}, importance: ${c.importance}): ${c.definition}`)
+  .filter((c) => c.importance >= 3)
+  .map((c) => `- ${c.name} (${c.category}, importance: ${c.importance}): ${c.definition}`)
   .join('\n')}
 
 ## Learning Objectives
-${pass1.learningObjectives.map(o => `- ${o.objective} (${o.bloomLevel})`).join('\n')}
+${pass1.learningObjectives.map((o) => `- ${o.objective} (${o.bloomLevel})`).join('\n')}
 
 ## Your Task
 Generate ${targetCount} HIGH-QUALITY questions following this distribution:

@@ -1,5 +1,5 @@
-import type { NextAuthConfig } from "next-auth"
-import Google from "next-auth/providers/google"
+import type { NextAuthConfig } from 'next-auth';
+import Google from 'next-auth/providers/google';
 
 export const authConfig = {
   providers: [
@@ -9,20 +9,20 @@ export const authConfig = {
     }),
   ],
   pages: {
-    signIn: "/login",
+    signIn: '/login',
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user
-      const isOnDashboard = nextUrl.pathname.startsWith("/dashboard")
+      const isLoggedIn = !!auth?.user;
+      const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
 
       if (isOnDashboard) {
-        if (isLoggedIn) return true
-        return false // Redirect to login
+        if (isLoggedIn) return true;
+        return false; // Redirect to login
       }
 
       // Allow access to public pages
-      return true
+      return true;
     },
   },
-} satisfies NextAuthConfig
+} satisfies NextAuthConfig;

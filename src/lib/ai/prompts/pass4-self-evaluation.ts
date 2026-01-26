@@ -1,9 +1,6 @@
 import type { QuestionGeneration, ContentAnalysis } from '../schemas';
 
-export function buildPass4Prompt(
-  pass1: ContentAnalysis,
-  pass3: QuestionGeneration
-): string {
+export function buildPass4Prompt(pass1: ContentAnalysis, pass3: QuestionGeneration): string {
   return `You are a critical evaluator of educational quiz questions.
 
 ## Your Task
@@ -44,14 +41,18 @@ Is this appropriate for ${pass1.gradeLevel} level ${pass1.subjectArea}?
 - 5: Perfectly pitched for target audience
 
 ## Questions to Evaluate
-${JSON.stringify(pass3.questions.map(q => ({
-  id: q.id,
-  text: q.questionText,
-  type: q.questionType,
-  bloom: q.bloomLevel,
-  answer: q.correctAnswer,
-  rationale: q.comprehensionRationale,
-})), null, 2)}
+${JSON.stringify(
+  pass3.questions.map((q) => ({
+    id: q.id,
+    text: q.questionText,
+    type: q.questionType,
+    bloom: q.bloomLevel,
+    answer: q.correctAnswer,
+    rationale: q.comprehensionRationale,
+  })),
+  null,
+  2
+)}
 
 ## Output
 For each question:

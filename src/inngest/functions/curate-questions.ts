@@ -65,7 +65,7 @@ export const curateQuestionsJob = inngest.createFunction(
       }
 
       // Assemble full document text from chunks
-      const fullText = doc.chunks.map(c => c.content).join('\n\n');
+      const fullText = doc.chunks.map((c) => c.content).join('\n\n');
       const requestedCount = doc.requestedQuestionCount ?? 15;
 
       return { fullText, requestedCount };
@@ -113,12 +113,7 @@ export const curateQuestionsJob = inngest.createFunction(
 
     // Step 5: Pass 3 - Question Generation (2x count)
     const pass3 = await step.run('pass-3-question-generation', async () => {
-      return runPass3QuestionGeneration(
-        fullText,
-        pass1.output,
-        pass2.output,
-        requestedCount
-      );
+      return runPass3QuestionGeneration(fullText, pass1.output, pass2.output, requestedCount);
     });
     passTimings.pass3 = pass3.durationMs;
     totalTokens += pass3.tokens;
@@ -172,15 +167,11 @@ export const curateQuestionsJob = inngest.createFunction(
       );
 
       // Get concept names for denormalization
-      const conceptMap = new Map(
-        pass2.output.concepts.map(c => [c.id, c.name])
-      );
+      const conceptMap = new Map(pass2.output.concepts.map((c) => [c.id, c.name]));
 
       // Store all curated questions
-      const questionsToCreate = curatedQuestions.map(q => {
-        const evaluation = pass4.output.evaluations.find(
-          e => e.questionId === q.id
-        );
+      const questionsToCreate = curatedQuestions.map((q) => {
+        const evaluation = pass4.output.evaluations.find((e) => e.questionId === q.id);
 
         return {
           documentId,
@@ -212,7 +203,7 @@ export const curateQuestionsJob = inngest.createFunction(
 
       return {
         total: questionsToCreate.length,
-        inPool: questionsToCreate.filter(q => q.inCurationPool).length,
+        inPool: questionsToCreate.filter((q) => q.inCurationPool).length,
       };
     });
 

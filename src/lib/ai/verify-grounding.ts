@@ -132,7 +132,7 @@ async function verifyGroundingTextBased(
 
     // Calculate word overlap
     const chunkWords = new Set(chunkLower.split(/\s+/));
-    const intersection = [...sourceWords].filter(w => chunkWords.has(w));
+    const intersection = [...sourceWords].filter((w) => chunkWords.has(w));
     const score = intersection.length / sourceWords.size;
 
     if (!bestMatch || score > bestMatch.score) {

@@ -1,5 +1,3 @@
-import type { ContentAnalysis } from '../schemas';
-
 export function buildPass1Prompt(documentText: string): string {
   return `You are an expert educator analyzing educational content.
 

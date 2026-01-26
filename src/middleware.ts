@@ -1,5 +1,5 @@
-import { auth } from "@/lib/auth"
-import { NextResponse } from "next/server"
+import { auth } from '@/lib/auth';
+import { NextResponse } from 'next/server';
 
 /**
  * Route protection middleware
@@ -15,56 +15,53 @@ import { NextResponse } from "next/server"
  * - Public pages (/, /login, etc.)
  */
 export default auth((req) => {
-  const { pathname } = req.nextUrl
+  const { pathname } = req.nextUrl;
 
   // Skip auth for Inngest webhook (has its own signing key verification)
-  if (pathname.startsWith("/api/inngest")) {
-    return NextResponse.next()
+  if (pathname.startsWith('/api/inngest')) {
+    return NextResponse.next();
   }
 
   // Skip auth for Auth.js routes
-  if (pathname.startsWith("/api/auth")) {
-    return NextResponse.next()
+  if (pathname.startsWith('/api/auth')) {
+    return NextResponse.next();
   }
 
   // Check authentication for protected routes
   const isProtectedAPI =
-    pathname.startsWith("/api/documents") ||
-    pathname.startsWith("/api/audit") ||
-    pathname.startsWith("/api/upload")
+    pathname.startsWith('/api/documents') ||
+    pathname.startsWith('/api/audit') ||
+    pathname.startsWith('/api/upload');
 
   const isProtectedPage =
-    pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/documents") ||
-    pathname.startsWith("/upload") ||
-    pathname.startsWith("/admin")
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/documents') ||
+    pathname.startsWith('/upload') ||
+    pathname.startsWith('/admin');
 
   if (isProtectedAPI || isProtectedPage) {
     if (!req.auth?.user) {
       if (isProtectedAPI) {
-        return NextResponse.json(
-          { error: "Unauthorized" },
-          { status: 401 }
-        )
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
       // Redirect to login for pages
-      const loginUrl = new URL("/login", req.url)
-      loginUrl.searchParams.set("callbackUrl", pathname)
-      return NextResponse.redirect(loginUrl)
+      const loginUrl = new URL('/login', req.url);
+      loginUrl.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(loginUrl);
     }
   }
 
-  return NextResponse.next()
-})
+  return NextResponse.next();
+});
 
 export const config = {
   matcher: [
     // Match API routes (except auth)
-    "/api/:path*",
+    '/api/:path*',
     // Match dashboard routes (using route groups)
-    "/dashboard/:path*",
-    "/documents/:path*",
-    "/upload/:path*",
-    "/admin/:path*",
+    '/dashboard/:path*',
+    '/documents/:path*',
+    '/upload/:path*',
+    '/admin/:path*',
   ],
-}
+};

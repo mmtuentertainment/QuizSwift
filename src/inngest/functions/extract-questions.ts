@@ -39,7 +39,6 @@ export const extractQuestionsJob = inngest.createFunction(
   async ({ event, step }) => {
     const { documentId } = event.data;
 
-
     // Step 1: Load chunks from database
     const chunks = await step.run('load-chunks', async () => {
       return prisma.sourceChunk.findMany({
@@ -83,12 +82,9 @@ export const extractQuestionsJob = inngest.createFunction(
       );
 
       // Deduplicate by normalized question text (case-insensitive, whitespace-normalized)
-      const seen = new Map<string, typeof flattened[0]>();
+      const seen = new Map<string, (typeof flattened)[0]>();
       for (const q of flattened) {
-        const normalizedText = q.questionText
-          .toLowerCase()
-          .replace(/\s+/g, ' ')
-          .trim();
+        const normalizedText = q.questionText.toLowerCase().replace(/\s+/g, ' ').trim();
 
         // Keep the first occurrence (usually from earlier chunk with better context)
         if (!seen.has(normalizedText)) {
@@ -115,7 +111,7 @@ export const extractQuestionsJob = inngest.createFunction(
     // Step 4: Verify each question against source using vector similarity
     const verifiedQuestions = await step.run('verify-questions', async () => {
       const results: Array<{
-        question: typeof allQuestions[0];
+        question: (typeof allQuestions)[0];
         verified: boolean;
         similarity: number;
         sourceChunkId: string | null;
@@ -204,9 +200,10 @@ export const extractQuestionsJob = inngest.createFunction(
     // Step 6: Update document status to completed
     await step.run('update-status-completed', async () => {
       // Include summary in document if there are flagged questions
-      const warningMessage = storedCounts.flagged > 0
-        ? `${storedCounts.flagged} of ${storedCounts.total} questions flagged for review`
-        : null;
+      const warningMessage =
+        storedCounts.flagged > 0
+          ? `${storedCounts.flagged} of ${storedCounts.total} questions flagged for review`
+          : null;
 
       await prisma.document.update({
         where: { id: documentId },

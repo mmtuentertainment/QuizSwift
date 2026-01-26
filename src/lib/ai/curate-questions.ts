@@ -200,9 +200,9 @@ export function buildCuratedQuestions(
   pass4: QuestionEvaluation,
   pass5: FinalSelection
 ): StorableCuratedQuestion[] {
-  return pass3.questions.map(q => {
-    const evaluation = pass4.evaluations.find(e => e.questionId === q.id);
-    const ranking = pass5.rankedQuestions.find(r => r.questionId === q.id);
+  return pass3.questions.map((q) => {
+    const evaluation = pass4.evaluations.find((e) => e.questionId === q.id);
+    const ranking = pass5.rankedQuestions.find((r) => r.questionId === q.id);
     const isSelected = pass5.selectedForPool.includes(q.id);
 
     return {

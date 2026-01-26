@@ -77,7 +77,7 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
 
   return (
     <div className="space-y-4">
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+      <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center">
         <input
           type="file"
           accept="application/pdf"
@@ -86,16 +86,11 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
           className="hidden"
           id="file-upload"
         />
-        <label
-          htmlFor="file-upload"
-          className="cursor-pointer text-blue-600 hover:text-blue-800"
-        >
+        <label htmlFor="file-upload" className="cursor-pointer text-blue-600 hover:text-blue-800">
           {file ? file.name : 'Click to select a PDF file'}
         </label>
         {file && (
-          <p className="text-sm text-gray-500 mt-2">
-            {(file.size / 1024 / 1024).toFixed(2)} MB
-          </p>
+          <p className="mt-2 text-sm text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
         )}
       </div>
 
@@ -114,26 +109,23 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
               value={questionCount}
               onChange={(e) => setQuestionCount(parseInt(e.target.value))}
               disabled={uploading}
-              className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 accent-blue-600"
             />
             <span className="w-12 text-center font-medium text-gray-900">{questionCount}</span>
           </div>
           <p className="text-xs text-gray-500">
-            AI will generate {questionCount * 2} questions. You&apos;ll select the best {questionCount}.
+            AI will generate {questionCount * 2} questions. You&apos;ll select the best{' '}
+            {questionCount}.
           </p>
         </div>
       )}
 
-      {error && (
-        <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm">
-          {error}
-        </div>
-      )}
+      {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
       {uploading && (
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="h-2 w-full rounded-full bg-gray-200">
           <div
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+            className="h-2 rounded-full bg-blue-600 transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -142,8 +134,7 @@ export function UploadForm({ onUploadComplete }: UploadFormProps) {
       <button
         onClick={handleUpload}
         disabled={!file || uploading}
-        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md
-                   hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+        className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
       >
         {uploading ? 'Uploading...' : 'Upload PDF'}
       </button>

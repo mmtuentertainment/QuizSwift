@@ -4,10 +4,6 @@ export {
   BlockMath,
   MathText,
   type MathDisplayProps,
-} from "./math-display";
+} from './math-display';
 
-export {
-  ShowYourWork,
-  type ShowYourWorkProps,
-  type ShowYourWorkData,
-} from "./show-your-work";
+export { ShowYourWork, type ShowYourWorkProps, type ShowYourWorkData } from './show-your-work';

@@ -22,9 +22,7 @@ export async function ocrPage(
     worker = await createWorker(language);
 
     // Convert to Buffer if needed - tesseract.js requires Buffer type
-    const buffer = Buffer.isBuffer(imageBuffer)
-      ? imageBuffer
-      : Buffer.from(imageBuffer);
+    const buffer = Buffer.isBuffer(imageBuffer) ? imageBuffer : Buffer.from(imageBuffer);
 
     const { data } = await worker.recognize(buffer);
 
@@ -97,9 +95,7 @@ export function mergeOcrWithExtracted(
   extractedPages: Array<{ pageNumber: number; content: string; charCount: number }>,
   ocrResults: OcrResult[]
 ): Array<{ pageNumber: number; content: string; charCount: number }> {
-  const ocrByPage = new Map(
-    ocrResults.map((r) => [r.pageNumber, r])
-  );
+  const ocrByPage = new Map(ocrResults.map((r) => [r.pageNumber, r]));
 
   return extractedPages.map((page) => {
     const ocrResult = ocrByPage.get(page.pageNumber);

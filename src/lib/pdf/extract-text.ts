@@ -16,9 +16,7 @@ export interface PagedText {
  * @param buffer - PDF file as ArrayBuffer or Uint8Array
  * @returns Object with total pages and per-page text content
  */
-export async function extractTextWithPages(
-  buffer: ArrayBuffer | Uint8Array
-): Promise<PagedText> {
+export async function extractTextWithPages(buffer: ArrayBuffer | Uint8Array): Promise<PagedText> {
   const uint8 = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
   const pdf = await getDocumentProxy(uint8);
 

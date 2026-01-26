@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+out/
+dist/
+
+# Generated files
+src/generated/
+prisma/migrations/
+
+# Config files that shouldn't be reformatted
+*.json
+*.md
+*.yml
+*.yaml
+
+# Environment files
+.env*
+
+# Planning files
+.planning/

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
-import prisma from "@/lib/prisma"
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import prisma from '@/lib/prisma';
 
 /**
  * GET /api/audit
@@ -27,85 +27,76 @@ import prisma from "@/lib/prisma"
 export async function GET(request: NextRequest) {
   try {
     // Verify authentication
-    const session = await auth()
+    const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Verify admin role
-    if (session.user.role !== "admin") {
-      return NextResponse.json(
-        { error: "Forbidden: Admin access required" },
-        { status: 403 }
-      )
+    if (session.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
     // Parse query parameters
-    const searchParams = request.nextUrl.searchParams
-    const startDate = searchParams.get("startDate")
-    const endDate = searchParams.get("endDate")
-    const userId = searchParams.get("userId")
-    const tableName = searchParams.get("tableName")
-    const action = searchParams.get("action")
-    const limit = Math.min(parseInt(searchParams.get("limit") || "100"), 1000)
-    const offset = parseInt(searchParams.get("offset") || "0")
+    const searchParams = request.nextUrl.searchParams;
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    const userId = searchParams.get('userId');
+    const tableName = searchParams.get('tableName');
+    const action = searchParams.get('action');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 1000);
+    const offset = parseInt(searchParams.get('offset') || '0');
 
     // Validate required parameters
     if (!startDate || !endDate) {
-      return NextResponse.json(
-        { error: "startDate and endDate are required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'startDate and endDate are required' }, { status: 400 });
     }
 
     // Validate date formats
-    const start = new Date(startDate)
-    const end = new Date(endDate)
+    const start = new Date(startDate);
+    const end = new Date(endDate);
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       return NextResponse.json(
-        { error: "Invalid date format. Use ISO 8601 format (YYYY-MM-DD)" },
+        { error: 'Invalid date format. Use ISO 8601 format (YYYY-MM-DD)' },
         { status: 400 }
-      )
+      );
     }
 
     // Build where clause
     const where: {
-      createdAt: { gte: Date; lte: Date }
-      actorId?: string
-      tableName?: string
-      action?: string
+      createdAt: { gte: Date; lte: Date };
+      actorId?: string;
+      tableName?: string;
+      action?: string;
     } = {
       createdAt: {
         gte: start,
         lte: end,
       },
-    }
+    };
 
     if (userId) {
-      where.actorId = userId
+      where.actorId = userId;
     }
 
     if (tableName) {
-      where.tableName = tableName
+      where.tableName = tableName;
     }
 
     if (action) {
-      where.action = action
+      where.action = action;
     }
 
     // Execute queries in parallel
     const [logs, total] = await Promise.all([
       prisma.auditLog.findMany({
         where,
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         take: limit,
         skip: offset,
       }),
       prisma.auditLog.count({ where }),
-    ])
+    ]);
 
     return NextResponse.json({
       logs,
@@ -115,12 +106,9 @@ export async function GET(request: NextRequest) {
         offset,
         hasMore: offset + logs.length < total,
       },
-    })
+    });
   } catch (error) {
-    console.error("Audit query error:", error)
-    return NextResponse.json(
-      { error: "Failed to query audit logs" },
-      { status: 500 }
-    )
+    console.error('Audit query error:', error);
+    return NextResponse.json({ error: 'Failed to query audit logs' }, { status: 500 });
   }
 }

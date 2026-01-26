@@ -45,15 +45,13 @@ export default async function CuratePage({ params }: PageProps) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto py-8 px-4">
+    <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Curate Questions</h1>
         <p className="text-gray-600">
           Select {document.requestedQuestionCount} questions from the curated pool for your quiz.
         </p>
-        <p className="text-sm text-gray-500 mt-1">
-          Document: {document.fileName}
-        </p>
+        <p className="mt-1 text-sm text-gray-500">Document: {document.fileName}</p>
       </div>
 
       <CurationClient

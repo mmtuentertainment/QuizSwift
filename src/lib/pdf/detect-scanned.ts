@@ -23,10 +23,7 @@ export function detectScannedPdf(pagedText: PagedText): boolean {
     return true; // Empty PDF, treat as needing OCR
   }
 
-  const totalChars = pagedText.pages.reduce(
-    (sum, page) => sum + page.charCount,
-    0
-  );
+  const totalChars = pagedText.pages.reduce((sum, page) => sum + page.charCount, 0);
   const avgCharsPerPage = totalChars / pagedText.totalPages;
 
   return avgCharsPerPage < LOW_TEXT_THRESHOLD;
@@ -37,9 +34,7 @@ export function detectScannedPdf(pagedText: PagedText): boolean {
  * (pages with very low text content in an otherwise text-native PDF)
  */
 export function getPagesNeedingOcr(pagedText: PagedText): number[] {
-  return pagedText.pages
-    .filter((page) => isLowTextPage(page))
-    .map((page) => page.pageNumber);
+  return pagedText.pages.filter((page) => isLowTextPage(page)).map((page) => page.pageNumber);
 }
 
 export interface ScanDetectionResult {
@@ -53,16 +48,11 @@ export interface ScanDetectionResult {
  * Full scan detection with details
  */
 export function analyzePdfForOcr(pagedText: PagedText): ScanDetectionResult {
-  const totalChars = pagedText.pages.reduce(
-    (sum, page) => sum + page.charCount,
-    0
-  );
+  const totalChars = pagedText.pages.reduce((sum, page) => sum + page.charCount, 0);
 
   return {
     isScanned: detectScannedPdf(pagedText),
-    avgCharsPerPage: pagedText.totalPages > 0
-      ? totalChars / pagedText.totalPages
-      : 0,
+    avgCharsPerPage: pagedText.totalPages > 0 ? totalChars / pagedText.totalPages : 0,
     totalPages: pagedText.totalPages,
     pagesNeedingOcr: getPagesNeedingOcr(pagedText),
   };

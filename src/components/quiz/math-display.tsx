@@ -1,20 +1,20 @@
-"use client";
+'use client';
 
-import DOMPurify from "dompurify";
-import katex from "katex";
-import "katex/dist/katex.min.css";
-import { useMemo } from "react";
+import DOMPurify from 'dompurify';
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
+import { useMemo } from 'react';
 
 /**
  * Escape HTML entities for safe display in error fallback
  */
 function escapeHtml(text: string): string {
   return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 export interface MathDisplayProps {
@@ -33,11 +33,7 @@ export interface MathDisplayProps {
  * before being rendered. This prevents XSS attacks from malicious LaTeX input.
  * KaTeX is also configured with trust: false to prevent unsafe macros.
  */
-export function MathDisplay({
-  math,
-  displayMode = false,
-  className = "",
-}: MathDisplayProps) {
+export function MathDisplay({ math, displayMode = false, className = '' }: MathDisplayProps) {
   const sanitizedHtml = useMemo(() => {
     try {
       // Render LaTeX to HTML with security settings
@@ -52,7 +48,7 @@ export function MathDisplay({
       return DOMPurify.sanitize(rawHtml);
     } catch (error) {
       // On error, show escaped raw LaTeX (safe - no HTML interpretation)
-      console.error("KaTeX rendering error:", error);
+      console.error('KaTeX rendering error:', error);
       return `<span class="text-red-500 font-mono text-sm">${escapeHtml(math)}</span>`;
     }
   }, [math, displayMode]);
@@ -70,26 +66,14 @@ export function MathDisplay({
 /**
  * Convenience wrapper for inline math (e.g., $x^2$)
  */
-export function InlineMath({
-  math,
-  className = "",
-}: {
-  math: string;
-  className?: string;
-}) {
+export function InlineMath({ math, className = '' }: { math: string; className?: string }) {
   return <MathDisplay math={math} displayMode={false} className={className} />;
 }
 
 /**
  * Convenience wrapper for block/display math (e.g., $$\sum_{i=1}^n x_i$$)
  */
-export function BlockMath({
-  math,
-  className = "",
-}: {
-  math: string;
-  className?: string;
-}) {
+export function BlockMath({ math, className = '' }: { math: string; className?: string }) {
   return <MathDisplay math={math} displayMode={true} className={className} />;
 }
 
@@ -99,15 +83,9 @@ export function BlockMath({
  *
  * All math content is sanitized through MathDisplay -> DOMPurify.
  */
-export function MathText({
-  children,
-  className = "",
-}: {
-  children: string;
-  className?: string;
-}) {
+export function MathText({ children, className = '' }: { children: string; className?: string }) {
   const parts = useMemo(() => {
-    const result: Array<{ type: "text" | "inline" | "block"; content: string }> = [];
+    const result: Array<{ type: 'text' | 'inline' | 'block'; content: string }> = [];
     let remaining = children;
 
     // Process $$...$$ (display math) first
@@ -118,7 +96,7 @@ export function MathText({
       // No more math found
       if (!displayMatch && !inlineMatch) {
         if (remaining) {
-          result.push({ type: "text", content: remaining });
+          result.push({ type: 'text', content: remaining });
         }
         break;
       }
@@ -130,18 +108,18 @@ export function MathText({
       if (displayIndex < inlineIndex && displayMatch) {
         // Add text before the match
         if (displayIndex > 0) {
-          result.push({ type: "text", content: remaining.slice(0, displayIndex) });
+          result.push({ type: 'text', content: remaining.slice(0, displayIndex) });
         }
         // Add the display math
-        result.push({ type: "block", content: displayMatch[1] });
+        result.push({ type: 'block', content: displayMatch[1] });
         remaining = remaining.slice(displayIndex + displayMatch[0].length);
       } else if (inlineMatch) {
         // Add text before the match
         if (inlineIndex > 0) {
-          result.push({ type: "text", content: remaining.slice(0, inlineIndex) });
+          result.push({ type: 'text', content: remaining.slice(0, inlineIndex) });
         }
         // Add the inline math
-        result.push({ type: "inline", content: inlineMatch[1] });
+        result.push({ type: 'inline', content: inlineMatch[1] });
         remaining = remaining.slice(inlineIndex + inlineMatch[0].length);
       }
     }
@@ -152,15 +130,15 @@ export function MathText({
   return (
     <span className={className}>
       {parts.map((part, index) => {
-        if (part.type === "text") {
+        if (part.type === 'text') {
           return <span key={index}>{part.content}</span>;
         }
-        if (part.type === "inline") {
+        if (part.type === 'inline') {
           return <InlineMath key={index} math={part.content} />;
         }
-        if (part.type === "block") {
+        if (part.type === 'block') {
           return (
-            <span key={index} className="block my-2">
+            <span key={index} className="my-2 block">
               <BlockMath math={part.content} />
             </span>
           );

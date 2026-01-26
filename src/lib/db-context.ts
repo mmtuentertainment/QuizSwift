@@ -1,11 +1,11 @@
-import { PrismaClient, Prisma } from "@/generated/prisma/client"
-import { getPrisma } from "@/lib/prisma"
+import { Prisma } from '@/generated/prisma/client';
+import { getPrisma } from '@/lib/prisma';
 
 export interface AuditContext {
-  userId: string
-  userType: string
-  ipAddress?: string
-  userAgent?: string
+  userId: string;
+  userType: string;
+  ipAddress?: string;
+  userAgent?: string;
 }
 
 /**
@@ -39,26 +39,26 @@ export async function withAuditContext<T>(
   context: AuditContext,
   operation: (tx: Prisma.TransactionClient) => Promise<T>
 ): Promise<T> {
-  const prisma = getPrisma()
+  const prisma = getPrisma();
 
   return prisma.$transaction(async (tx) => {
     // Set session variables for PostgreSQL triggers
     // These are read by audit_trigger_func() via current_setting()
     // The 'true' parameter makes the setting transaction-local
-    await tx.$executeRaw`SELECT set_config('app.current_user_id', ${context.userId}, true)`
-    await tx.$executeRaw`SELECT set_config('app.current_user_type', ${context.userType}, true)`
+    await tx.$executeRaw`SELECT set_config('app.current_user_id', ${context.userId}, true)`;
+    await tx.$executeRaw`SELECT set_config('app.current_user_type', ${context.userType}, true)`;
 
     if (context.ipAddress) {
-      await tx.$executeRaw`SELECT set_config('app.current_ip', ${context.ipAddress}, true)`
+      await tx.$executeRaw`SELECT set_config('app.current_ip', ${context.ipAddress}, true)`;
     }
 
     if (context.userAgent) {
-      await tx.$executeRaw`SELECT set_config('app.current_user_agent', ${context.userAgent}, true)`
+      await tx.$executeRaw`SELECT set_config('app.current_user_agent', ${context.userAgent}, true)`;
     }
 
     // Execute operation within the same transaction (same connection)
-    return operation(tx)
-  })
+    return operation(tx);
+  });
 }
 
 /**
@@ -74,14 +74,14 @@ export async function withAuditContext<T>(
 export async function withSystemContext<T>(
   operation: (tx: Prisma.TransactionClient) => Promise<T>
 ): Promise<T> {
-  const prisma = getPrisma()
+  const prisma = getPrisma();
 
   return prisma.$transaction(async (tx) => {
-    await tx.$executeRaw`SELECT set_config('app.current_user_id', 'system', true)`
-    await tx.$executeRaw`SELECT set_config('app.current_user_type', 'system', true)`
+    await tx.$executeRaw`SELECT set_config('app.current_user_id', 'system', true)`;
+    await tx.$executeRaw`SELECT set_config('app.current_user_type', 'system', true)`;
 
-    return operation(tx)
-  })
+    return operation(tx);
+  });
 }
 
 /**
@@ -98,20 +98,20 @@ export async function withAuditContextSimple<T>(
   context: AuditContext,
   operation: () => Promise<T>
 ): Promise<T> {
-  const prisma = getPrisma()
+  const prisma = getPrisma();
 
   // Note: This version doesn't guarantee same connection, but sets context best-effort.
   // Use withAuditContext with transaction client for guaranteed audit trails.
-  await prisma.$executeRaw`SELECT set_config('app.current_user_id', ${context.userId}, true)`
-  await prisma.$executeRaw`SELECT set_config('app.current_user_type', ${context.userType}, true)`
+  await prisma.$executeRaw`SELECT set_config('app.current_user_id', ${context.userId}, true)`;
+  await prisma.$executeRaw`SELECT set_config('app.current_user_type', ${context.userType}, true)`;
 
   if (context.ipAddress) {
-    await prisma.$executeRaw`SELECT set_config('app.current_ip', ${context.ipAddress}, true)`
+    await prisma.$executeRaw`SELECT set_config('app.current_ip', ${context.ipAddress}, true)`;
   }
 
   if (context.userAgent) {
-    await prisma.$executeRaw`SELECT set_config('app.current_user_agent', ${context.userAgent}, true)`
+    await prisma.$executeRaw`SELECT set_config('app.current_user_agent', ${context.userAgent}, true)`;
   }
 
-  return operation()
+  return operation();
 }

@@ -1,8 +1,5 @@
 // Pass 1: Content Analysis
-export {
-  ContentAnalysisSchema,
-  type ContentAnalysis,
-} from './content-analysis';
+export { ContentAnalysisSchema, type ContentAnalysis } from './content-analysis';
 
 // Pass 2: Concept Extraction
 export {
