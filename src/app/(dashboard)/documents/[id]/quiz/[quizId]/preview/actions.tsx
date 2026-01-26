@@ -1,0 +1,69 @@
+'use client';
+
+/**
+ * TeacherPreviewWrapper component
+ *
+ * Wraps the QuizTaker and handles the preview completion flow.
+ * When the quiz is submitted, marks it as previewed so it can be published.
+ */
+
+import { useCallback, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { QuizTaker } from '@/components/quiz/quiz-taker';
+import { markQuizPreviewed } from '@/actions/attempts';
+import type { CuratedQuestion } from '@/generated/prisma/client';
+
+interface TeacherPreviewWrapperProps {
+  quizId: string;
+  documentId: string;
+  questions: CuratedQuestion[];
+  timeLimit: number | null;
+}
+
+export function TeacherPreviewWrapper({
+  quizId,
+  documentId,
+  questions,
+  timeLimit,
+}: TeacherPreviewWrapperProps) {
+  const router = useRouter();
+  const [completionState, setCompletionState] = useState<{
+    completed: boolean;
+    score: number;
+    maxScore: number;
+  } | null>(null);
+
+  const handleComplete = useCallback(async (score: number, maxScore: number) => {
+    setCompletionState({ completed: true, score, maxScore });
+
+    // Mark quiz as previewed
+    await markQuizPreviewed(quizId);
+
+    // Refresh page data to reflect the updated status
+    router.refresh();
+  }, [quizId, router]);
+
+  return (
+    <div>
+      <QuizTaker
+        quizId={quizId}
+        questions={questions}
+        isPreview={true}
+        onComplete={handleComplete}
+        timeLimit={timeLimit}
+      />
+
+      {/* Show navigation after completion */}
+      {completionState?.completed && (
+        <div className="mt-6 flex justify-center gap-4">
+          <button
+            onClick={() => router.push(`/documents/${documentId}/quiz/${quizId}`)}
+            className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700"
+          >
+            Return to Quiz Settings
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
