@@ -141,6 +141,8 @@ const UpdateQuestionSchema = z.object({
   explanation: z.string().max(5000).optional(),
   sourceEvidence: z.string().max(5000).optional(),
   options: z.unknown().optional(), // JSON structure varies by question type
+  imageUrl: z.string().nullable().optional(),
+  imageAltText: z.string().max(500).nullable().optional(),
 });
 
 export type UpdateQuestionInput = z.infer<typeof UpdateQuestionSchema>;
@@ -187,6 +189,8 @@ export async function updateQuestion(
     explanation?: string;
     sourceEvidence?: string;
     options?: object;
+    imageUrl?: string | null;
+    imageAltText?: string | null;
   } = {};
 
   if (parsed.data.questionText !== undefined) {
@@ -203,6 +207,12 @@ export async function updateQuestion(
   }
   if (parsed.data.options !== undefined) {
     updateData.options = parsed.data.options as object;
+  }
+  if (parsed.data.imageUrl !== undefined) {
+    updateData.imageUrl = parsed.data.imageUrl;
+  }
+  if (parsed.data.imageAltText !== undefined) {
+    updateData.imageAltText = parsed.data.imageAltText;
   }
 
   await prisma.curatedQuestion.update({

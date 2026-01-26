@@ -72,6 +72,10 @@ interface QuestionRendererProps {
   showCorrect?: boolean;
   /** Correct answer for display in review mode */
   correctAnswer?: string;
+  /** Optional image URL for the question */
+  imageUrl?: string | null;
+  /** Alt text for the question image */
+  imageAltText?: string | null;
 }
 
 /**
@@ -95,6 +99,8 @@ export function QuestionRenderer({
   readOnly = false,
   showCorrect = false,
   correctAnswer,
+  imageUrl,
+  imageAltText,
 }: QuestionRendererProps) {
   /**
    * Helper to get typed answer data or return null.
@@ -316,8 +322,26 @@ export function QuestionRenderer({
     questionType !== 'fill_blank' &&
     questionType !== 'show_work';
 
+  // Build image URL - if it's a storage key, prepend the public URL
+  const resolvedImageUrl = imageUrl
+    ? imageUrl.startsWith('http')
+      ? imageUrl
+      : `${process.env.NEXT_PUBLIC_R2_URL || ''}/${imageUrl}`
+    : null;
+
   return (
     <div className="space-y-4">
+      {/* Question image (if present) */}
+      {resolvedImageUrl && (
+        <div className="mb-4">
+          <img
+            src={resolvedImageUrl}
+            alt={imageAltText || 'Question image'}
+            className="max-h-64 rounded border border-gray-200 object-contain"
+          />
+        </div>
+      )}
+
       {/* Question text with LaTeX support */}
       {shouldRenderQuestionText && (
         <div className="text-lg">
