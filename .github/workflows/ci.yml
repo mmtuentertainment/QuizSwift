@@ -6,10 +6,16 @@ on:
   pull_request:
     branches: [main, master]
 
+# Cancel in-progress runs when a new commit is pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint-typecheck-build:
     name: Lint, Typecheck & Build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -36,6 +42,12 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Run tests
+        run: npm test --if-present
+        env:
+          DATABASE_URL: 'postgresql://user:pass@localhost:5432/db'
+          AUTH_SECRET: 'ci-test-secret-not-real'
+
       - name: Build
         run: npm run build
         env:
@@ -47,6 +59,7 @@ jobs:
   security:
     name: Security Audit
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout
@@ -62,5 +75,4 @@ jobs:
         run: npm ci
 
       - name: Audit dependencies
-        run: npm audit --audit-level=high
-        continue-on-error: true  # Don't fail CI for audit warnings
+        run: npm audit --audit-level=critical
