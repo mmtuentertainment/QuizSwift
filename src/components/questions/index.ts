@@ -12,6 +12,9 @@ export { FillInBlank, type FillInBlankOptions as FIBComponentOptions } from './t
 export { Essay, type EssayOptions as EssayComponentOptions } from './types/essay';
 export { Matching } from './types/matching';
 
+// Image upload component
+export { ImageUpload } from './image-upload';
+
 // Dispatcher component
 export { QuestionRenderer, type AnswerData, type QuestionType } from './question-renderer';
 
