@@ -162,6 +162,10 @@ model CuratedQuestion {
   bloomLevel             String   // understand, apply, analyze, evaluate
   difficulty             String   // easy, medium, hard
 
+  // Image support (QUES-07)
+  imageUrl               String?  // R2 storage key for question image
+  imageAltText           String?  // Accessibility alt text
+
   // Answer structure
   options                Json?    // For multiple choice
   correctAnswer          String
