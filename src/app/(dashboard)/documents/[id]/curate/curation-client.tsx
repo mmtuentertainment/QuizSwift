@@ -121,8 +121,8 @@ export function CurationClient({ documentId, questions, targetCount }: CurationC
           <button
             className="mt-2 rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700"
             onClick={() => {
-              // Navigate to document page (quiz setup in future phase)
-              window.location.href = `/documents/${documentId}`;
+              // Navigate to quiz creation with selected questions
+              window.location.href = `/documents/${documentId}/quiz/new`;
             }}
           >
             Continue to Quiz Setup
