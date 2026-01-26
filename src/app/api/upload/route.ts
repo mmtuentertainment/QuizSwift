@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { uploadPdf, deletePdf } from '@/lib/storage/blob';
 import { inngest } from '@/inngest/client';
+import { checkRateLimit, rateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +13,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
+      );
+    }
+
+    // Rate limiting: 10 uploads per hour per user
+    const rateLimitResult = checkRateLimit(
+      `upload:${session.user.id}`,
+      RATE_LIMITS.upload
+    );
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Too many uploads. Please try again later.',
+          retryAfter: rateLimitResult.resetAt - Math.floor(Date.now() / 1000),
+        },
+        {
+          status: 429,
+          headers: rateLimitHeaders(rateLimitResult),
+        }
       );
     }
 

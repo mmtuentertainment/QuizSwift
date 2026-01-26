@@ -26,6 +26,26 @@ const ollamaProvider = createOllama({
 });
 
 /**
+ * AI Provider availability error with troubleshooting instructions
+ */
+export class AIProviderUnavailableError extends Error {
+  constructor(provider: string, troubleshooting: string[]) {
+    const message = [
+      `AI provider "${provider}" is not available.`,
+      '',
+      'Troubleshooting steps:',
+      ...troubleshooting.map((s, i) => `  ${i + 1}. ${s}`),
+    ].join('\n');
+    super(message);
+    this.name = 'AIProviderUnavailableError';
+  }
+}
+
+// Cache Ollama availability check (refreshed every 30 seconds)
+let ollamaAvailableCache: { available: boolean; checkedAt: number } | null = null;
+const CACHE_TTL_MS = 30000;
+
+/**
  * Get the extraction model (Hermes 2 Pro Mistral 7B via Ollama)
  *
  * Hermes 2 Pro Mistral 7B is fine-tuned for function calling and JSON mode:
@@ -59,13 +79,58 @@ export function getEmbeddingModel(): any {
 }
 
 /**
- * Check if Ollama is available
+ * Check if Ollama is available (with caching to avoid repeated calls)
  */
 export async function isOllamaAvailable(): Promise<boolean> {
+  const now = Date.now();
+
+  // Return cached result if still valid
+  if (ollamaAvailableCache && now - ollamaAvailableCache.checkedAt < CACHE_TTL_MS) {
+    return ollamaAvailableCache.available;
+  }
+
   try {
-    const response = await fetch('http://127.0.0.1:11434/api/tags');
-    return response.ok;
+    const response = await fetch('http://127.0.0.1:11434/api/tags', {
+      signal: AbortSignal.timeout(5000), // 5 second timeout for health check
+    });
+    const available = response.ok;
+    ollamaAvailableCache = { available, checkedAt: now };
+    return available;
   } catch {
+    ollamaAvailableCache = { available: false, checkedAt: now };
     return false;
   }
+}
+
+/**
+ * Ensure Ollama is available before returning model, with actionable error message
+ */
+export async function ensureOllamaAvailable(): Promise<void> {
+  const available = await isOllamaAvailable();
+  if (!available) {
+    throw new AIProviderUnavailableError('Ollama', [
+      'Ensure Ollama is installed: https://ollama.com/download',
+      'Start Ollama service: ollama serve',
+      'Pull required model: ollama pull hermes2pro-32k',
+      'Check if port 11434 is accessible: curl http://127.0.0.1:11434/api/tags',
+    ]);
+  }
+}
+
+/**
+ * Get extraction model with availability check
+ * Call this instead of getExtractionModel() when you need guaranteed availability
+ */
+export async function getExtractionModelSafe(): Promise<ReturnType<typeof getExtractionModel>> {
+  await ensureOllamaAvailable();
+  return getExtractionModel();
+}
+
+/**
+ * Get embedding model with availability check
+ * Call this instead of getEmbeddingModel() when you need guaranteed availability
+ */
+export async function getEmbeddingModelSafe(): Promise<ReturnType<typeof getEmbeddingModel>> {
+  await ensureOllamaAvailable();
+  return getEmbeddingModel();
 }

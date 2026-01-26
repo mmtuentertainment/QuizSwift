@@ -1,4 +1,3 @@
-import prisma from "@/lib/prisma"
 import { withAuditContext } from "@/lib/db-context"
 
 interface DeletionResult {
@@ -38,9 +37,9 @@ export async function deleteUserData(
 ): Promise<DeletionResult> {
   return withAuditContext(
     { userId: requestedBy, userType: requestorRole },
-    async () => {
+    async (tx) => {
       // Verify user exists and hasn't been deleted
-      const user = await prisma.user.findUnique({
+      const user = await tx.user.findUnique({
         where: { id: userId },
         include: { accounts: true, sessions: true },
       })
@@ -57,7 +56,7 @@ export async function deleteUserData(
 
       // Step 1: Anonymize user data (soft delete)
       // Replace PII with anonymized placeholders
-      await prisma.user.update({
+      await tx.user.update({
         where: { id: userId },
         data: {
           email: `deleted_${userId}@anonymized.local`,
@@ -68,19 +67,19 @@ export async function deleteUserData(
       })
 
       // Step 2: Delete OAuth accounts (contains tokens, not needed after anonymization)
-      const accountsResult = await prisma.account.deleteMany({
+      const accountsResult = await tx.account.deleteMany({
         where: { userId },
       })
 
       // Step 3: Delete all sessions (logout user everywhere)
-      const sessionsResult = await prisma.session.deleteMany({
+      const sessionsResult = await tx.session.deleteMany({
         where: { userId },
       })
 
       // Step 4: Create audit log entry for the deletion request
       // Note: The user update above will also trigger the audit trigger,
       // but we create an explicit ANONYMIZE entry for compliance reporting
-      await prisma.auditLog.create({
+      await tx.auditLog.create({
         data: {
           tableName: "User",
           recordId: userId,

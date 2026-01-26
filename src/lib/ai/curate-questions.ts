@@ -1,5 +1,5 @@
 import { generateText, Output } from 'ai';
-import { getExtractionModel } from './providers';
+import { getExtractionModel, ensureOllamaAvailable } from './providers';
 import {
   ContentAnalysisSchema,
   ConceptExtractionSchema,
@@ -67,6 +67,8 @@ export interface PassResult<T> {
 export async function runPass1ContentAnalysis(
   documentText: string
 ): Promise<PassResult<ContentAnalysis>> {
+  // Verify Ollama is available before starting (fail fast with helpful error)
+  await ensureOllamaAvailable();
   const model = getExtractionModel();
   const start = Date.now();
 

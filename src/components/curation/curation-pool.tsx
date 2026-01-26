@@ -79,6 +79,44 @@ export function CurationPool({
   const selectedCount = selectedIds.size;
   const progressPercent = Math.min((selectedCount / targetCount) * 100, 100);
 
+  // Calculate Bloom's distribution for selected questions
+  const bloomDistribution = useMemo(() => {
+    const selected = questions.filter((q) => selectedIds.has(q.id));
+    const counts: Record<string, number> = {
+      understand: 0,
+      apply: 0,
+      analyze: 0,
+      evaluate: 0,
+    };
+    selected.forEach((q) => {
+      if (counts[q.bloomLevel] !== undefined) {
+        counts[q.bloomLevel]++;
+      }
+    });
+    return counts;
+  }, [questions, selectedIds]);
+
+  // Check if distribution is imbalanced (>60% in one level or 0% in any level when >5 selected)
+  const distributionWarning = useMemo(() => {
+    if (selectedCount < 5) return null;
+
+    const total = selectedCount;
+    const levels = Object.entries(bloomDistribution);
+    const highestPercent = Math.max(...levels.map(([, c]) => (c / total) * 100));
+    const emptyLevels = levels.filter(([, c]) => c === 0).map(([level]) => level);
+
+    if (highestPercent > 60) {
+      const dominant = levels.find(([, c]) => (c / total) * 100 === highestPercent)?.[0];
+      return `${Math.round(highestPercent)}% of questions are "${dominant}" level. Consider diversifying for better assessment coverage.`;
+    }
+
+    if (emptyLevels.length > 0 && selectedCount >= 10) {
+      return `No questions selected at ${emptyLevels.join(', ')} level(s). Consider adding variety.`;
+    }
+
+    return null;
+  }, [bloomDistribution, selectedCount]);
+
   const handleSelectTopN = () => {
     // Get top N questions by rank that aren't already selected
     const topQuestions = filteredQuestions
@@ -132,6 +170,45 @@ export function CurationPool({
         <p className="text-sm text-gray-500 mt-1">
           {questions.length} questions available (2x your requested count)
         </p>
+
+        {/* Bloom's distribution mini-chart */}
+        {selectedCount > 0 && (
+          <div className="mt-3 pt-3 border-t">
+            <div className="text-xs text-gray-500 mb-1">Bloom&apos;s Distribution:</div>
+            <div className="flex gap-1 h-4">
+              {Object.entries(bloomDistribution).map(([level, count]) => (
+                <div
+                  key={level}
+                  className="flex-1 rounded text-xs text-center text-white flex items-center justify-center"
+                  style={{
+                    backgroundColor:
+                      level === 'understand' ? '#3b82f6' :
+                      level === 'apply' ? '#10b981' :
+                      level === 'analyze' ? '#f59e0b' :
+                      '#ef4444',
+                    opacity: count > 0 ? 1 : 0.3,
+                  }}
+                  title={`${level}: ${count} (${selectedCount > 0 ? Math.round((count / selectedCount) * 100) : 0}%)`}
+                >
+                  {count > 0 && count}
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-1 text-xs text-gray-400 mt-0.5">
+              <span className="flex-1 text-center">Understand</span>
+              <span className="flex-1 text-center">Apply</span>
+              <span className="flex-1 text-center">Analyze</span>
+              <span className="flex-1 text-center">Evaluate</span>
+            </div>
+          </div>
+        )}
+
+        {/* Distribution warning */}
+        {distributionWarning && (
+          <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded text-sm text-amber-700">
+            <span className="font-medium">Balance tip:</span> {distributionWarning}
+          </div>
+        )}
       </div>
 
       {/* Filters and controls */}

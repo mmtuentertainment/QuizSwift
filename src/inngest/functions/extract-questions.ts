@@ -73,14 +73,33 @@ export const extractQuestionsJob = inngest.createFunction(
       return extractQuestionsFromChunks(chunks);
     });
 
-    // Step 3: Flatten all questions
-    const allQuestions = await step.run('flatten-questions', async () => {
-      return extractions.flatMap((e) =>
+    // Step 3: Flatten and deduplicate questions
+    // Overlapping chunks can extract the same question multiple times
+    const allQuestions = await step.run('flatten-and-dedupe-questions', async () => {
+      const flattened = extractions.flatMap((e) =>
         e.result.questions.map((q) => ({
           ...q,
           chunkPageNumber: e.pageNumber,
         }))
       );
+
+      // Deduplicate by normalized question text (case-insensitive, whitespace-normalized)
+      const seen = new Map<string, typeof flattened[0]>();
+      for (const q of flattened) {
+        const normalizedText = q.questionText
+          .toLowerCase()
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        // Keep the first occurrence (usually from earlier chunk with better context)
+        if (!seen.has(normalizedText)) {
+          seen.set(normalizedText, q);
+        }
+      }
+
+      const deduplicated = Array.from(seen.values());
+      console.log(`[extract-questions] Deduplicated ${flattened.length} -> ${deduplicated.length} questions`);
+      return deduplicated;
     });
 
     if (allQuestions.length === 0) {
