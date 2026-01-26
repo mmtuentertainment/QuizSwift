@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth"
+import { redirect } from "next/navigation"
 import Link from "next/link"
 
 /**
@@ -11,7 +12,10 @@ import Link from "next/link"
 export default async function AdminPage() {
   const session = await auth()
 
-  // TODO (Phase 1-05): Add role check - only admins can access this page
+  // Role check: only admins can access this page
+  if (session?.user?.role !== "admin") {
+    redirect("/dashboard")
+  }
 
   return (
     <div className="space-y-8">
@@ -100,7 +104,7 @@ export default async function AdminPage() {
 
         <div className="mt-4">
           <p className="text-sm italic text-gray-500">
-            Coming in Phase 1-05: Role-based access control
+            User management features coming soon
           </p>
         </div>
       </section>
@@ -112,7 +116,7 @@ export default async function AdminPage() {
           {session?.user?.email}
         </p>
         <p className="mt-1 text-xs text-blue-600">
-          Note: Full admin role verification coming in Phase 1-05
+          Role: {session?.user?.role || "user"}
         </p>
       </section>
     </div>

@@ -116,22 +116,17 @@ export async function extractQuestionsFromChunks(
     }
 
     try {
-      console.log(`[extract-questions] Processing chunk ${i + 1}/${chunks.length} (page ${chunk.pageNumber}), content length: ${chunk.content.length}`);
-
       const result = await extractQuestionsFromChunk(
         chunk.content,
         chunk.pageNumber
       );
-
-      console.log(`[extract-questions] Chunk ${i + 1} extracted ${result.questions.length} questions`);
 
       results.push({
         chunkIndex: chunk.chunkIndex,
         pageNumber: chunk.pageNumber,
         result,
       });
-    } catch (error) {
-      console.error(`[extract-questions] Extraction FAILED for chunk ${chunk.chunkIndex}:`, error);
+    } catch {
       // Continue with other chunks on error
       results.push({
         chunkIndex: chunk.chunkIndex,

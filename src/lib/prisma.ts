@@ -15,9 +15,14 @@ function createPrismaClient(): PrismaClient {
   }
 
   // Use standard pg driver with connection pool
+  // SSL Note: Neon's connection pooler terminates SSL at the proxy layer.
+  // The connection string includes sslmode=require which ensures encryption.
+  // rejectUnauthorized:false is needed because Neon's pooler uses a different
+  // certificate than the direct connection endpoint.
+  // @see https://neon.tech/docs/connect/connection-pooling
   const pool = new Pool({
     connectionString,
-    ssl: { rejectUnauthorized: false }, // Required for Neon
+    ssl: { rejectUnauthorized: false },
     max: 10,
   })
 

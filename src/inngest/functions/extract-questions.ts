@@ -39,7 +39,6 @@ export const extractQuestionsJob = inngest.createFunction(
   async ({ event, step }) => {
     const { documentId } = event.data;
 
-    console.log(`[extract-questions] Starting extraction for document ${documentId}`);
 
     // Step 1: Load chunks from database
     const chunks = await step.run('load-chunks', async () => {
@@ -97,9 +96,7 @@ export const extractQuestionsJob = inngest.createFunction(
         }
       }
 
-      const deduplicated = Array.from(seen.values());
-      console.log(`[extract-questions] Deduplicated ${flattened.length} -> ${deduplicated.length} questions`);
-      return deduplicated;
+      return Array.from(seen.values());
     });
 
     if (allQuestions.length === 0) {

@@ -144,17 +144,9 @@ export const processPdf = inngest.createFunction(
 
       // Extract chunk contents for batch embedding
       const chunkTexts = chunks.map((c) => c.content);
-      console.log(`[process-pdf] Generating embeddings for ${chunkTexts.length} chunks`);
 
-      try {
-        // Generate embeddings in batch using Ollama mxbai-embed-large
-        const embeddings = await embedBatch(chunkTexts);
-        console.log(`[process-pdf] Generated ${embeddings.length} embeddings, first has ${embeddings[0]?.length || 0} dimensions`);
-        return embeddings;
-      } catch (embeddingError) {
-        console.error('[process-pdf] Embedding generation failed:', embeddingError);
-        throw embeddingError;
-      }
+      // Generate embeddings in batch using Ollama mxbai-embed-large
+      return embedBatch(chunkTexts);
     });
 
     // Step 8: Store chunks with embeddings in database

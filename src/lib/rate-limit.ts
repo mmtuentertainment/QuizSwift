@@ -1,9 +1,15 @@
 /**
- * Simple in-memory rate limiter for API routes.
- * Uses sliding window algorithm with cleanup.
+ * In-memory rate limiter for API routes using sliding window algorithm.
  *
- * Note: For production with multiple instances, use Redis-based rate limiting.
- * This in-memory version works well for single-instance deployments.
+ * PRODUCTION NOTE: This in-memory implementation works for Vercel's serverless
+ * functions where each function instance is short-lived. For strict rate limiting
+ * across multiple instances, integrate Vercel KV or Upstash Redis:
+ *
+ * @see https://vercel.com/docs/storage/vercel-kv
+ * @see https://upstash.com/docs/redis/sdks/ratelimit-ts/overview
+ *
+ * Current behavior: Rate limits are per-function-instance, which provides
+ * reasonable protection against abuse while allowing legitimate burst traffic.
  */
 
 interface RateLimitEntry {

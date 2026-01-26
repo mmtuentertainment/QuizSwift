@@ -29,10 +29,18 @@ export async function DELETE(
       )
     }
 
-    // TODO (Phase 1-05): Add role check - only admins can delete other users
-    // For now, any authenticated user can trigger deletion (for COPPA self-deletion)
-
     const { userId } = await params
+
+    // Role check: users can delete themselves (COPPA), admins can delete anyone
+    const isSelfDeletion = userId === session.user.id
+    const isAdmin = session.user.role === "admin"
+
+    if (!isSelfDeletion && !isAdmin) {
+      return NextResponse.json(
+        { error: "Forbidden: You can only delete your own account" },
+        { status: 403 }
+      )
+    }
 
     // Perform the deletion
     const result = await deleteUserData(userId, session.user.id, "admin")

@@ -46,8 +46,6 @@ export const curateQuestionsJob = inngest.createFunction(
   async ({ event, step }) => {
     const { documentId } = event.data;
 
-    console.log(`[curate-questions] Starting curation for document ${documentId}`);
-
     // Step 1: Load document and chunks
     const { fullText, requestedCount } = await step.run('load-document', async () => {
       const doc = await prisma.document.findUnique({
@@ -100,62 +98,47 @@ export const curateQuestionsJob = inngest.createFunction(
     let totalTokens = 0;
 
     // Step 3: Pass 1 - Content Analysis
-    console.log(`[curate-questions] Starting Pass 1: Content Analysis`);
     const pass1 = await step.run('pass-1-content-analysis', async () => {
-      const result = await runPass1ContentAnalysis(fullText);
-      console.log(`[curate-questions] Pass 1 complete in ${result.durationMs}ms`);
-      return result;
+      return runPass1ContentAnalysis(fullText);
     });
     passTimings.pass1 = pass1.durationMs;
     totalTokens += pass1.tokens;
 
     // Step 4: Pass 2 - Concept Extraction
-    console.log(`[curate-questions] Starting Pass 2: Concept Extraction`);
     const pass2 = await step.run('pass-2-concept-extraction', async () => {
-      const result = await runPass2ConceptExtraction(fullText, pass1.output);
-      console.log(`[curate-questions] Pass 2 complete in ${result.durationMs}ms`);
-      return result;
+      return runPass2ConceptExtraction(fullText, pass1.output);
     });
     passTimings.pass2 = pass2.durationMs;
     totalTokens += pass2.tokens;
 
     // Step 5: Pass 3 - Question Generation (2x count)
-    console.log(`[curate-questions] Starting Pass 3: Question Generation for ${requestedCount * 2} questions`);
     const pass3 = await step.run('pass-3-question-generation', async () => {
-      const result = await runPass3QuestionGeneration(
+      return runPass3QuestionGeneration(
         fullText,
         pass1.output,
         pass2.output,
         requestedCount
       );
-      console.log(`[curate-questions] Pass 3 complete in ${result.durationMs}ms, generated ${result.output.questions.length} questions`);
-      return result;
     });
     passTimings.pass3 = pass3.durationMs;
     totalTokens += pass3.tokens;
 
     // Step 6: Pass 4 - Self-Evaluation
-    console.log(`[curate-questions] Starting Pass 4: Self-Evaluation`);
     const pass4 = await step.run('pass-4-evaluation', async () => {
-      const result = await runPass4Evaluation(pass1.output, pass3.output);
-      console.log(`[curate-questions] Pass 4 complete in ${result.durationMs}ms`);
-      return result;
+      return runPass4Evaluation(pass1.output, pass3.output);
     });
     passTimings.pass4 = pass4.durationMs;
     totalTokens += pass4.tokens;
 
     // Step 7: Pass 5 - Final Selection
-    console.log(`[curate-questions] Starting Pass 5: Final Selection`);
     const pass5 = await step.run('pass-5-final-selection', async () => {
-      const result = await runPass5FinalSelection(
+      return runPass5FinalSelection(
         pass1.output,
         pass2.output,
         pass3.output,
         pass4.output,
         requestedCount
       );
-      console.log(`[curate-questions] Pass 5 complete in ${result.durationMs}ms, selected ${result.output.selectedForPool.length} questions`);
-      return result;
     });
     passTimings.pass5 = pass5.durationMs;
     totalTokens += pass5.tokens;
@@ -246,7 +229,6 @@ export const curateQuestionsJob = inngest.createFunction(
     });
 
     const totalDurationMs = Object.values(passTimings).reduce((a, b) => a + b, 0);
-    console.log(`[curate-questions] Pipeline complete in ${totalDurationMs}ms, ${totalTokens} tokens`);
 
     return {
       documentId,
