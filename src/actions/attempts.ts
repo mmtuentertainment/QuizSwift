@@ -1,0 +1,272 @@
+'use server';
+
+/**
+ * Server Actions for quiz attempt management
+ *
+ * Handles:
+ * - Starting a quiz attempt
+ * - Submitting individual answers (with auto-grading)
+ * - Completing an attempt (calculating final score)
+ * - Marking quiz as previewed (teacher workflow)
+ */
+
+import { revalidatePath } from 'next/cache';
+import { auth } from '@/lib/auth';
+import prisma from '@/lib/prisma';
+import { gradeAnswer, isAutoGradable } from '@/lib/questions/grading';
+import type { AnswerData, QuestionOptions } from '@/lib/questions/types';
+
+/**
+ * Start or retrieve an existing quiz attempt for the current user
+ */
+export async function startAttempt(quizId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: 'Unauthorized' };
+  }
+
+  // Check if attempt already exists
+  const existing = await prisma.quizAttempt.findUnique({
+    where: {
+      quizId_userId: {
+        quizId,
+        userId: session.user.id,
+      },
+    },
+  });
+
+  if (existing) {
+    return { attemptId: existing.id };
+  }
+
+  // Create new attempt
+  const attempt = await prisma.quizAttempt.create({
+    data: {
+      quizId,
+      userId: session.user.id,
+      status: 'in_progress',
+    },
+  });
+
+  return { attemptId: attempt.id };
+}
+
+/**
+ * Submit an answer for a specific question in an attempt
+ * Automatically grades objective question types
+ */
+export async function submitAnswer(
+  attemptId: string,
+  questionId: string,
+  answerData: AnswerData
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: 'Unauthorized' };
+  }
+
+  // Verify attempt ownership and get question details
+  const attempt = await prisma.quizAttempt.findUnique({
+    where: { id: attemptId },
+    include: {
+      quiz: {
+        include: {
+          questions: {
+            where: { questionId },
+            include: { question: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!attempt || attempt.userId !== session.user.id) {
+    return { error: 'Attempt not found' };
+  }
+
+  if (attempt.status !== 'in_progress') {
+    return { error: 'Attempt already submitted' };
+  }
+
+  const quizQuestion = attempt.quiz.questions[0];
+  if (!quizQuestion) {
+    return { error: 'Question not in quiz' };
+  }
+
+  const question = quizQuestion.question;
+  const points = quizQuestion.points;
+
+  // Grade if auto-gradable
+  let gradeResult = null;
+  if (isAutoGradable(question.questionType)) {
+    gradeResult = gradeAnswer(
+      question.questionType,
+      question.options as QuestionOptions | null,
+      answerData,
+      points
+    );
+  }
+
+  // Upsert answer (update if already exists)
+  await prisma.questionAnswer.upsert({
+    where: {
+      attemptId_questionId: {
+        attemptId,
+        questionId,
+      },
+    },
+    create: {
+      attemptId,
+      questionId,
+      answerData: answerData as object,
+      isCorrect: gradeResult?.isCorrect ?? null,
+      pointsEarned: gradeResult?.pointsEarned ?? null,
+      feedback: gradeResult?.feedback ?? null,
+    },
+    update: {
+      answerData: answerData as object,
+      isCorrect: gradeResult?.isCorrect ?? null,
+      pointsEarned: gradeResult?.pointsEarned ?? null,
+      feedback: gradeResult?.feedback ?? null,
+      answeredAt: new Date(),
+    },
+  });
+
+  return { success: true, gradeResult };
+}
+
+/**
+ * Complete a quiz attempt and calculate the final score
+ */
+export async function completeAttempt(attemptId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: 'Unauthorized' };
+  }
+
+  const attempt = await prisma.quizAttempt.findUnique({
+    where: { id: attemptId },
+    include: {
+      answers: true,
+      quiz: {
+        include: {
+          questions: true,
+        },
+      },
+    },
+  });
+
+  if (!attempt || attempt.userId !== session.user.id) {
+    return { error: 'Attempt not found' };
+  }
+
+  if (attempt.status !== 'in_progress') {
+    return { error: 'Attempt already submitted' };
+  }
+
+  // Calculate total score from graded answers
+  const totalScore = attempt.answers.reduce(
+    (sum, ans) => sum + (ans.pointsEarned ?? 0),
+    0
+  );
+  const maxScore = attempt.quiz.questions.reduce(
+    (sum, q) => sum + q.points,
+    0
+  );
+
+  // Update attempt status
+  await prisma.quizAttempt.update({
+    where: { id: attemptId },
+    data: {
+      status: 'submitted',
+      submittedAt: new Date(),
+      score: totalScore,
+      maxScore,
+    },
+  });
+
+  revalidatePath('/documents');
+
+  return { success: true, score: totalScore, maxScore };
+}
+
+/**
+ * Mark a quiz as previewed by the teacher
+ * Required before quiz can be published (CONT-06 workflow requirement)
+ */
+export async function markQuizPreviewed(quizId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: 'Unauthorized' };
+  }
+
+  const quiz = await prisma.quiz.findUnique({
+    where: { id: quizId },
+    select: { createdById: true, status: true },
+  });
+
+  if (!quiz) {
+    return { error: 'Quiz not found' };
+  }
+
+  if (quiz.createdById !== session.user.id) {
+    return { error: 'Access denied' };
+  }
+
+  await prisma.quiz.update({
+    where: { id: quizId },
+    data: {
+      teacherPreviewedAt: new Date(),
+      // After preview, quiz can now be published
+      status: quiz.status === 'draft' ? 'preview_required' : quiz.status,
+    },
+  });
+
+  revalidatePath('/documents');
+
+  return { success: true };
+}
+
+/**
+ * Get an existing attempt with all answers for resuming
+ */
+export async function getAttemptWithAnswers(quizId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: 'Unauthorized' };
+  }
+
+  const attempt = await prisma.quizAttempt.findUnique({
+    where: {
+      quizId_userId: {
+        quizId,
+        userId: session.user.id,
+      },
+    },
+    include: {
+      answers: {
+        select: {
+          questionId: true,
+          answerData: true,
+          isCorrect: true,
+          pointsEarned: true,
+          feedback: true,
+        },
+      },
+    },
+  });
+
+  if (!attempt) {
+    return { attempt: null, answers: [] };
+  }
+
+  return {
+    attempt: {
+      id: attempt.id,
+      status: attempt.status,
+      score: attempt.score,
+      maxScore: attempt.maxScore,
+    },
+    answers: attempt.answers,
+  };
+}
