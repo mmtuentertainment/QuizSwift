@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { z } from 'zod';
 
 export interface QuestionFilters {
   documentId?: string;
@@ -126,25 +127,46 @@ export async function getTeacherDocuments(): Promise<TeacherDocument[]> {
   });
 }
 
+// =============================================================================
+// Question Update with Zod Validation
+// =============================================================================
+
 /**
- * Update a curated question's content.
+ * Zod schema for question update validation
+ * Validates questionText, options, correctAnswer, explanation, sourceEvidence
+ */
+const UpdateQuestionSchema = z.object({
+  questionText: z.string().min(1, 'Question text cannot be empty').max(5000).optional(),
+  correctAnswer: z.string().min(1, 'Correct answer cannot be empty').max(2000).optional(),
+  explanation: z.string().max(5000).optional(),
+  sourceEvidence: z.string().max(5000).optional(),
+  options: z.unknown().optional(), // JSON structure varies by question type
+});
+
+export type UpdateQuestionInput = z.infer<typeof UpdateQuestionSchema>;
+
+/**
+ * Update a curated question's content with Zod validation.
  * Only allows updating questions from documents owned by the current user.
+ *
+ * CONT-07: Teacher can edit question text, answers, or explanation
  */
 export async function updateQuestion(
   questionId: string,
-  data: {
-    questionText?: string;
-    correctAnswer?: string;
-    explanation?: string;
-    options?: unknown;
-  }
-): Promise<{ success: boolean; error?: string }> {
+  data: UpdateQuestionInput
+): Promise<{ success: boolean; error?: string; details?: ReturnType<z.ZodError['flatten']> }> {
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'Not authenticated' };
   }
 
-  // Verify ownership
+  // Validate input with Zod
+  const parsed = UpdateQuestionSchema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, error: 'Invalid input', details: parsed.error.flatten() };
+  }
+
+  // Verify ownership - user must own the document the question belongs to
   const question = await prisma.curatedQuestion.findFirst({
     where: {
       id: questionId,
@@ -158,15 +180,59 @@ export async function updateQuestion(
     return { success: false, error: 'Question not found or access denied' };
   }
 
+  // Build update data, only including fields that were provided
+  const updateData: {
+    questionText?: string;
+    correctAnswer?: string;
+    explanation?: string;
+    sourceEvidence?: string;
+    options?: object;
+  } = {};
+
+  if (parsed.data.questionText !== undefined) {
+    updateData.questionText = parsed.data.questionText;
+  }
+  if (parsed.data.correctAnswer !== undefined) {
+    updateData.correctAnswer = parsed.data.correctAnswer;
+  }
+  if (parsed.data.explanation !== undefined) {
+    updateData.explanation = parsed.data.explanation;
+  }
+  if (parsed.data.sourceEvidence !== undefined) {
+    updateData.sourceEvidence = parsed.data.sourceEvidence;
+  }
+  if (parsed.data.options !== undefined) {
+    updateData.options = parsed.data.options as object;
+  }
+
   await prisma.curatedQuestion.update({
     where: { id: questionId },
-    data: {
-      questionText: data.questionText,
-      correctAnswer: data.correctAnswer,
-      explanation: data.explanation,
-      options: data.options as object | undefined,
-    },
+    data: updateData,
   });
 
   return { success: true };
+}
+
+/**
+ * Get a single question with all details for editing
+ */
+export async function getQuestionForEdit(questionId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return null;
+  }
+
+  return prisma.curatedQuestion.findFirst({
+    where: {
+      id: questionId,
+      document: {
+        uploadedById: session.user.id,
+      },
+    },
+    include: {
+      document: {
+        select: { id: true, fileName: true },
+      },
+    },
+  });
 }
