@@ -1,27 +1,27 @@
 # Project State: QuizSwift
 
 **Last Updated:** 2026-01-26
-**Session:** Phase 3 Plan 07 Complete - Question Bank Browse Page
+**Session:** Phase 3 Plan 08 Complete - Image Upload Support
 
 ## Project Reference
 
 **Core Value:** 100% factual accuracy - every question extracted from source material, never generated
 
-**Current Focus:** Phase 3 - Question Bank & Teacher Workflow (Plan 07 of 9 complete)
+**Current Focus:** Phase 3 - Question Bank & Teacher Workflow (Plan 08 of 9 complete)
 
 ## Current Position
 
 **Phase:** 3 of 8 - Question Bank & Teacher Workflow
-**Plan:** 7 of 9 complete
+**Plan:** 8 of 9 complete
 **Status:** In progress
-**Last activity:** 2026-01-26 - Completed 03-07-PLAN.md (Question bank browse page)
+**Last activity:** 2026-01-26 - Completed 03-08-PLAN.md (Image upload support)
 
 **Progress:**
 Phase 1: 100% (5/5 plans)   [========================================]
 Phase 2: 100% (4/4 plans)   [========================================]
 Phase 2.1: 100% (6/6 plans) [========================================]
-Phase 3: 78% (7/9 plans)    [===============================         ]
-Overall: 61%                [======================================= ]
+Phase 3: 89% (8/9 plans)    [===================================     ]
+Overall: 64%                [=========================================]
 
 **Phases Overview:**
 | Phase | Name | Status | Plans |
@@ -29,7 +29,7 @@ Overall: 61%                [======================================= ]
 | 1 | Foundation & Compliance | COMPLETE | 5/5 |
 | 2 | Content & AI Extraction | COMPLETE | 4/4 |
 | 2.1 | Intelligent Question Curation | COMPLETE | 6/6 |
-| 3 | Question Bank & Teacher Workflow | In Progress | 7/9 |
+| 3 | Question Bank & Teacher Workflow | In Progress | 8/9 |
 | 4 | Quiz Delivery & Student Experience | Pending | - |
 | 5 | Anti-Cheating & Randomization | Pending | - |
 | 6 | Grading & Analytics | Pending | - |
@@ -39,13 +39,13 @@ Overall: 61%                [======================================= ]
 ## Performance Metrics
 
 **Session Stats:**
-- Plans completed: 1 (03-07)
+- Plans completed: 1 (03-08)
 - Tasks completed: 3
-- Duration: 6 min
+- Duration: 4 min
 
 **Cumulative Stats:**
 - Total phases: 8 (+ 2.1 sub-phase)
-- Plans completed: 22/36+ (approximate)
+- Plans completed: 23/36+ (approximate)
 
 ## Accumulated Context
 
@@ -69,6 +69,9 @@ Overall: 61%                [======================================= ]
 | Shuffle on initial render | Fair quiz-taking by randomizing right column | 03-03 |
 | URL-based filter state | Bookmarkable, shareable, browser back button works | 03-07 |
 | teacherSelected filter in bank | Question bank shows curated picks, not full 2x pool | 03-07 |
+| Presigned PUT for direct upload | Avoids server as middleman, reduces bandwidth costs | 03-08 |
+| 5MB max image size | Balance between quality and storage costs | 03-08 |
+| Local constants in client component | Avoid server imports in 'use client' components | 03-08 |
 
 ### Technical Stack
 
@@ -78,8 +81,9 @@ Overall: 61%                [======================================= ]
 - **Background Jobs:** Inngest 3.49.3
 - **Structured Output:** Zod 3.25.76 for AI schema validation
 - **Drag-and-Drop:** @dnd-kit/core@6.3.1, @dnd-kit/sortable@10.0.0, @dnd-kit/utilities@3.2.2
+- **Storage:** Cloudflare R2 via @aws-sdk/client-s3 + @aws-sdk/s3-request-presigner
 
-### Patterns Established (03-02, 03-03, 03-07)
+### Patterns Established (03-02, 03-03, 03-07, 03-08)
 
 - QuestionRenderer switch pattern for dispatching to type-specific components
 - Consistent props interface: options, answer/value, onChange, readOnly, showCorrect
@@ -87,6 +91,7 @@ Overall: 61%                [======================================= ]
 - SortableItem pattern with useSortable hook for accessible drag-and-drop
 - Server actions pattern for authenticated data fetching (src/actions/)
 - URL searchParams for filter state management
+- Direct client-to-R2 upload via presigned URLs pattern
 
 ### Lessons Learned
 
@@ -96,25 +101,24 @@ Overall: 61%                [======================================= ]
 - Prisma schema validation requires all related models to exist before validation passes
 - dnd-kit provides excellent React 19 compatibility and keyboard accessibility out of the box
 - useSearchParams + router.push pattern enables URL-based filter state
+- Client components cannot import server-only modules - duplicate constants locally
 
 ## Session Continuity
 
 ### What Just Happened
 
-Completed Phase 3 Plan 07 (Question Bank Browse Page):
-- Created server actions for question queries with filtering/pagination
-- Built QuestionFilters component with document, type, bloom level dropdowns
-- Built QuestionList with paginated display and metadata badges
-- Created QuestionEditor modal for inline editing from bank
-- Implemented /question-bank page with URL-based filter state
+Completed Phase 3 Plan 08 (Image Upload Support):
+- Added imageUrl and imageAltText fields to CuratedQuestion model
+- Created image upload utilities with presigned URL generation
+- Built ImageUpload component with drag-and-drop, preview, and validation
+- Created /api/upload/image endpoint for presigned URL requests
 
 ### What Happens Next
 
-Phase 3 continues with remaining plans:
-- 03-08: Quiz builder to add questions from bank to quizzes
+Phase 3 continues with final plan:
 - 03-09: Teacher preview flow before publishing
 
 ---
 
 *State captured: 2026-01-26*
-*Next command: /gsd:execute-phase 03 plan 08*
+*Next command: /gsd:execute-phase 03 plan 09*
