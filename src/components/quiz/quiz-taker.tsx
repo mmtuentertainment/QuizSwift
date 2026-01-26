@@ -24,6 +24,7 @@ interface QuizTakerProps {
   questions: CuratedQuestion[];
   isPreview?: boolean;
   onComplete?: (score: number, maxScore: number) => void;
+  // Note: timeLimit will be implemented in Phase 4
   timeLimit?: number | null;
 }
 
@@ -117,7 +118,8 @@ export function QuizTaker({
   questions,
   isPreview = false,
   onComplete,
-  timeLimit,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  timeLimit: _timeLimit,
 }: QuizTakerProps) {
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
