@@ -1,27 +1,27 @@
 # Project State: QuizSwift
 
 **Last Updated:** 2026-01-26
-**Session:** Phase 3 Plan 05 Complete - Quiz Taking & Teacher Preview
+**Session:** Phase 3 Plan 06 Complete - Quiz Detail, Question Editing, Publish Workflow
 
 ## Project Reference
 
 **Core Value:** 100% factual accuracy - every question extracted from source material, never generated
 
-**Current Focus:** Phase 3 - Question Bank & Teacher Workflow (Plan 05 of 9 complete)
+**Current Focus:** Phase 3 - Question Bank & Teacher Workflow (Plan 06 of 9 complete)
 
 ## Current Position
 
 **Phase:** 3 of 8 - Question Bank & Teacher Workflow
-**Plan:** 7 of 9 complete (01, 02, 03, 04, 05, 07, 08)
+**Plan:** 8 of 9 complete (01, 02, 03, 04, 05, 06, 07, 08)
 **Status:** In progress
-**Last activity:** 2026-01-26 - Completed 03-05-PLAN.md (Quiz taking & teacher preview)
+**Last activity:** 2026-01-26 - Completed 03-06-PLAN.md (Quiz detail, question editing, publish workflow)
 
 **Progress:**
 Phase 1: 100% (5/5 plans)   [========================================]
 Phase 2: 100% (4/4 plans)   [========================================]
 Phase 2.1: 100% (6/6 plans) [========================================]
-Phase 3: 78% (7/9 plans)    [================================        ]
-Overall: 61%                [=================================       ]
+Phase 3: 89% (8/9 plans)    [====================================    ]
+Overall: 64%                [==================================      ]
 
 **Phases Overview:**
 | Phase | Name | Status | Plans |
@@ -29,7 +29,7 @@ Overall: 61%                [=================================       ]
 | 1 | Foundation & Compliance | COMPLETE | 5/5 |
 | 2 | Content & AI Extraction | COMPLETE | 4/4 |
 | 2.1 | Intelligent Question Curation | COMPLETE | 6/6 |
-| 3 | Question Bank & Teacher Workflow | In Progress | 7/9 |
+| 3 | Question Bank & Teacher Workflow | In Progress | 8/9 |
 | 4 | Quiz Delivery & Student Experience | Pending | - |
 | 5 | Anti-Cheating & Randomization | Pending | - |
 | 6 | Grading & Analytics | Pending | - |
@@ -39,13 +39,13 @@ Overall: 61%                [=================================       ]
 ## Performance Metrics
 
 **Session Stats:**
-- Plans completed: 1 (03-05)
+- Plans completed: 1 (03-06)
 - Tasks completed: 3
-- Duration: 12 min
+- Duration: 10 min
 
 **Cumulative Stats:**
 - Total phases: 8 (+ 2.1 sub-phase)
-- Plans completed: 22/36+ (approximate)
+- Plans completed: 23/36+ (approximate)
 
 ## Accumulated Context
 
@@ -71,10 +71,12 @@ Overall: 61%                [=================================       ]
 | teacherSelected filter in bank | Question bank shows curated picks, not full 2x pool | 03-07 |
 | Presigned PUT for direct upload | Avoids server as middleman, reduces bandwidth costs | 03-08 |
 | 5MB max image size | Balance between quality and storage costs | 03-08 |
-| Local constants in client component | Avoid server imports in 'use client' components | 03-08 |
+| Local constants in client component | Avoid server imports in use client components | 03-08 |
 | Answer format conversion functions | Bridge QuestionRenderer and grading library formats | 03-05 |
 | Partial credit = (correct/total) * max | Simple proportional scoring for fill-in-blank and matching | 03-05 |
 | Teacher preview via real QuizAttempt | Reuses quiz-taking flow for realistic experience | 03-05 |
+| CONT-06 enforcement via server action | publishQuiz checks teacherPreviewedAt before allowing publish | 03-06 |
+| Modal pattern for question editing | QuestionEditor as overlay maintains quiz context | 03-06 |
 
 ### Technical Stack
 
@@ -86,7 +88,7 @@ Overall: 61%                [=================================       ]
 - **Drag-and-Drop:** @dnd-kit/core@6.3.1, @dnd-kit/sortable@10.0.0, @dnd-kit/utilities@3.2.2
 - **Storage:** Cloudflare R2 via @aws-sdk/client-s3 + @aws-sdk/s3-request-presigner
 
-### Patterns Established (03-02, 03-03, 03-05, 03-07, 03-08)
+### Patterns Established (03-02, 03-03, 03-05, 03-06, 03-07, 03-08)
 
 - QuestionRenderer switch pattern for dispatching to type-specific components
 - Consistent props interface: options, answer/value, onChange, readOnly, showCorrect
@@ -97,6 +99,8 @@ Overall: 61%                [=================================       ]
 - Direct client-to-R2 upload via presigned URLs pattern
 - Answer format conversion between renderer and library types
 - Auto-grading with partial credit for objective question types
+- Modal editor pattern: QuestionEditor with isOpen/onClose/onSave props
+- Quiz status workflow: draft -> preview_required -> published
 
 ### Lessons Learned
 
@@ -113,25 +117,28 @@ Overall: 61%                [=================================       ]
 
 ### What Just Happened
 
-Completed Phase 3 Plan 05 (Quiz Taking & Teacher Preview):
-- Created auto-grading logic for objective question types (MC, T/F, fill-blank, matching)
-- Added Server Actions for quiz attempt management (start, submit, complete, preview)
-- Built QuizTaker component with navigation, progress tracking, answer persistence
-- Created teacher preview page satisfying CONT-06 requirement
+Completed Phase 3 Plan 06 (Quiz Detail, Question Editing, Publish Workflow):
+- Enhanced updateQuestion with Zod validation and sourceEvidence field support
+- Added publishQuiz action with CONT-06 preview requirement enforcement
+- Created quiz detail page showing all questions with edit buttons
+- Built QuestionEditor modal for question text, answers, explanation editing
+- Created quiz settings edit page for title, time limit, shuffle options
 
 Key files created:
-- src/lib/questions/grading.ts - Auto-grading logic
-- src/actions/attempts.ts - Quiz attempt Server Actions
-- src/components/quiz/quiz-taker.tsx - Quiz-taking UI component
-- src/app/(dashboard)/documents/[id]/quiz/[quizId]/preview/page.tsx - Teacher preview page
+- src/components/questions/question-editor.tsx - Modal for editing questions
+- src/app/(dashboard)/documents/[id]/quiz/[quizId]/page.tsx - Quiz detail page
+- src/app/(dashboard)/documents/[id]/quiz/[quizId]/edit/page.tsx - Quiz settings page
+
+Key files modified:
+- src/actions/questions.ts - Added Zod validation, sourceEvidence support
+- src/actions/quiz.ts - Added publishQuiz, unpublishQuiz, updateQuizSettings
 
 ### What Happens Next
 
-Phase 3 continues with remaining plans:
-- 03-06: Question editing capabilities
+Phase 3 continues with final plan:
 - 03-09: Final workflow polish
 
 ---
 
 *State captured: 2026-01-26*
-*Next command: /gsd:execute-phase 03 plan 06*
+*Next command: /gsd:execute-phase 03 plan 09*
