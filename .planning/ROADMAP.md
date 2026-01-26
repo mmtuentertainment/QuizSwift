@@ -92,17 +92,17 @@ Plans:
 
 **Goal:** Replace chunk-by-chunk extraction with a pedagogically-sound 5-pass reasoning pipeline that generates comprehension questions and allows teacher selection from a curated pool.
 
-**Status:** PLANNED
+**Status:** COMPLETE
 
 **Plans:** 6 plans
 
 Plans:
-- [ ] 02.1-01-PLAN.md - Schema updates and upload UI question count input
-- [ ] 02.1-02-PLAN.md - Zod schemas for 5-pass reasoning pipeline
-- [ ] 02.1-03-PLAN.md - 5-pass reasoning pipeline implementation
-- [ ] 02.1-04-PLAN.md - Inngest curation job replacing extraction
-- [ ] 02.1-05-PLAN.md - Show-your-work canvas with tldraw and KaTeX
-- [ ] 02.1-06-PLAN.md - Teacher curation UI for question selection
+- [x] 02.1-01-PLAN.md - Schema updates and upload UI question count input
+- [x] 02.1-02-PLAN.md - Zod schemas for 5-pass reasoning pipeline
+- [x] 02.1-03-PLAN.md - 5-pass reasoning pipeline implementation
+- [x] 02.1-04-PLAN.md - Inngest curation job replacing extraction
+- [x] 02.1-05-PLAN.md - Show-your-work canvas with tldraw and KaTeX
+- [x] 02.1-06-PLAN.md - Teacher curation UI for question selection
 
 **Requirements:**
 - CONT-04-ENH: AI generates comprehension questions (not just extraction) following Bloom's Taxonomy
@@ -131,6 +131,19 @@ Plans:
 ## Phase 3: Question Bank & Teacher Workflow
 
 **Goal:** Teachers can review, edit, and approve extracted questions across all question types before students see them.
+
+**Plans:** 9 plans
+
+Plans:
+- [ ] 03-01-PLAN.md - Database models (Quiz, QuizQuestion, QuizAttempt, QuestionAnswer) and TypeScript types
+- [ ] 03-02-PLAN.md - Question type components (MC, T/F, fill-blank, essay)
+- [ ] 03-03-PLAN.md - Matching questions with @dnd-kit drag-and-drop
+- [ ] 03-04-PLAN.md - Quiz creation workflow and Server Actions
+- [ ] 03-05-PLAN.md - Quiz-taking flow with auto-grading and teacher preview
+- [ ] 03-06-PLAN.md - Quiz detail page, question editing, and publish workflow
+- [ ] 03-07-PLAN.md - Question bank browse page with filters
+- [ ] 03-08-PLAN.md - Image upload support for questions
+- [ ] 03-09-PLAN.md - Integration, navigation, and human verification
 
 **Requirements:**
 - CONT-06: Teacher must take the quiz before approving it
@@ -285,19 +298,19 @@ Plans:
 | CONT-02 | Phase 2 | Complete |
 | CONT-03 | Phase 2 | Complete |
 | CONT-04 | Phase 2 | Complete |
-| CONT-04-ENH | Phase 2.1 | Pending |
+| CONT-04-ENH | Phase 2.1 | Complete |
 | CONT-05 | Phase 2 | Complete |
 | CONT-06 | Phase 3 | Pending |
 | CONT-07 | Phase 3 | Pending |
 | CONT-08 | Phase 3 | Pending |
-| CUR-01 | Phase 2.1 | Pending |
-| CUR-02 | Phase 2.1 | Pending |
-| CUR-03 | Phase 2.1 | Pending |
+| CUR-01 | Phase 2.1 | Complete |
+| CUR-02 | Phase 2.1 | Complete |
+| CUR-03 | Phase 2.1 | Complete |
 | QUES-01 | Phase 3 | Pending |
 | QUES-02 | Phase 3 | Pending |
 | QUES-03 | Phase 3 | Pending |
 | QUES-04 | Phase 3 | Pending |
-| QUES-05 | Phase 2.1 | Pending |
+| QUES-05 | Phase 2.1 | Complete |
 | QUES-06 | Phase 3 | Pending |
 | QUES-07 | Phase 3 | Pending |
 | DELV-01 | Phase 4 | Pending |
@@ -339,8 +352,8 @@ Plans:
 **Phase Distribution:**
 - Phase 1: 6 requirements (Foundation & Compliance) - COMPLETE
 - Phase 2: 5 requirements (Content & AI Extraction) - COMPLETE
-- Phase 2.1: 5 requirements (Intelligent Question Curation) - PLANNED
-- Phase 3: 9 requirements (Question Bank & Teacher Workflow)
+- Phase 2.1: 5 requirements (Intelligent Question Curation) - COMPLETE
+- Phase 3: 9 requirements (Question Bank & Teacher Workflow) - PLANNED
 - Phase 4: 5 requirements (Quiz Delivery & Student Experience)
 - Phase 5: 2 requirements (Anti-Cheating & Randomization)
 - Phase 6: 7 requirements (Grading & Analytics)
@@ -358,10 +371,10 @@ Phase 1 (Foundation) - COMPLETE
 Phase 2 (Content & AI) - COMPLETE -----> Phase 8 (Dual-Tier AI)
     |
     v
-Phase 2.1 (Intelligent Curation) - PLANNED
+Phase 2.1 (Intelligent Curation) - COMPLETE
     |
     v
-Phase 3 (Question Bank)
+Phase 3 (Question Bank) - PLANNED
     |
     v
 Phase 4 (Quiz Delivery)
@@ -382,5 +395,6 @@ Phase 6 (Grading) ---------> Phase 7 (Google Classroom)
 *Roadmap created: 2025-01-23*
 *Phase 1 completed: 2026-01-23*
 *Phase 2 completed: 2026-01-23*
-*Phase 2.1 planned: 2026-01-24*
-*Next step: /gsd:execute-phase 2.1*
+*Phase 2.1 completed: 2026-01-25*
+*Phase 3 planned: 2026-01-26*
+*Next step: /gsd:execute-phase 3*
