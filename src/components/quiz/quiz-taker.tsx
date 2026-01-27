@@ -13,7 +13,7 @@
  * Used by both teacher preview and student quiz modes.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useOptimistic, startTransition } from 'react';
 import { QuestionRenderer, type AnswerData as RendererAnswerData } from '@/components/questions';
 import { startAttempt, submitAnswer, completeAttempt, getAttemptWithAnswers } from '@/actions/attempts';
 import type { CuratedQuestion } from '@/generated/prisma/client';
@@ -35,23 +35,24 @@ function toLibAnswerData(answer: RendererAnswerData): LibAnswerData | null {
   switch (answer.type) {
     case 'multiple_choice':
       return answer.selectedId
-        ? { selectedChoiceId: answer.selectedId }
+        ? { type: 'multiple_choice', selectedChoiceId: answer.selectedId }
         : null;
     case 'true_false':
       return answer.selectedAnswer !== null
-        ? { answer: answer.selectedAnswer }
+        ? { type: 'true_false', answer: answer.selectedAnswer }
         : null;
     case 'fill_in_blank':
-      return { blanks: answer.answers };
+      return { type: 'fill_in_blank', blanks: answer.answers };
     case 'matching':
-      return { pairs: answer.pairs };
+      return { type: 'matching', pairs: answer.pairs };
     case 'essay':
     case 'short_answer':
       return answer.text
-        ? { text: answer.text, wordCount: answer.text.split(/\s+/).filter(Boolean).length }
+        ? { type: answer.type, text: answer.text, wordCount: answer.text.split(/\s+/).filter(Boolean).length }
         : null;
     case 'show_work':
       return {
+        type: 'show_work',
         finalAnswer: answer.data?.finalAnswer || '',
         canvasState: answer.data?.canvasState || {},
       };
@@ -123,7 +124,18 @@ export function QuizTaker({
 }: QuizTakerProps) {
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Map<string, RendererAnswerData>>(new Map());
+  // Saved answers confirmed by server
+  const [savedAnswers, setSavedAnswers] = useState<Map<string, RendererAnswerData>>(new Map());
+  // Optimistic answers with auto-revert on failure (React 19 pattern)
+  const [optimisticAnswers, addOptimisticAnswer] = useOptimistic(
+    savedAnswers,
+    (state, update: { questionId: string; answer: RendererAnswerData }) => {
+      const next = new Map(state);
+      next.set(update.questionId, update.answer);
+      return next;
+    }
+  );
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [score, setScore] = useState<{ earned: number; max: number } | null>(null);
@@ -170,7 +182,7 @@ export function QuizTaker({
               }
             }
           }
-          setAnswers(restoredAnswers);
+          setSavedAnswers(restoredAnswers);
         } else {
           // Create new attempt
           const result = await startAttempt(quizId);
@@ -188,25 +200,45 @@ export function QuizTaker({
   }, [quizId, questions]);
 
   const currentQuestion = questions[currentIndex];
-  const currentAnswer = currentQuestion ? answers.get(currentQuestion.id) ?? null : null;
+  const currentAnswer = currentQuestion ? optimisticAnswers.get(currentQuestion.id) ?? null : null;
 
   const handleAnswer = useCallback(async (answerData: RendererAnswerData) => {
     if (!attemptId || !currentQuestion) return;
 
-    // Update local state immediately
-    setAnswers((prev) => new Map(prev).set(currentQuestion.id, answerData));
+    // Clear any previous save error
+    setSaveError(null);
+
+    // Show optimistic update immediately
+    addOptimisticAnswer({ questionId: currentQuestion.id, answer: answerData });
 
     // Convert to library format and submit to server
     const libAnswer = toLibAnswerData(answerData);
     if (libAnswer) {
-      try {
-        await submitAnswer(attemptId, currentQuestion.id, libAnswer);
-      } catch (err) {
-        console.error('Failed to save answer:', err);
-        // Optionally show user feedback
-      }
+      // Use startTransition for the async server operation
+      // On success: update savedAnswers (optimistic becomes real)
+      // On failure: transition ends without updating savedAnswers (auto-reverts)
+      startTransition(async () => {
+        try {
+          const result = await submitAnswer(attemptId, currentQuestion.id, libAnswer);
+          if (result.error) {
+            console.error('Failed to save answer:', result.error);
+            setSaveError(`Failed to save answer: ${result.error}`);
+            // Don't update savedAnswers - optimistic will revert
+          } else {
+            // Success: update saved answers so optimistic becomes permanent
+            setSavedAnswers((prev) => new Map(prev).set(currentQuestion.id, answerData));
+          }
+        } catch (err) {
+          console.error('Failed to save answer:', err);
+          setSaveError('Failed to save your answer. Please check your connection and try again.');
+          // Don't update savedAnswers - optimistic will revert
+        }
+      });
+    } else {
+      // For answers that don't need server save (empty), just update saved state
+      setSavedAnswers((prev) => new Map(prev).set(currentQuestion.id, answerData));
     }
-  }, [attemptId, currentQuestion]);
+  }, [attemptId, currentQuestion, addOptimisticAnswer]);
 
   const handleNext = useCallback(() => {
     if (currentIndex < questions.length - 1) {
@@ -329,7 +361,7 @@ export function QuizTaker({
           Question {currentIndex + 1} of {questions.length}
         </span>
         <span>
-          {answers.size} of {questions.length} answered
+          {optimisticAnswers.size} of {questions.length} answered
         </span>
       </div>
 
@@ -386,12 +418,12 @@ export function QuizTaker({
               className={`h-3 w-3 rounded-full transition-all ${
                 idx === currentIndex
                   ? 'scale-125 bg-blue-600 ring-2 ring-blue-300'
-                  : answers.has(q.id)
+                  : optimisticAnswers.has(q.id)
                     ? 'bg-green-500 hover:bg-green-400'
                     : 'bg-gray-300 hover:bg-gray-400'
               }`}
-              aria-label={`Go to question ${idx + 1}${answers.has(q.id) ? ' (answered)' : ''}`}
-              title={`Question ${idx + 1}${answers.has(q.id) ? ' (answered)' : ''}`}
+              aria-label={`Go to question ${idx + 1}${optimisticAnswers.has(q.id) ? ' (answered)' : ''}`}
+              title={`Question ${idx + 1}${optimisticAnswers.has(q.id) ? ' (answered)' : ''}`}
             />
           ))}
         </div>
@@ -425,12 +457,27 @@ export function QuizTaker({
         )}
       </div>
 
+      {/* Save error notification */}
+      {saveError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-red-700">{saveError}</p>
+            <button
+              onClick={() => setSaveError(null)}
+              className="ml-4 text-sm text-red-600 underline hover:text-red-800"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Unanswered warning on last question */}
-      {currentIndex === questions.length - 1 && answers.size < questions.length && (
+      {currentIndex === questions.length - 1 && optimisticAnswers.size < questions.length && (
         <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
           <p className="text-sm text-yellow-800">
-            <strong>Note:</strong> You have {questions.length - answers.size} unanswered question
-            {questions.length - answers.size > 1 ? 's' : ''}.
+            <strong>Note:</strong> You have {questions.length - optimisticAnswers.size} unanswered question
+            {questions.length - optimisticAnswers.size > 1 ? 's' : ''}.
             You can still submit, but unanswered questions will be marked incorrect.
           </p>
         </div>

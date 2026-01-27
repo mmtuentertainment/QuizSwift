@@ -66,21 +66,27 @@ export type QuestionOptions =
 
 // =============================================================================
 // Answer Data (stored in QuestionAnswer.answerData)
+// Discriminated union with 'type' field for runtime type checking
+// Note: UI components use a different format (RendererAnswerData in question-renderer.tsx)
 // =============================================================================
 
 export interface MCAnswer {
+  type: 'multiple_choice';
   selectedChoiceId: string;
 }
 
 export interface TFAnswer {
+  type: 'true_false';
   answer: boolean;
 }
 
 export interface FillBlankAnswer {
+  type: 'fill_in_blank';
   blanks: string[];
 }
 
 export interface MatchingAnswer {
+  type: 'matching';
   pairs: Array<{
     leftId: string;
     rightId: string;
@@ -88,11 +94,13 @@ export interface MatchingAnswer {
 }
 
 export interface EssayAnswer {
+  type: 'essay' | 'short_answer';
   text: string;
   wordCount: number;
 }
 
 export interface ShowWorkAnswer {
+  type: 'show_work';
   finalAnswer: string;
   canvasState: object;
 }
@@ -131,6 +139,31 @@ export function isEssayOptions(options: QuestionOptions): options is EssayOption
 
 export function isShowWorkOptions(options: QuestionOptions): options is ShowWorkOptions {
   return options.type === 'show_work';
+}
+
+// Answer Data type guards
+export function isMCAnswer(answer: AnswerData): answer is MCAnswer {
+  return answer.type === 'multiple_choice';
+}
+
+export function isTFAnswer(answer: AnswerData): answer is TFAnswer {
+  return answer.type === 'true_false';
+}
+
+export function isFillBlankAnswer(answer: AnswerData): answer is FillBlankAnswer {
+  return answer.type === 'fill_in_blank';
+}
+
+export function isMatchingAnswer(answer: AnswerData): answer is MatchingAnswer {
+  return answer.type === 'matching';
+}
+
+export function isEssayAnswer(answer: AnswerData): answer is EssayAnswer {
+  return answer.type === 'essay' || answer.type === 'short_answer';
+}
+
+export function isShowWorkAnswer(answer: AnswerData): answer is ShowWorkAnswer {
+  return answer.type === 'show_work';
 }
 
 // =============================================================================

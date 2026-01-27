@@ -13,8 +13,19 @@
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { Prisma } from '@/generated/prisma/client';
 import { gradeAnswer, isAutoGradable } from '@/lib/questions/grading';
 import type { AnswerData, QuestionOptions } from '@/lib/questions/types';
+
+function handlePrismaError(error: unknown): string {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === 'P2002') return 'A record with this information already exists.';
+    if (error.code === 'P2003') return 'Referenced record not found.';
+    if (error.code === 'P2025') return 'Record not found.';
+  }
+  console.error('Database error:', error);
+  return 'Database operation failed. Please try again.';
+}
 
 /**
  * Start or retrieve an existing quiz attempt for the current user
@@ -45,22 +56,26 @@ export async function startAttempt(quizId: string) {
   }
 
   // Use upsert to prevent race condition
-  const attempt = await prisma.quizAttempt.upsert({
-    where: {
-      quizId_userId: {
+  try {
+    const attempt = await prisma.quizAttempt.upsert({
+      where: {
+        quizId_userId: {
+          quizId,
+          userId: session.user.id,
+        },
+      },
+      update: {}, // No-op if exists
+      create: {
         quizId,
         userId: session.user.id,
+        status: 'in_progress',
       },
-    },
-    update: {}, // No-op if exists
-    create: {
-      quizId,
-      userId: session.user.id,
-      status: 'in_progress',
-    },
-  });
+    });
 
-  return { attemptId: attempt.id };
+    return { attemptId: attempt.id };
+  } catch (error) {
+    return { error: handlePrismaError(error) };
+  }
 }
 
 /**
@@ -120,31 +135,35 @@ export async function submitAnswer(
   }
 
   // Upsert answer (update if already exists)
-  await prisma.questionAnswer.upsert({
-    where: {
-      attemptId_questionId: {
+  try {
+    await prisma.questionAnswer.upsert({
+      where: {
+        attemptId_questionId: {
+          attemptId,
+          questionId,
+        },
+      },
+      create: {
         attemptId,
         questionId,
+        answerData: answerData as object,
+        isCorrect: gradeResult?.isCorrect ?? null,
+        pointsEarned: gradeResult?.pointsEarned ?? null,
+        feedback: gradeResult?.feedback ?? null,
       },
-    },
-    create: {
-      attemptId,
-      questionId,
-      answerData: answerData as object,
-      isCorrect: gradeResult?.isCorrect ?? null,
-      pointsEarned: gradeResult?.pointsEarned ?? null,
-      feedback: gradeResult?.feedback ?? null,
-    },
-    update: {
-      answerData: answerData as object,
-      isCorrect: gradeResult?.isCorrect ?? null,
-      pointsEarned: gradeResult?.pointsEarned ?? null,
-      feedback: gradeResult?.feedback ?? null,
-      answeredAt: new Date(),
-    },
-  });
+      update: {
+        answerData: answerData as object,
+        isCorrect: gradeResult?.isCorrect ?? null,
+        pointsEarned: gradeResult?.pointsEarned ?? null,
+        feedback: gradeResult?.feedback ?? null,
+        answeredAt: new Date(),
+      },
+    });
 
-  return { success: true, gradeResult };
+    return { success: true, gradeResult };
+  } catch (error) {
+    return { error: handlePrismaError(error) };
+  }
 }
 
 /**
@@ -187,19 +206,23 @@ export async function completeAttempt(attemptId: string) {
   );
 
   // Update attempt status
-  await prisma.quizAttempt.update({
-    where: { id: attemptId },
-    data: {
-      status: 'submitted',
-      submittedAt: new Date(),
-      score: totalScore,
-      maxScore,
-    },
-  });
+  try {
+    await prisma.quizAttempt.update({
+      where: { id: attemptId },
+      data: {
+        status: 'submitted',
+        submittedAt: new Date(),
+        score: totalScore,
+        maxScore,
+      },
+    });
 
-  revalidatePath('/documents');
+    revalidatePath('/documents');
 
-  return { success: true, score: totalScore, maxScore };
+    return { success: true, score: totalScore, maxScore };
+  } catch (error) {
+    return { error: handlePrismaError(error) };
+  }
 }
 
 /**
