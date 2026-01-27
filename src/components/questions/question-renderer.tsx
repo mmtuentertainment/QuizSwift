@@ -292,7 +292,7 @@ export function QuestionRenderer({
         return (
           <Matching
             options={options}
-            answer={matchAnswer ? { pairs: matchAnswer.pairs } : null}
+            answer={matchAnswer ? { type: 'matching', pairs: matchAnswer.pairs } : null}
             onAnswer={(matchingAnswer) =>
               onAnswer({ type: 'matching', pairs: matchingAnswer.pairs })
             }

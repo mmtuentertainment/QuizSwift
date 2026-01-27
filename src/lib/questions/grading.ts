@@ -13,14 +13,17 @@
 import type {
   QuestionOptions,
   AnswerData,
-  MultipleChoiceOptions,
-  TrueFalseOptions,
-  FillInBlankOptions,
-  MatchingOptions,
-  MCAnswer,
-  TFAnswer,
-  FillBlankAnswer,
-  MatchingAnswer,
+} from './types';
+
+import {
+  isMultipleChoiceOptions,
+  isTrueFalseOptions,
+  isFillInBlankOptions,
+  isMatchingOptions,
+  isMCAnswer,
+  isTFAnswer,
+  isFillBlankAnswer,
+  isMatchingAnswer,
 } from './types';
 
 export interface GradeResult {
@@ -46,15 +49,16 @@ export function gradeAnswer(
 
   switch (questionType) {
     case 'multiple_choice': {
-      const opts = options as MultipleChoiceOptions | null;
-      const answer = answerData as MCAnswer;
-
-      if (!opts?.choices) {
+      // Use type guards for safe type narrowing
+      if (!options || !isMultipleChoiceOptions(options)) {
         return { isCorrect: false, pointsEarned: 0, maxPoints, feedback: 'Invalid question options' };
       }
+      if (!isMCAnswer(answerData)) {
+        return { isCorrect: false, pointsEarned: 0, maxPoints, feedback: 'Invalid answer format' };
+      }
 
-      const correctChoice = opts.choices.find((c) => c.isCorrect);
-      const isCorrect = answer.selectedChoiceId === correctChoice?.id;
+      const correctChoice = options.choices.find((c) => c.isCorrect);
+      const isCorrect = answerData.selectedChoiceId === correctChoice?.id;
       return {
         isCorrect,
         pointsEarned: isCorrect ? maxPoints : 0,
@@ -64,14 +68,15 @@ export function gradeAnswer(
 
     case 'true_false':
     case 'true_false_justify': {
-      const opts = options as TrueFalseOptions | null;
-      const answer = answerData as TFAnswer;
-
-      if (opts?.correctAnswer === undefined) {
+      // Use type guards for safe type narrowing
+      if (!options || !isTrueFalseOptions(options)) {
         return { isCorrect: false, pointsEarned: 0, maxPoints, feedback: 'Invalid question options' };
       }
+      if (!isTFAnswer(answerData)) {
+        return { isCorrect: false, pointsEarned: 0, maxPoints, feedback: 'Invalid answer format' };
+      }
 
-      const isCorrect = answer.answer === opts.correctAnswer;
+      const isCorrect = answerData.answer === options.correctAnswer;
       return {
         isCorrect,
         pointsEarned: isCorrect ? maxPoints : 0,
@@ -81,18 +86,19 @@ export function gradeAnswer(
 
     case 'fill_in_blank':
     case 'fill_blank': {
-      const opts = options as FillInBlankOptions | null;
-      const answer = answerData as FillBlankAnswer;
-
-      if (!opts?.blanks || !answer?.blanks) {
+      // Use type guards for safe type narrowing
+      if (!options || !isFillInBlankOptions(options)) {
+        return { isCorrect: false, pointsEarned: 0, maxPoints, feedback: 'Invalid question options' };
+      }
+      if (!isFillBlankAnswer(answerData)) {
         return { isCorrect: false, pointsEarned: 0, maxPoints, feedback: 'Invalid answer format' };
       }
 
       let correctCount = 0;
-      const totalBlanks = opts.blanks.length;
+      const totalBlanks = options.blanks.length;
 
-      opts.blanks.forEach((blank, idx) => {
-        const studentAnswer = (answer.blanks[idx] || '').trim();
+      options.blanks.forEach((blank, idx) => {
+        const studentAnswer = (answerData.blanks[idx] || '').trim();
         const isMatch = blank.acceptedAnswers.some((accepted) => {
           if (blank.caseSensitive) {
             return studentAnswer === accepted.trim();
@@ -116,18 +122,19 @@ export function gradeAnswer(
     }
 
     case 'matching': {
-      const opts = options as MatchingOptions | null;
-      const answer = answerData as MatchingAnswer;
-
-      if (!opts?.pairs || !answer?.pairs) {
+      // Use type guards for safe type narrowing
+      if (!options || !isMatchingOptions(options)) {
+        return { isCorrect: false, pointsEarned: 0, maxPoints, feedback: 'Invalid question options' };
+      }
+      if (!isMatchingAnswer(answerData)) {
         return { isCorrect: false, pointsEarned: 0, maxPoints, feedback: 'Invalid answer format' };
       }
 
       let correctCount = 0;
-      const totalPairs = opts.pairs.length;
+      const totalPairs = options.pairs.length;
 
       // Matching is correct when leftId === rightId (since pairs share the same id)
-      answer.pairs.forEach((match) => {
+      answerData.pairs.forEach((match) => {
         if (match.leftId === match.rightId) {
           correctCount++;
         }

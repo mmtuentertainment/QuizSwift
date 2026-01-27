@@ -92,7 +92,7 @@ export function Matching({
         leftId: p.id,
         rightId: rightOrder[idx],
       }));
-      onAnswer({ pairs: initialMatches });
+      onAnswer({ type: 'matching', pairs: initialMatches });
     }
     // Only run on mount - intentionally excluding dependencies
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -120,7 +120,7 @@ export function Matching({
           leftId: p.id,
           rightId: newOrder[idx],
         }));
-        onAnswer({ pairs: matches });
+        onAnswer({ type: 'matching', pairs: matches });
 
         return newOrder;
       });

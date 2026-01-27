@@ -1,8 +1,19 @@
 'use server';
 
 import prisma from '@/lib/prisma';
+import { Prisma } from '@/generated/prisma/client';
 import { auth } from '@/lib/auth';
 import { z } from 'zod';
+
+function handlePrismaError(error: unknown): string {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === 'P2002') return 'A record with this information already exists.';
+    if (error.code === 'P2003') return 'Referenced record not found.';
+    if (error.code === 'P2025') return 'Record not found.';
+  }
+  console.error('Database error:', error);
+  return 'Database operation failed. Please try again.';
+}
 
 export interface QuestionFilters {
   documentId?: string;
@@ -269,12 +280,16 @@ export async function updateQuestion(
     return { success: true }; // Nothing to update
   }
 
-  await prisma.curatedQuestion.update({
-    where: { id: questionId },
-    data: updateData,
-  });
+  try {
+    await prisma.curatedQuestion.update({
+      where: { id: questionId },
+      data: updateData,
+    });
 
-  return { success: true };
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: handlePrismaError(error) };
+  }
 }
 
 /**

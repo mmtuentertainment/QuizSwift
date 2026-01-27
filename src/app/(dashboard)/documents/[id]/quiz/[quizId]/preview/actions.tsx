@@ -32,6 +32,7 @@ export function TeacherPreviewWrapper({
     score: number;
     maxScore: number;
   } | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
 
   const handleComplete = useCallback(async (score: number, maxScore: number) => {
     setCompletionState({ completed: true, score, maxScore });
@@ -41,9 +42,11 @@ export function TeacherPreviewWrapper({
       const result = await markQuizPreviewed(quizId);
       if (result.error) {
         console.error('Failed to mark quiz as previewed:', result.error);
+        setPreviewError('Preview could not be recorded. You may need to preview again before publishing.');
       }
     } catch (err) {
       console.error('Failed to mark quiz as previewed:', err);
+      setPreviewError('Failed to record preview completion. Please try again.');
     }
 
     // Refresh page data to reflect the updated status
@@ -59,6 +62,15 @@ export function TeacherPreviewWrapper({
         onComplete={handleComplete}
         timeLimit={timeLimit}
       />
+
+      {/* Preview error warning */}
+      {previewError && (
+        <div className="mt-4 rounded-lg border border-yellow-300 bg-yellow-50 p-4">
+          <p className="text-sm text-yellow-800">
+            <strong>Warning:</strong> {previewError}
+          </p>
+        </div>
+      )}
 
       {/* Show navigation after completion */}
       {completionState?.completed && (

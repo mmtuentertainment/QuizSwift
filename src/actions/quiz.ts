@@ -4,7 +4,21 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { Prisma } from '@/generated/prisma/client';
 import { z } from 'zod';
+
+/**
+ * Handle Prisma errors and return user-friendly messages
+ */
+function handlePrismaError(error: unknown): string {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === 'P2002') return 'A record with this information already exists.';
+    if (error.code === 'P2003') return 'Referenced record not found.';
+    if (error.code === 'P2025') return 'Record not found.';
+  }
+  console.error('Database error:', error);
+  return 'Database operation failed. Please try again.';
+}
 
 const CreateQuizSchema = z.object({
   documentId: z.string().cuid(),
@@ -54,27 +68,31 @@ export async function createQuiz(formData: FormData) {
   }
 
   // Create quiz with questions
-  const quiz = await prisma.quiz.create({
-    data: {
-      documentId: parsed.data.documentId,
-      title: parsed.data.title,
-      description: parsed.data.description,
-      timeLimit: parsed.data.timeLimit,
-      shuffleQuestions: parsed.data.shuffleQuestions ?? false,
-      createdById: session.user.id,
-      status: 'draft',
-      questions: {
-        create: parsed.data.questionIds.map((questionId, idx) => ({
-          questionId,
-          position: idx,
-          points: 1.0,
-        })),
+  try {
+    const quiz = await prisma.quiz.create({
+      data: {
+        documentId: parsed.data.documentId,
+        title: parsed.data.title,
+        description: parsed.data.description,
+        timeLimit: parsed.data.timeLimit,
+        shuffleQuestions: parsed.data.shuffleQuestions ?? false,
+        createdById: session.user.id,
+        status: 'draft',
+        questions: {
+          create: parsed.data.questionIds.map((questionId, idx) => ({
+            questionId,
+            position: idx,
+            points: 1.0,
+          })),
+        },
       },
-    },
-  });
+    });
 
-  revalidatePath(`/documents/${parsed.data.documentId}/quiz`);
-  redirect(`/documents/${parsed.data.documentId}/quiz/${quiz.id}`);
+    revalidatePath(`/documents/${parsed.data.documentId}/quiz`);
+    redirect(`/documents/${parsed.data.documentId}/quiz/${quiz.id}`);
+  } catch (error) {
+    return { error: handlePrismaError(error) };
+  }
 }
 
 export async function getQuizzesForDocument(documentId: string) {
