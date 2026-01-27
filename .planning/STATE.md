@@ -1,27 +1,28 @@
 # Project State: QuizSwift
 
 **Last Updated:** 2026-01-27
-**Session:** Quick Task 004 Complete - Fix Silent Failure Issues
+**Session:** Phase 3.2 Complete - Centralize QuestionType (Verified)
 
 ## Project Reference
 
 **Core Value:** 100% factual accuracy - every question extracted from source material, never generated
 
-**Current Focus:** Phase 3 - Question Bank & Teacher Workflow (Plan 06 of 9 complete)
+**Current Focus:** Phase 3 - Question Bank & Teacher Workflow (8/9 plans) + Phase 3.2 COMPLETE
 
 ## Current Position
 
 **Phase:** 3 of 8 - Question Bank & Teacher Workflow
 **Plan:** 8 of 9 complete (01, 02, 03, 04, 05, 06, 07, 08)
-**Status:** In progress
-**Last activity:** 2026-01-27 - Completed quick task 004: Fix 5 silent failure issues in server actions
+**Status:** In progress (Phase 3.2 sub-phase COMPLETE)
+**Last activity:** 2026-01-27 - Phase 3.2 verified complete: Centralize QuestionType
 
 **Progress:**
-Phase 1: 100% (5/5 plans)   [========================================]
-Phase 2: 100% (4/4 plans)   [========================================]
-Phase 2.1: 100% (6/6 plans) [========================================]
-Phase 3: 89% (8/9 plans)    [====================================    ]
-Overall: 64%                [==================================      ]
+Phase 1: 100% (5/5 plans)     [========================================]
+Phase 2: 100% (4/4 plans)     [========================================]
+Phase 2.1: 100% (6/6 plans)   [========================================]
+Phase 3: 89% (8/9 plans)      [====================================    ]
+Phase 3.2: 100% (1/1 plans)   [========================================]
+Overall: 66%                  [===================================     ]
 
 **Phases Overview:**
 | Phase | Name | Status | Plans |
@@ -30,6 +31,8 @@ Overall: 64%                [==================================      ]
 | 2 | Content & AI Extraction | COMPLETE | 4/4 |
 | 2.1 | Intelligent Question Curation | COMPLETE | 6/6 |
 | 3 | Question Bank & Teacher Workflow | In Progress | 8/9 |
+| 3.1 | Convert Prisma Status Enums | Pending | - |
+| 3.2 | Centralize QuestionType | COMPLETE | 1/1 |
 | 4 | Quiz Delivery & Student Experience | Pending | - |
 | 5 | Anti-Cheating & Randomization | Pending | - |
 | 6 | Grading & Analytics | Pending | - |
@@ -137,32 +140,30 @@ Overall: 64%                [==================================      ]
 
 ### What Just Happened
 
-Completed quick task 003 - Fixed all 26 CodeRabbit PR #2 review issues:
+Phase 3.2 execution and verification completed:
 
-**Round 1 (19 fixes):**
-- Security: Quiz authorization, upsert pattern, pagination clamping
-- Validation: Discriminated union Zod schemas, empty updateData guard
-- Accessibility: Aria-labels on filter selects
-- Navigation: window.location.href → router.push
-- State: Modal reset, immutable updates, controlled inputs
-- Consistency: Global underscore replacement in 4 files
-- Tech debt: Renamed blob.ts → pdf-storage.ts
+**Phase 3.2 Plan 01:** Centralize QuestionType Definition
+- Created QUESTION_TYPES const array with 9 values in types.ts
+- Derived QuestionType union type from const array
+- Added isValidQuestionType() type guard for runtime validation
+- Updated grading.ts functions to accept typed QuestionType parameter
+- Removed duplicate QuestionType from question-renderer.tsx
+- All 43 tests pass, build succeeds
 
-**Round 2 (7 fixes):**
-- Preserve imageUrl/imageAltText in question editing
-- Sanitize page query param to avoid NaN
-- Return 400 for invalid JSON in image upload
-- Pass through T/F justification in review mode
-- Guard missing R2 URL for storage keys
-- Warn on [BLANK] marker count mismatch
-- Report initial shuffle state in matching component
+**Verification:** Goal verified ✓ (4/4 must-haves)
+- TECH-DEBT-04: ✓ QuestionType defined once in types.ts
+- TECH-DEBT-05: ✓ grading.ts uses QuestionType parameter
+- TECH-DEBT-06: ✓ Components import QuestionType from types.ts
+
+**Pattern established:** QUESTION_TYPES const array → QuestionType union → isValidQuestionType() guard
 
 ### What Happens Next
 
-Phase 3 continues with final plan:
-- 03-09: Final workflow polish
+Two options:
+1. **Phase 3 Plan 09** - Final workflow polish (completes Phase 3)
+2. **Phase 3.1** - Convert Prisma status fields to enums (tech debt)
 
 ---
 
-*State captured: 2026-01-26*
-*Next command: /gsd:execute-phase 03 plan 09*
+*State captured: 2026-01-27*
+*Next command: /gsd:execute-phase 03 plan 09 OR /gsd:plan-phase 3.1*
