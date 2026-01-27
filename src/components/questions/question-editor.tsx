@@ -12,7 +12,7 @@
  * Uses the updateQuestion server action with Zod validation.
  */
 
-import { useState, useTransition, useCallback } from 'react';
+import { useState, useTransition, useCallback, useEffect } from 'react';
 import { updateQuestion, type UpdateQuestionInput } from '@/actions/questions';
 import { MathText } from '@/components/quiz/math-display';
 import { ImageUpload } from './image-upload';
@@ -57,19 +57,36 @@ export function QuestionEditor({
   const [imageUrl, setImageUrl] = useState<string | null>(question.imageUrl ?? null);
   const [imageAltText, setImageAltText] = useState<string | null>(question.imageAltText ?? null);
 
+  // Reset form state when modal opens or question changes
+  useEffect(() => {
+    if (isOpen) {
+      /* eslint-disable react-hooks/set-state-in-effect */
+      setQuestionText(question.questionText);
+      setCorrectAnswer(question.correctAnswer);
+      setExplanation(question.explanation);
+      setSourceEvidence(question.sourceEvidence);
+      setOptions(question.options);
+      setImageUrl(question.imageUrl ?? null);
+      setImageAltText(question.imageAltText ?? null);
+      setError(null);
+      /* eslint-enable react-hooks/set-state-in-effect */
+    }
+  }, [isOpen, question]);
+
   // Handle multiple choice option editing
   const updateMCOption = useCallback((index: number, field: 'text' | 'isCorrect', value: string | boolean) => {
     if (!options || options.type !== 'multiple_choice') return;
 
-    const newChoices = [...(options as MultipleChoiceOptions).choices];
-    if (field === 'isCorrect') {
-      // When setting one as correct, unset others
-      newChoices.forEach((c, i) => {
-        c.isCorrect = i === index;
-      });
-    } else {
-      newChoices[index] = { ...newChoices[index], text: value as string };
-    }
+    const mcOptions = options as MultipleChoiceOptions;
+    const newChoices = mcOptions.choices.map((choice, i) => {
+      if (field === 'isCorrect') {
+        return { ...choice, isCorrect: i === index };
+      }
+      if (i === index && field === 'text') {
+        return { ...choice, text: value as string };
+      }
+      return choice;
+    });
 
     setOptions({ ...options, choices: newChoices } as MultipleChoiceOptions);
 
