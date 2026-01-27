@@ -10,6 +10,7 @@ import { MathText } from '@/components/quiz/math-display';
 import type {
   QuestionOptions,
   MatchingAnswer,
+  QuestionType,
 } from '@/lib/questions/types';
 
 // Import type guards
@@ -23,8 +24,9 @@ import {
 } from '@/lib/questions/types';
 
 /**
- * Union type for all answer data structures.
- * This is what gets stored when a student answers a question.
+ * Union type for answer data in the UI layer.
+ * This is the format used by renderer components for display and interaction.
+ * Note: Converted to/from LibAnswerData (in @/lib/questions/types) for server storage.
  */
 export type AnswerData =
   | { type: 'multiple_choice'; selectedId: string | null }
@@ -34,20 +36,8 @@ export type AnswerData =
   | { type: 'show_work'; data: ShowYourWorkData }
   | { type: 'matching'; pairs: MatchingAnswer['pairs'] };
 
-/**
- * Supported question types.
- * Maps to CuratedQuestion.questionType field.
- */
-export type QuestionType =
-  | 'multiple_choice'
-  | 'true_false'
-  | 'true_false_justify'
-  | 'fill_in_blank'
-  | 'fill_blank'
-  | 'essay'
-  | 'short_answer'
-  | 'show_work'
-  | 'matching';
+// Re-export QuestionType for consumers that import from this module
+export type { QuestionType } from '@/lib/questions/types';
 
 interface QuestionRendererProps {
   /** Question text (may contain LaTeX) */
