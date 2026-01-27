@@ -25,11 +25,13 @@ export default async function QuizDetailPage({
     redirect('/api/auth/signin');
   }
 
-  const quiz = await getQuizWithQuestions(quizId);
+  const result = await getQuizWithQuestions(quizId);
 
-  if (!quiz) {
+  if (!result.success) {
     redirect(`/documents/${documentId}/quiz`);
   }
+
+  const quiz = result.quiz;
 
   // Verify quiz belongs to the document
   if (quiz.documentId !== documentId) {
