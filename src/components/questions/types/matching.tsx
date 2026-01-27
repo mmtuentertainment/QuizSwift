@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -84,6 +84,19 @@ export function Matching({
     // Shuffle on initial render for quiz-taking
     return [...options.pairs.map((p) => p.id)].sort(() => Math.random() - 0.5);
   });
+
+  // Report initial shuffled state to parent if no existing answer
+  useEffect(() => {
+    if (!answer?.pairs && !readOnly) {
+      const initialMatches = options.pairs.map((p, idx) => ({
+        leftId: p.id,
+        rightId: rightOrder[idx],
+      }));
+      onAnswer({ pairs: initialMatches });
+    }
+    // Only run on mount - intentionally excluding dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor),

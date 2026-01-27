@@ -49,6 +49,8 @@ export default async function QuizDetailPage({
     difficulty: qq.question.difficulty,
     position: qq.position,
     points: qq.points,
+    imageUrl: qq.question.imageUrl,
+    imageAltText: qq.question.imageAltText,
   }));
 
   return (

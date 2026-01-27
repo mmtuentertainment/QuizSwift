@@ -39,7 +39,7 @@ export default async function QuestionBankPage({ searchParams }: PageProps) {
       questionType: params.questionType,
       bloomLevel: params.bloomLevel,
       search: params.search,
-      page: params.page ? parseInt(params.page, 10) : 1,
+      page: params.page ? (parseInt(params.page, 10) || 1) : 1,
     }),
   ]);
 

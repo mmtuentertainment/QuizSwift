@@ -156,11 +156,16 @@ export function QuestionRenderer({
           correctBool = correctAnswer.toLowerCase() === 'true';
         }
 
+        // Get justification from options if available (cast to access optional property)
+        const justification = (options && isTF(options))
+          ? (options as { justification?: string }).justification
+          : undefined;
+
         return (
           <TrueFalse
             options={{
               correctAnswer: correctBool,
-              justification: undefined,
+              justification,
             }}
             selectedAnswer={tfAnswer?.selectedAnswer ?? null}
             onSelect={(value) =>
@@ -317,10 +322,13 @@ export function QuestionRenderer({
     questionType !== 'show_work';
 
   // Build image URL - if it's a storage key, prepend the public URL
+  // Guard: if R2 URL not configured and imageUrl is a storage key, return null
   const resolvedImageUrl = imageUrl
     ? imageUrl.startsWith('http')
       ? imageUrl
-      : `${process.env.NEXT_PUBLIC_R2_URL || ''}/${imageUrl}`
+      : process.env.NEXT_PUBLIC_R2_URL
+        ? `${process.env.NEXT_PUBLIC_R2_URL}/${imageUrl}`
+        : null
     : null;
 
   return (
