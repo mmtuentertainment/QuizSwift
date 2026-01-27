@@ -40,7 +40,7 @@ export const processPdf = inngest.createFunction(
     }
 
     // Generate presigned URL for PDF access
-    const { getDownloadUrl } = await import('@/lib/storage/blob');
+    const { getDownloadUrl } = await import('@/lib/storage/pdf-storage');
     const fileUrl = await getDownloadUrl(doc.storageKey); // Use presigned URL for extraction
 
     // Step 1: Update status to processing
