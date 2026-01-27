@@ -172,6 +172,11 @@ export async function updateQuizSettings(
     return { success: false, error: 'Invalid input' };
   }
 
+  // Guard against empty update data
+  if (Object.keys(parsed.data).length === 0) {
+    return { success: true }; // No fields to update, return success
+  }
+
   // Verify ownership
   const quiz = await prisma.quiz.findUnique({
     where: { id: quizId },

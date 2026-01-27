@@ -42,14 +42,23 @@ function toLibAnswerData(answer: RendererAnswerData): LibAnswerData | null {
         ? { type: 'true_false', answer: answer.selectedAnswer }
         : null;
     case 'fill_in_blank':
-      return { type: 'fill_in_blank', blanks: answer.answers };
+      // Return null for empty blanks to be consistent with MC/TF behavior
+      return answer.answers.length > 0 && answer.answers.some(a => a !== '')
+        ? { type: 'fill_in_blank', blanks: answer.answers }
+        : null;
     case 'matching':
-      return { type: 'matching', pairs: answer.pairs };
+      // Return null for empty pairs to be consistent with MC/TF behavior
+      return answer.pairs.length > 0
+        ? { type: 'matching', pairs: answer.pairs }
+        : null;
     case 'essay':
     case 'short_answer':
-      return answer.text
-        ? { type: answer.type, text: answer.text, wordCount: answer.text.split(/\s+/).filter(Boolean).length }
-        : null;
+      // Return explicit empty payload to allow clearing answers on server
+      return {
+        type: answer.type,
+        text: answer.text || '',
+        wordCount: answer.text ? answer.text.split(/\s+/).filter(Boolean).length : 0
+      };
     case 'show_work':
       return {
         type: 'show_work',

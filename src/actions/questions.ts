@@ -178,7 +178,8 @@ const questionOptionsSchema = z.discriminatedUnion('type', [
   }),
   z.object({
     type: z.literal('true_false'),
-    correctAnswer: z.boolean()
+    correctAnswer: z.boolean(),
+    justification: z.string().optional()
   }),
   z.object({
     type: z.literal('essay'),
