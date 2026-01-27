@@ -178,6 +178,7 @@ export function ImageUpload({
 
       {preview ? (
         <div className="relative inline-block">
+          {/* eslint-disable-next-line @next/next/no-img-element -- blob URL preview, not optimizable */}
           <img
             src={preview}
             alt="Question image preview"

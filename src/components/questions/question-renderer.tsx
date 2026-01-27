@@ -326,6 +326,7 @@ export function QuestionRenderer({
       {/* Question image (if present) */}
       {resolvedImageUrl && (
         <div className="mb-4">
+          {/* eslint-disable-next-line @next/next/no-img-element -- dynamic external URL */}
           <img
             src={resolvedImageUrl}
             alt={imageAltText || 'Question image'}
