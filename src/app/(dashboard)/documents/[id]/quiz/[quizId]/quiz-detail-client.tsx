@@ -101,12 +101,20 @@ export function QuizDetailClient({
     options: QuestionOptions | null;
     bloomLevel: string;
     difficulty: string;
+    imageUrl?: string | null;
+    imageAltText?: string | null;
   }) => {
-    // Update local state with saved question
+    // Update local state with saved question, preserving image metadata
     setLocalQuestions((prev) =>
       prev.map((q) =>
         q.id === updatedQuestion.id
-          ? { ...q, ...updatedQuestion }
+          ? {
+              ...q,
+              ...updatedQuestion,
+              // Preserve existing image data if not provided in update
+              imageUrl: updatedQuestion.imageUrl ?? q.imageUrl,
+              imageAltText: updatedQuestion.imageAltText ?? q.imageAltText,
+            }
           : q
       )
     );

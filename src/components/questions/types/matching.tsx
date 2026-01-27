@@ -85,6 +85,13 @@ export function Matching({
     return [...options.pairs.map((p) => p.id)].sort(() => Math.random() - 0.5);
   });
 
+  // Sync rightOrder when answer prop changes (e.g., navigating between questions)
+  useEffect(() => {
+    if (answer?.pairs?.length) {
+      setRightOrder(answer.pairs.map((p) => p.rightId));
+    }
+  }, [answer]);
+
   // Report initial shuffled state to parent if no existing answer
   useEffect(() => {
     if (!answer?.pairs && !readOnly) {

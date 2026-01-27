@@ -11,14 +11,24 @@ const nextConfig: NextConfig = {
         hostname: '*.r2.dev',
       },
       // Custom domain pointing to R2 (if configured)
-      ...(process.env.NEXT_PUBLIC_R2_URL
-        ? [
+      ...(() => {
+        if (!process.env.NEXT_PUBLIC_R2_URL) return [];
+        try {
+          // Normalize URL: add https:// if no scheme present
+          const urlStr = process.env.NEXT_PUBLIC_R2_URL.includes('://')
+            ? process.env.NEXT_PUBLIC_R2_URL
+            : `https://${process.env.NEXT_PUBLIC_R2_URL}`;
+          return [
             {
               protocol: 'https' as const,
-              hostname: new URL(process.env.NEXT_PUBLIC_R2_URL).hostname,
+              hostname: new URL(urlStr).hostname,
             },
-          ]
-        : []),
+          ];
+        } catch {
+          console.warn('Invalid NEXT_PUBLIC_R2_URL, skipping custom domain pattern');
+          return [];
+        }
+      })(),
       // Cloudflare R2 storage URLs for presigned URLs
       {
         protocol: 'https',
