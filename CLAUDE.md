@@ -28,7 +28,7 @@ Kill by PID or use `KillShell` tool instead.
 
 ## Structure
 
-```
+```text
 src/app/          # Pages + API routes
 src/components/   # React components
 src/lib/          # Utilities (ai, pdf, auth)
@@ -47,7 +47,7 @@ prisma/           # Database schema
 - NO context summaries or notes files
 
 **ALL context lives in `.planning/`:**
-```
+```text
 .planning/
 ├── PROJECT.md      # What we're building
 ├── REQUIREMENTS.md # Checkable requirements
@@ -69,7 +69,7 @@ prisma/           # Database schema
 3. DO NOT continue to the next GSD command in the same context
 
 **GSD Command Flow:**
-```
+```text
 /gsd:new-project    → /clear → /gsd:plan-phase 1
 /gsd:new-milestone  → /clear → /gsd:plan-phase N
 /gsd:plan-phase N   → /clear → /gsd:execute-phase N
@@ -109,7 +109,7 @@ prisma/           # Database schema
 
 **After completing any GSD command, output:**
 
-```
+```markdown
 ---
 
 ## ▶ Next Up
