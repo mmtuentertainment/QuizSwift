@@ -53,15 +53,15 @@ completed: 2026-01-26
 
 # Quick 003: Fix CodeRabbit PR #2 Review Issues
 
-**Fixed 19 code review issues spanning security, accessibility, navigation, state management, and consistency**
+**Fixed 26 code review issues spanning security, accessibility, navigation, state management, and consistency**
 
 ## Performance
 
 - **Duration:** 8h 22min
 - **Started:** 2026-01-26T16:42:48Z
 - **Completed:** 2026-01-26T01:05:02Z (next day)
-- **Tasks:** 3
-- **Files modified:** 16
+- **Tasks:** 4
+- **Files modified:** 23
 
 ## Accomplishments
 
@@ -97,6 +97,15 @@ Each task was committed atomically:
    - Replace single underscore with global regex in 4 files
    - Rename blob.ts to pdf-storage.ts
    - Update all imports to use pdf-storage
+
+4. **Task 4: Additional Review Fixes** - `bdde6e2` (fix)
+   - Preserve imageUrl/imageAltText when editing questions
+   - Sanitize page query param to avoid NaN
+   - Return 400 for invalid JSON in image upload
+   - Pass through T/F justification in review mode
+   - Guard missing R2 URL for storage keys
+   - Warn on [BLANK] marker count mismatch
+   - Report initial shuffle state to parent for matching
 
 ## Files Created/Modified
 
