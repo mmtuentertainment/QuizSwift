@@ -13,6 +13,7 @@
 import type {
   QuestionOptions,
   AnswerData,
+  QuestionType,
 } from './types';
 
 import {
@@ -38,7 +39,7 @@ export interface GradeResult {
  * Returns partial credit for fill-in-blank and matching
  */
 export function gradeAnswer(
-  questionType: string,
+  questionType: QuestionType,
   options: QuestionOptions | null,
   answerData: AnswerData | null,
   maxPoints: number = 1.0
@@ -133,7 +134,9 @@ export function gradeAnswer(
       let correctCount = 0;
       const totalPairs = options.pairs.length;
 
-      // Matching is correct when leftId === rightId (since pairs share the same id)
+      // Matching pairs use the same id for both left and right items in the correct answer.
+      // A student's match is correct when they pair items that share the same id (leftId === rightId).
+      // This approach simplifies grading since we don't need a separate mapping structure.
       answerData.pairs.forEach((match) => {
         if (match.leftId === match.rightId) {
           correctCount++;
@@ -177,7 +180,7 @@ export function gradeAnswer(
 /**
  * Check if a question type can be auto-graded
  */
-export function isAutoGradable(questionType: string): boolean {
+export function isAutoGradable(questionType: QuestionType): boolean {
   return [
     'multiple_choice',
     'true_false',
