@@ -21,12 +21,20 @@ export async function createQuiz(formData: FormData) {
     return { error: 'Unauthorized' };
   }
 
-  const rawQuestionIds = formData.get('questionIds');
+  // Parse questionIds with error handling
+  let questionIds: string[] = [];
+  try {
+    const rawQuestionIds = formData.get('questionIds');
+    questionIds = rawQuestionIds ? JSON.parse(rawQuestionIds as string) : [];
+  } catch {
+    return { error: 'Invalid question IDs format' };
+  }
+
   const parsed = CreateQuizSchema.safeParse({
     documentId: formData.get('documentId'),
     title: formData.get('title'),
     description: formData.get('description') || undefined,
-    questionIds: rawQuestionIds ? JSON.parse(rawQuestionIds as string) : [],
+    questionIds,
     timeLimit: formData.get('timeLimit') ? parseInt(formData.get('timeLimit') as string) : null,
     shuffleQuestions: formData.get('shuffleQuestions') === 'true',
   });

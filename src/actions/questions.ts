@@ -44,7 +44,12 @@ export async function getQuestions(filters: QuestionFilters = {}): Promise<Quest
     return { questions: [], total: 0, page: 1, totalPages: 0 };
   }
 
-  const { documentId, questionType, bloomLevel, search, page = 1, limit = 20 } = filters;
+  // Validate and clamp pagination inputs to safe ranges
+  const page = Math.max(1, Math.floor(filters.page ?? 1));
+  const limit = Math.min(100, Math.max(1, Math.floor(filters.limit ?? 20)));
+  const offset = Math.max(0, (page - 1) * limit);
+
+  const { documentId, questionType, bloomLevel, search } = filters;
 
   // Build where clause with proper typing
   const where: {
@@ -81,7 +86,7 @@ export async function getQuestions(filters: QuestionFilters = {}): Promise<Quest
   }
 
   const [questions, total] = await Promise.all([
-    fetchQuestions(where, (page - 1) * limit, limit),
+    fetchQuestions(where, offset, limit),
     prisma.curatedQuestion.count({ where }),
   ]);
 
@@ -135,12 +140,56 @@ export async function getTeacherDocuments(): Promise<TeacherDocument[]> {
  * Zod schema for question update validation
  * Validates questionText, options, correctAnswer, explanation, sourceEvidence
  */
+const questionOptionsSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('multiple_choice'),
+    choices: z.array(z.object({
+      id: z.string(),
+      text: z.string(),
+      isCorrect: z.boolean()
+    }))
+  }),
+  z.object({
+    type: z.literal('fill_in_blank'),
+    blanks: z.array(z.object({
+      index: z.number(),
+      acceptedAnswers: z.array(z.string()),
+      caseSensitive: z.boolean()
+    }))
+  }),
+  z.object({
+    type: z.literal('matching'),
+    pairs: z.array(z.object({
+      id: z.string(),
+      left: z.string(),
+      right: z.string()
+    }))
+  }),
+  z.object({
+    type: z.literal('true_false'),
+    correctAnswer: z.boolean()
+  }),
+  z.object({
+    type: z.literal('essay'),
+    minWords: z.number().optional(),
+    maxWords: z.number().optional(),
+    rubric: z.string().optional()
+  }),
+  z.object({
+    type: z.literal('short_answer')
+  }),
+  z.object({
+    type: z.literal('show_work'),
+    workingSteps: z.array(z.string())
+  }),
+]);
+
 const UpdateQuestionSchema = z.object({
   questionText: z.string().min(1, 'Question text cannot be empty').max(5000).optional(),
   correctAnswer: z.string().min(1, 'Correct answer cannot be empty').max(2000).optional(),
   explanation: z.string().max(5000).optional(),
   sourceEvidence: z.string().max(5000).optional(),
-  options: z.unknown().optional(), // JSON structure varies by question type
+  options: questionOptionsSchema.nullable().optional(),
   imageUrl: z.string().nullable().optional(),
   imageAltText: z.string().max(500).nullable().optional(),
 });
@@ -213,6 +262,11 @@ export async function updateQuestion(
   }
   if (parsed.data.imageAltText !== undefined) {
     updateData.imageAltText = parsed.data.imageAltText;
+  }
+
+  // Guard against empty updateData
+  if (Object.keys(updateData).length === 0) {
+    return { success: true }; // Nothing to update
   }
 
   await prisma.curatedQuestion.update({
