@@ -48,6 +48,7 @@ prisma/*.db-journal
 
 # Local development artifacts
 .claude/
+!.claude/settings.json
 .planning/debug/
 .planning/evaluation/
 test-screenshots/
