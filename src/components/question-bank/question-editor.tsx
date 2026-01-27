@@ -65,7 +65,7 @@ export function QuestionEditor({ question, onClose }: QuestionEditorProps) {
         {/* Question metadata - read only */}
         <div className="mb-4 flex flex-wrap gap-2 text-sm">
           <span className="rounded bg-gray-100 px-2 py-1">
-            {question.questionType.replace('_', ' ')}
+            {question.questionType.replace(/_/g, ' ')}
           </span>
           <span className="rounded bg-purple-100 px-2 py-1 text-purple-700">
             {question.bloomLevel}

@@ -169,7 +169,7 @@ export function QuizBuilder({ documentId, availableQuestions }: QuizBuilderProps
                       Q{idx + 1}
                     </span>
                     <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">
-                      {question.questionType.replace('_', ' ')}
+                      {question.questionType.replace(/_/g, ' ')}
                     </span>
                     <span className="rounded bg-purple-100 px-1.5 py-0.5 text-xs text-purple-700">
                       {question.bloomLevel}

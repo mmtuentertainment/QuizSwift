@@ -84,7 +84,7 @@ export default async function QuizListPage({
                           : 'bg-gray-100 text-gray-800'
                     }`}
                   >
-                    {quiz.status.replace('_', ' ')}
+                    {quiz.status.replace(/_/g, ' ')}
                   </span>
                   <p className="mt-1 text-xs text-gray-500">
                     {new Date(quiz.createdAt).toLocaleDateString()}
