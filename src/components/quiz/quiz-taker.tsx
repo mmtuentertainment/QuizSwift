@@ -199,7 +199,12 @@ export function QuizTaker({
     // Convert to library format and submit to server
     const libAnswer = toLibAnswerData(answerData);
     if (libAnswer) {
-      await submitAnswer(attemptId, currentQuestion.id, libAnswer);
+      try {
+        await submitAnswer(attemptId, currentQuestion.id, libAnswer);
+      } catch (err) {
+        console.error('Failed to save answer:', err);
+        // Optionally show user feedback
+      }
     }
   }, [attemptId, currentQuestion]);
 

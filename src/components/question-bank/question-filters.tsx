@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useState, useEffect } from 'react';
 import type { TeacherDocument } from '@/actions/questions';
 
 interface QuestionFiltersProps {
@@ -31,6 +31,7 @@ export function QuestionFilters({ documents }: QuestionFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const [searchValue, setSearchValue] = useState(searchParams.get('search') || '');
 
   const updateFilter = useCallback(
     (key: string, value: string) => {
@@ -59,6 +60,15 @@ export function QuestionFilters({ documents }: QuestionFiltersProps) {
     [updateFilter]
   );
 
+  // Cleanup debounce timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="mb-6 flex flex-wrap gap-4">
       {/* Search */}
@@ -66,8 +76,11 @@ export function QuestionFilters({ documents }: QuestionFiltersProps) {
         <input
           type="text"
           placeholder="Search questions..."
-          defaultValue={searchParams.get('search') || ''}
-          onChange={(e) => handleSearchChange(e.target.value)}
+          value={searchValue}
+          onChange={(e) => {
+            setSearchValue(e.target.value);
+            handleSearchChange(e.target.value);
+          }}
           className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>
@@ -76,6 +89,7 @@ export function QuestionFilters({ documents }: QuestionFiltersProps) {
       <select
         value={searchParams.get('documentId') || ''}
         onChange={(e) => updateFilter('documentId', e.target.value)}
+        aria-label="Filter by document"
         className="rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
       >
         <option value="">All Documents</option>
@@ -90,6 +104,7 @@ export function QuestionFilters({ documents }: QuestionFiltersProps) {
       <select
         value={searchParams.get('questionType') || ''}
         onChange={(e) => updateFilter('questionType', e.target.value)}
+        aria-label="Filter by question type"
         className="rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
       >
         {questionTypes.map((type) => (
@@ -103,6 +118,7 @@ export function QuestionFilters({ documents }: QuestionFiltersProps) {
       <select
         value={searchParams.get('bloomLevel') || ''}
         onChange={(e) => updateFilter('bloomLevel', e.target.value)}
+        aria-label="Filter by Bloom's taxonomy level"
         className="rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
       >
         {bloomLevels.map((level) => (

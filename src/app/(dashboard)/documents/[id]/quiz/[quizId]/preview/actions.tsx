@@ -37,7 +37,14 @@ export function TeacherPreviewWrapper({
     setCompletionState({ completed: true, score, maxScore });
 
     // Mark quiz as previewed
-    await markQuizPreviewed(quizId);
+    try {
+      const result = await markQuizPreviewed(quizId);
+      if (result.error) {
+        console.error('Failed to mark quiz as previewed:', result.error);
+      }
+    } catch (err) {
+      console.error('Failed to mark quiz as previewed:', err);
+    }
 
     // Refresh page data to reflect the updated status
     router.refresh();

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { CurationPool } from '@/components/curation';
 import type { CuratedQuestion } from '@/generated/prisma/client';
 
@@ -12,6 +13,7 @@ interface CurationClientProps {
 }
 
 export function CurationClient({ documentId, questions, targetCount }: CurationClientProps) {
+  const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => {
     return new Set(questions.filter((q) => q.teacherSelected).map((q) => q.id));
   });
@@ -122,7 +124,7 @@ export function CurationClient({ documentId, questions, targetCount }: CurationC
             className="mt-2 rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700"
             onClick={() => {
               // Navigate to quiz creation with selected questions
-              window.location.href = `/documents/${documentId}/quiz/new`;
+              router.push(`/documents/${documentId}/quiz/new`);
             }}
           >
             Continue to Quiz Setup
