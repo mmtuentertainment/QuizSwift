@@ -31,6 +31,7 @@ export const multipleChoiceOptionsSchema = multipleChoiceOptionsBase.refine(
 export const trueFalseOptionsSchema = z.object({
   type: z.literal('true_false'),
   correctAnswer: z.boolean(),
+  justification: z.string().optional(),
 });
 
 export const fillInBlankOptionsSchema = z.object({

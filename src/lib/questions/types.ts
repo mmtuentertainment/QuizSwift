@@ -23,6 +23,7 @@ export interface MultipleChoiceOptions {
 export interface TrueFalseOptions {
   type: 'true_false';
   correctAnswer: boolean;
+  justification?: string;
 }
 
 export interface FillInBlankOptions {
@@ -102,7 +103,12 @@ export interface EssayAnswer {
 export interface ShowWorkAnswer {
   type: 'show_work';
   finalAnswer: string;
-  canvasState: object;
+  /**
+   * Canvas state from tldraw editor.getSnapshot()
+   * Type is `unknown` for JSON persistence compatibility - at runtime this is TLEditorSnapshot.
+   * See: https://tldraw.dev/docs/persistence
+   */
+  canvasState: unknown;
 }
 
 export type AnswerData =
@@ -171,18 +177,18 @@ export function isShowWorkAnswer(answer: AnswerData): answer is ShowWorkAnswer {
 // These will be removed when components are updated in Phase 4
 // =============================================================================
 
-/** @deprecated Use MultipleChoiceOptions instead */
+/** @deprecated Use MCAnswer instead */
 export interface MultipleChoiceAnswer {
   selectedIds: string[];
 }
 
-/** @deprecated Use FillBlankAnswer instead */
+/** @deprecated Use FillInBlankOptions instead */
 export interface ShortAnswerOptions {
   maxLength?: number;
   placeholder?: string;
 }
 
-/** @deprecated Use FillBlankAnswer instead */
+/** @deprecated Use EssayAnswer instead */
 export interface ShortAnswerAnswer {
   text: string;
 }
