@@ -53,10 +53,5 @@ reviews:
   #       name: "250-Line Modular Standard"
   #       instructions: "Flag files exceeding 250 lines"
 
-# Chat configuration
-chat:
-  enabled: true
-  auto_reply: true
-
 # Early access features (disabled for stability)
 early_access: false

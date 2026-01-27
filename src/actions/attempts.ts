@@ -25,23 +25,35 @@ export async function startAttempt(quizId: string) {
     return { error: 'Unauthorized' };
   }
 
-  // Check if attempt already exists
-  const existing = await prisma.quizAttempt.findUnique({
+  // Verify user has access to the quiz
+  const quiz = await prisma.quiz.findUnique({
+    where: { id: quizId },
+    include: {
+      document: {
+        select: { uploadedById: true },
+      },
+    },
+  });
+
+  if (!quiz) {
+    return { error: 'Quiz not found' };
+  }
+
+  // Verify user owns the document (for now, only teachers can take quizzes)
+  if (quiz.document.uploadedById !== session.user.id) {
+    return { error: 'Access denied' };
+  }
+
+  // Use upsert to prevent race condition
+  const attempt = await prisma.quizAttempt.upsert({
     where: {
       quizId_userId: {
         quizId,
         userId: session.user.id,
       },
     },
-  });
-
-  if (existing) {
-    return { attemptId: existing.id };
-  }
-
-  // Create new attempt
-  const attempt = await prisma.quizAttempt.create({
-    data: {
+    update: {}, // No-op if exists
+    create: {
       quizId,
       userId: session.user.id,
       status: 'in_progress',
