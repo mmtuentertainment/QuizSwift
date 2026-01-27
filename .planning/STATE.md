@@ -1,7 +1,7 @@
 # Project State: QuizSwift
 
-**Last Updated:** 2026-01-26
-**Session:** Quick Task 003 Complete - CodeRabbit PR #2 Review Fixes
+**Last Updated:** 2026-01-27
+**Session:** Quick Task 004 Complete - Fix Silent Failure Issues
 
 ## Project Reference
 
@@ -14,7 +14,7 @@
 **Phase:** 3 of 8 - Question Bank & Teacher Workflow
 **Plan:** 8 of 9 complete (01, 02, 03, 04, 05, 06, 07, 08)
 **Status:** In progress
-**Last activity:** 2026-01-27 - Completed quick task 003: Fix 26 CodeRabbit PR #2 review issues
+**Last activity:** 2026-01-27 - Completed quick task 004: Fix 5 silent failure issues in server actions
 
 **Progress:**
 Phase 1: 100% (5/5 plans)   [========================================]
@@ -82,6 +82,13 @@ Overall: 64%                [==================================      ]
 | Pagination input clamping | page >= 1, limit 1-100, offset >= 0 prevents performance issues | quick-003 |
 | pdf-storage.ts naming | Renamed from blob.ts to eliminate Vercel Blob confusion | quick-003 |
 
+### Roadmap Evolution
+
+| Phase | Type | Description | Date |
+|-------|------|-------------|------|
+| 3.1 | INSERTED | Convert Prisma Status Fields to Enums - address tech debt identified in PR review | 2026-01-27 |
+| 3.2 | INSERTED | Centralize QuestionType Definition - single source of truth for type safety | 2026-01-27 |
+
 ### Technical Stack
 
 - **Framework:** Next.js 16.1.4 + TypeScript 5 + React 19.2.3
@@ -113,6 +120,7 @@ Overall: 64%                [==================================      ]
 | 001 | Phase 3 tech debt audit | 2026-01-26 | dfc96e2 | [001-audit-phase-3-tech-debt](./quick/001-audit-phase-3-tech-debt/) |
 | 002 | Fix CodeRabbit AI configuration | 2026-01-26 | dba0688 | [002-fix-coderabbit-config](./quick/002-fix-coderabbit-config/) |
 | 003 | Fix CodeRabbit PR #2 review issues (26 fixes) | 2026-01-27 | bdde6e2 | [003-fix-pr2-coderabbit-review](./quick/003-fix-pr2-coderabbit-review/) |
+| 004 | Fix 5 silent failure issues in server actions | 2026-01-27 | 0b26ddd | [004-fix-pr2-silent-failures](./quick/004-fix-pr2-silent-failures/) |
 
 ### Lessons Learned
 

@@ -1,19 +1,19 @@
 'use server';
 
+/**
+ * Server Actions for question management
+ *
+ * Handles:
+ * - Fetching questions with pagination and filtering (question bank)
+ * - Getting teacher documents for filtering
+ * - Updating question content (CONT-07: Teacher editing)
+ * - Getting individual questions for editing
+ */
+
 import prisma from '@/lib/prisma';
-import { Prisma } from '@/generated/prisma/client';
 import { auth } from '@/lib/auth';
 import { z } from 'zod';
-
-function handlePrismaError(error: unknown): string {
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    if (error.code === 'P2002') return 'A record with this information already exists.';
-    if (error.code === 'P2003') return 'Referenced record not found.';
-    if (error.code === 'P2025') return 'Record not found.';
-  }
-  console.error('Database error:', error);
-  return 'Database operation failed. Please try again.';
-}
+import { handlePrismaError } from '@/lib/prisma-errors';
 
 export interface QuestionFilters {
   documentId?: string;
@@ -24,12 +24,15 @@ export interface QuestionFilters {
   limit?: number;
 }
 
-export interface QuestionsResult {
-  questions: Awaited<ReturnType<typeof fetchQuestions>>;
-  total: number;
-  page: number;
-  totalPages: number;
-}
+export type QuestionsResult =
+  | {
+      success: true;
+      questions: Awaited<ReturnType<typeof fetchQuestions>>;
+      total: number;
+      page: number;
+      totalPages: number;
+    }
+  | { success: false; error: string };
 
 async function fetchQuestions(where: object, skip: number, take: number) {
   return prisma.curatedQuestion.findMany({
@@ -52,7 +55,7 @@ async function fetchQuestions(where: object, skip: number, take: number) {
 export async function getQuestions(filters: QuestionFilters = {}): Promise<QuestionsResult> {
   const session = await auth();
   if (!session?.user?.id) {
-    return { questions: [], total: 0, page: 1, totalPages: 0 };
+    return { success: false, error: 'Authentication required' };
   }
 
   // Validate and clamp pagination inputs to safe ranges
@@ -96,17 +99,22 @@ export async function getQuestions(filters: QuestionFilters = {}): Promise<Quest
     };
   }
 
-  const [questions, total] = await Promise.all([
-    fetchQuestions(where, offset, limit),
-    prisma.curatedQuestion.count({ where }),
-  ]);
+  try {
+    const [questions, total] = await Promise.all([
+      fetchQuestions(where, offset, limit),
+      prisma.curatedQuestion.count({ where }),
+    ]);
 
-  return {
-    questions,
-    total,
-    page,
-    totalPages: Math.ceil(total / limit),
-  };
+    return {
+      success: true,
+      questions,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
+  } catch (error) {
+    return { success: false, error: handlePrismaError(error) };
+  }
 }
 
 export interface TeacherDocument {
@@ -117,30 +125,40 @@ export interface TeacherDocument {
   };
 }
 
+export type TeacherDocumentsResult =
+  | { success: true; documents: TeacherDocument[] }
+  | { success: false; error: string };
+
 /**
  * Get all documents with curated questions for the current teacher.
  * Used for the document filter dropdown in question bank.
  */
-export async function getTeacherDocuments(): Promise<TeacherDocument[]> {
+export async function getTeacherDocuments(): Promise<TeacherDocumentsResult> {
   const session = await auth();
   if (!session?.user?.id) {
-    return [];
+    return { success: false, error: 'Authentication required' };
   }
 
-  return prisma.document.findMany({
-    where: {
-      uploadedById: session.user.id,
-      curationStatus: 'complete',
-    },
-    select: {
-      id: true,
-      fileName: true,
-      _count: {
-        select: { curatedQuestions: { where: { teacherSelected: true } } },
+  try {
+    const documents = await prisma.document.findMany({
+      where: {
+        uploadedById: session.user.id,
+        curationStatus: 'complete',
       },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+      select: {
+        id: true,
+        fileName: true,
+        _count: {
+          select: { curatedQuestions: { where: { teacherSelected: true } } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return { success: true, documents };
+  } catch (error) {
+    return { success: false, error: handlePrismaError(error) };
+  }
 }
 
 // =============================================================================
@@ -148,8 +166,14 @@ export async function getTeacherDocuments(): Promise<TeacherDocument[]> {
 // =============================================================================
 
 /**
- * Zod schema for question update validation
- * Validates questionText, options, correctAnswer, explanation, sourceEvidence
+ * Zod schema for question update validation.
+ *
+ * Validates structure of: questionText, options, correctAnswer, explanation,
+ * sourceEvidence, imageUrl, imageAltText.
+ *
+ * Note: Business rules (e.g., "exactly one correct choice") are enforced
+ * separately in @/lib/questions/validation.ts. This schema validates
+ * API input structure only.
  */
 const questionOptionsSchema = z.discriminatedUnion('type', [
   z.object({
@@ -293,20 +317,14 @@ export async function updateQuestion(
   }
 }
 
-/**
- * Get a single question with all details for editing
- */
-export async function getQuestionForEdit(questionId: string) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return null;
-  }
+type QuestionForEdit = Awaited<ReturnType<typeof fetchQuestionForEdit>>;
 
+async function fetchQuestionForEdit(questionId: string, userId: string) {
   return prisma.curatedQuestion.findFirst({
     where: {
       id: questionId,
       document: {
-        uploadedById: session.user.id,
+        uploadedById: userId,
       },
     },
     include: {
@@ -315,4 +333,31 @@ export async function getQuestionForEdit(questionId: string) {
       },
     },
   });
+}
+
+export type GetQuestionForEditResult =
+  | { success: true; question: NonNullable<QuestionForEdit> }
+  | { success: false; error: string };
+
+/**
+ * Get a single question with all details for editing.
+ * Returns error result if unauthenticated or question not found/accessible.
+ */
+export async function getQuestionForEdit(questionId: string): Promise<GetQuestionForEditResult> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: 'Authentication required' };
+  }
+
+  try {
+    const question = await fetchQuestionForEdit(questionId, session.user.id);
+
+    if (!question) {
+      return { success: false, error: 'Question not found or access denied' };
+    }
+
+    return { success: true, question };
+  } catch (error) {
+    return { success: false, error: handlePrismaError(error) };
+  }
 }

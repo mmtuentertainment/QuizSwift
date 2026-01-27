@@ -1,24 +1,22 @@
 'use server';
 
+/**
+ * Server Actions for quiz management
+ *
+ * Handles:
+ * - Creating quizzes from selected questions
+ * - Fetching quizzes for documents
+ * - Updating quiz settings
+ * - Publishing workflow (CONT-06: requires teacher preview)
+ * - Archiving quizzes
+ */
+
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { Prisma } from '@/generated/prisma/client';
 import { z } from 'zod';
-
-/**
- * Handle Prisma errors and return user-friendly messages
- */
-function handlePrismaError(error: unknown): string {
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    if (error.code === 'P2002') return 'A record with this information already exists.';
-    if (error.code === 'P2003') return 'Referenced record not found.';
-    if (error.code === 'P2025') return 'Record not found.';
-  }
-  console.error('Database error:', error);
-  return 'Database operation failed. Please try again.';
-}
+import { handlePrismaError } from '@/lib/prisma-errors';
 
 const CreateQuizSchema = z.object({
   documentId: z.string().cuid(),
@@ -40,7 +38,8 @@ export async function createQuiz(formData: FormData) {
   try {
     const rawQuestionIds = formData.get('questionIds');
     questionIds = rawQuestionIds ? JSON.parse(rawQuestionIds as string) : [];
-  } catch {
+  } catch (error) {
+    console.error('[createQuiz] Failed to parse questionIds:', error);
     return { error: 'Invalid question IDs format' };
   }
 
@@ -95,16 +94,13 @@ export async function createQuiz(formData: FormData) {
   }
 }
 
-export async function getQuizzesForDocument(documentId: string) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return [];
-  }
+type QuizListItem = Awaited<ReturnType<typeof fetchQuizzesForDocument>>[number];
 
+async function fetchQuizzesForDocument(documentId: string, userId: string) {
   return prisma.quiz.findMany({
     where: {
       documentId,
-      createdById: session.user.id,
+      createdById: userId,
     },
     include: {
       _count: {
@@ -115,13 +111,28 @@ export async function getQuizzesForDocument(documentId: string) {
   });
 }
 
-export async function getQuizWithQuestions(quizId: string) {
+export type GetQuizzesResult =
+  | { success: true; quizzes: QuizListItem[] }
+  | { success: false; error: string };
+
+export async function getQuizzesForDocument(documentId: string): Promise<GetQuizzesResult> {
   const session = await auth();
   if (!session?.user?.id) {
-    return null;
+    return { success: false, error: 'Authentication required' };
   }
 
-  const quiz = await prisma.quiz.findUnique({
+  try {
+    const quizzes = await fetchQuizzesForDocument(documentId, session.user.id);
+    return { success: true, quizzes };
+  } catch (error) {
+    return { success: false, error: handlePrismaError(error) };
+  }
+}
+
+type QuizWithQuestions = NonNullable<Awaited<ReturnType<typeof fetchQuizWithQuestions>>>;
+
+async function fetchQuizWithQuestions(quizId: string) {
+  return prisma.quiz.findUnique({
     where: { id: quizId },
     include: {
       questions: {
@@ -133,12 +144,34 @@ export async function getQuizWithQuestions(quizId: string) {
       },
     },
   });
+}
 
-  if (!quiz || quiz.createdById !== session.user.id) {
-    return null;
+export type GetQuizWithQuestionsResult =
+  | { success: true; quiz: QuizWithQuestions }
+  | { success: false; error: 'unauthenticated' | 'not_found' | 'access_denied' };
+
+export async function getQuizWithQuestions(quizId: string): Promise<GetQuizWithQuestionsResult> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: 'unauthenticated' };
   }
 
-  return quiz;
+  try {
+    const quiz = await fetchQuizWithQuestions(quizId);
+
+    if (!quiz) {
+      return { success: false, error: 'not_found' };
+    }
+
+    if (quiz.createdById !== session.user.id) {
+      return { success: false, error: 'access_denied' };
+    }
+
+    return { success: true, quiz };
+  } catch {
+    // Database error - treat as not found to avoid leaking error details
+    return { success: false, error: 'not_found' };
+  }
 }
 
 // =============================================================================
@@ -187,13 +220,17 @@ export async function updateQuizSettings(
     return { success: false, error: 'Quiz not found or access denied' };
   }
 
-  await prisma.quiz.update({
-    where: { id: quizId },
-    data: parsed.data,
-  });
+  try {
+    await prisma.quiz.update({
+      where: { id: quizId },
+      data: parsed.data,
+    });
 
-  revalidatePath(`/documents/${quiz.documentId}/quiz/${quizId}`);
-  return { success: true };
+    revalidatePath(`/documents/${quiz.documentId}/quiz/${quizId}`);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: handlePrismaError(error) };
+  }
 }
 
 // =============================================================================
@@ -246,16 +283,20 @@ export async function publishQuiz(
   }
 
   // Publish the quiz
-  await prisma.quiz.update({
-    where: { id: quizId },
-    data: {
-      status: 'published',
-      publishedAt: new Date(),
-    },
-  });
+  try {
+    await prisma.quiz.update({
+      where: { id: quizId },
+      data: {
+        status: 'published',
+        publishedAt: new Date(),
+      },
+    });
 
-  revalidatePath(`/documents/${quiz.documentId}/quiz/${quizId}`);
-  return { success: true };
+    revalidatePath(`/documents/${quiz.documentId}/quiz/${quizId}`);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: handlePrismaError(error) };
+  }
 }
 
 /**
@@ -282,16 +323,20 @@ export async function unpublishQuiz(
     return { success: false, error: 'Quiz is not published' };
   }
 
-  await prisma.quiz.update({
-    where: { id: quizId },
-    data: {
-      status: 'draft',
-      publishedAt: null,
-    },
-  });
+  try {
+    await prisma.quiz.update({
+      where: { id: quizId },
+      data: {
+        status: 'draft',
+        publishedAt: null,
+      },
+    });
 
-  revalidatePath(`/documents/${quiz.documentId}/quiz/${quizId}`);
-  return { success: true };
+    revalidatePath(`/documents/${quiz.documentId}/quiz/${quizId}`);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: handlePrismaError(error) };
+  }
 }
 
 /**
@@ -314,12 +359,16 @@ export async function archiveQuiz(
     return { success: false, error: 'Quiz not found or access denied' };
   }
 
-  await prisma.quiz.update({
-    where: { id: quizId },
-    data: { status: 'archived' },
-  });
+  try {
+    await prisma.quiz.update({
+      where: { id: quizId },
+      data: { status: 'archived' },
+    });
 
-  revalidatePath(`/documents/${quiz.documentId}/quiz/${quizId}`);
-  revalidatePath(`/documents/${quiz.documentId}/quiz`);
-  return { success: true };
+    revalidatePath(`/documents/${quiz.documentId}/quiz/${quizId}`);
+    revalidatePath(`/documents/${quiz.documentId}/quiz`);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: handlePrismaError(error) };
+  }
 }
