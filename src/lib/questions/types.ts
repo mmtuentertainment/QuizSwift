@@ -209,6 +209,40 @@ export function isShowWorkAnswer(answer: AnswerData): answer is ShowWorkAnswer {
 }
 
 // =============================================================================
+// Question Type Constants and Type
+// =============================================================================
+
+/**
+ * Canonical list of all supported question types.
+ * Includes aliases (fill_blank, true_false_justify) for backward compatibility.
+ */
+export const QUESTION_TYPES = [
+  'multiple_choice',
+  'true_false',
+  'true_false_justify',
+  'fill_in_blank',
+  'fill_blank',
+  'essay',
+  'short_answer',
+  'show_work',
+  'matching',
+] as const;
+
+/**
+ * Union type of all valid question types.
+ * Derived from QUESTION_TYPES for single source of truth.
+ */
+export type QuestionType = (typeof QUESTION_TYPES)[number];
+
+/**
+ * Type guard to validate strings from database/API as valid QuestionType.
+ * Use this when receiving questionType from external sources.
+ */
+export function isValidQuestionType(value: string): value is QuestionType {
+  return QUESTION_TYPES.includes(value as QuestionType);
+}
+
+// =============================================================================
 // Legacy Aliases (backward compatibility with Phase 2.1 components)
 // These will be removed when components are updated in Phase 4
 // =============================================================================
