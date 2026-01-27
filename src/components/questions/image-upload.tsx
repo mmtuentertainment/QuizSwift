@@ -11,6 +11,7 @@
  */
 
 import { useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 
 // Local constants to avoid server import in client component
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -178,11 +179,13 @@ export function ImageUpload({
 
       {preview ? (
         <div className="relative inline-block">
-          {/* eslint-disable-next-line @next/next/no-img-element -- blob URL preview, not optimizable */}
-          <img
+          <Image
             src={preview}
             alt="Question image preview"
-            className="max-h-48 rounded border border-gray-300 object-contain"
+            width={200}
+            height={200}
+            className="max-h-48 w-auto rounded border border-gray-300 object-contain"
+            unoptimized
           />
           {!disabled && (
             <button

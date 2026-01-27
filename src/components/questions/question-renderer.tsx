@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { MultipleChoice } from './types/multiple-choice';
 import { TrueFalse } from './types/true-false';
 import { FillInBlank } from './types/fill-in-blank';
@@ -325,12 +326,13 @@ export function QuestionRenderer({
     <div className="space-y-4">
       {/* Question image (if present) */}
       {resolvedImageUrl && (
-        <div className="mb-4">
-          {/* eslint-disable-next-line @next/next/no-img-element -- dynamic external URL */}
-          <img
+        <div className="relative mb-4 h-64 w-full">
+          <Image
             src={resolvedImageUrl}
             alt={imageAltText || 'Question image'}
-            className="max-h-64 rounded border border-gray-200 object-contain"
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className="rounded border border-gray-200 object-contain"
           />
         </div>
       )}
