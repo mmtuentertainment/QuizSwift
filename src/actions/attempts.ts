@@ -13,19 +13,9 @@
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { Prisma } from '@/generated/prisma/client';
 import { gradeAnswer, isAutoGradable } from '@/lib/questions/grading';
 import type { AnswerData, QuestionOptions } from '@/lib/questions/types';
-
-function handlePrismaError(error: unknown): string {
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    if (error.code === 'P2002') return 'A record with this information already exists.';
-    if (error.code === 'P2003') return 'Referenced record not found.';
-    if (error.code === 'P2025') return 'Record not found.';
-  }
-  console.error('Database error:', error);
-  return 'Database operation failed. Please try again.';
-}
+import { handlePrismaError } from '@/lib/prisma-errors';
 
 /**
  * Start or retrieve an existing quiz attempt for the current user
@@ -248,18 +238,22 @@ export async function markQuizPreviewed(quizId: string) {
     return { error: 'Access denied' };
   }
 
-  await prisma.quiz.update({
-    where: { id: quizId },
-    data: {
-      teacherPreviewedAt: new Date(),
-      // After preview, quiz can now be published
-      status: quiz.status === 'draft' ? 'preview_required' : quiz.status,
-    },
-  });
+  try {
+    await prisma.quiz.update({
+      where: { id: quizId },
+      data: {
+        teacherPreviewedAt: new Date(),
+        // After preview, quiz can now be published
+        status: quiz.status === 'draft' ? 'preview_required' : quiz.status,
+      },
+    });
 
-  revalidatePath('/documents');
+    revalidatePath('/documents');
 
-  return { success: true };
+    return { success: true };
+  } catch (error) {
+    return { error: handlePrismaError(error) };
+  }
 }
 
 /**
@@ -271,37 +265,41 @@ export async function getAttemptWithAnswers(quizId: string) {
     return { error: 'Unauthorized' };
   }
 
-  const attempt = await prisma.quizAttempt.findUnique({
-    where: {
-      quizId_userId: {
-        quizId,
-        userId: session.user.id,
-      },
-    },
-    include: {
-      answers: {
-        select: {
-          questionId: true,
-          answerData: true,
-          isCorrect: true,
-          pointsEarned: true,
-          feedback: true,
+  try {
+    const attempt = await prisma.quizAttempt.findUnique({
+      where: {
+        quizId_userId: {
+          quizId,
+          userId: session.user.id,
         },
       },
-    },
-  });
+      include: {
+        answers: {
+          select: {
+            questionId: true,
+            answerData: true,
+            isCorrect: true,
+            pointsEarned: true,
+            feedback: true,
+          },
+        },
+      },
+    });
 
-  if (!attempt) {
-    return { attempt: null, answers: [] };
+    if (!attempt) {
+      return { attempt: null, answers: [] };
+    }
+
+    return {
+      attempt: {
+        id: attempt.id,
+        status: attempt.status,
+        score: attempt.score,
+        maxScore: attempt.maxScore,
+      },
+      answers: attempt.answers,
+    };
+  } catch (error) {
+    return { error: handlePrismaError(error) };
   }
-
-  return {
-    attempt: {
-      id: attempt.id,
-      status: attempt.status,
-      score: attempt.score,
-      maxScore: attempt.maxScore,
-    },
-    answers: attempt.answers,
-  };
 }
