@@ -32,7 +32,7 @@ export default async function QuestionBankPage({ searchParams }: PageProps) {
     redirect('/login');
   }
 
-  const [documents, questionsResult] = await Promise.all([
+  const [documentsResult, questionsResult] = await Promise.all([
     getTeacherDocuments(),
     getQuestions({
       documentId: params.documentId,
@@ -42,6 +42,13 @@ export default async function QuestionBankPage({ searchParams }: PageProps) {
       page: params.page ? (parseInt(params.page, 10) || 1) : 1,
     }),
   ]);
+
+  // Extract data with fallbacks for error cases
+  const documents = documentsResult.success ? documentsResult.documents : [];
+  const questions = questionsResult.success ? questionsResult.questions : [];
+  const total = questionsResult.success ? questionsResult.total : 0;
+  const page = questionsResult.success ? questionsResult.page : 1;
+  const totalPages = questionsResult.success ? questionsResult.totalPages : 1;
 
   return (
     <div className="container mx-auto max-w-6xl p-6">
@@ -57,7 +64,7 @@ export default async function QuestionBankPage({ searchParams }: PageProps) {
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <p className="text-sm text-gray-500">Total Questions</p>
-          <p className="text-2xl font-semibold">{questionsResult.total}</p>
+          <p className="text-2xl font-semibold">{total}</p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <p className="text-sm text-gray-500">Documents</p>
@@ -66,7 +73,7 @@ export default async function QuestionBankPage({ searchParams }: PageProps) {
         <div className="rounded-lg border border-gray-200 bg-white p-4">
           <p className="text-sm text-gray-500">Current Page</p>
           <p className="text-2xl font-semibold">
-            {questionsResult.page} / {questionsResult.totalPages || 1}
+            {page} / {totalPages || 1}
           </p>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4">
@@ -95,10 +102,10 @@ export default async function QuestionBankPage({ searchParams }: PageProps) {
 
       {/* Question list */}
       <QuestionList
-        questions={questionsResult.questions}
-        total={questionsResult.total}
-        page={questionsResult.page}
-        totalPages={questionsResult.totalPages}
+        questions={questions}
+        total={total}
+        page={page}
+        totalPages={totalPages}
       />
     </div>
   );

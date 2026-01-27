@@ -26,7 +26,8 @@ export default async function QuizListPage({
     redirect('/documents');
   }
 
-  const quizzes = await getQuizzesForDocument(documentId);
+  const quizzesResult = await getQuizzesForDocument(documentId);
+  const quizzes = quizzesResult.success ? quizzesResult.quizzes : [];
 
   return (
     <div className="container mx-auto max-w-4xl p-6">
