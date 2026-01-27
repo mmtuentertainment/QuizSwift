@@ -30,6 +30,8 @@ interface QuizQuestion {
   difficulty: string;
   position: number;
   points: number;
+  imageUrl: string | null;
+  imageAltText: string | null;
 }
 
 interface QuizData {

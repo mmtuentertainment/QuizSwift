@@ -90,6 +90,14 @@ export function FillInBlank({
 
   // Split question text by [BLANK] markers
   const parts = questionText.split(/\[BLANK\]/gi);
+  const blankCount = parts.length - 1;
+
+  // Guard against [BLANK] marker / options.blanks mismatch
+  if (blankCount !== options.blanks.length && blankCount > 0) {
+    console.warn(
+      `FillInBlank: Mismatch between [BLANK] markers (${blankCount}) and options.blanks (${options.blanks.length})`
+    );
+  }
 
   // Ensure answers array has correct length
   const normalizedAnswers = options.blanks.map((_, i) => answers[i] || '');

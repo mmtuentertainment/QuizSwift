@@ -29,7 +29,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse request body
-    const body = (await request.json()) as Partial<UploadRequest>;
+    let body: Partial<UploadRequest>;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      );
+    }
     const { fileName, contentType, fileSize } = body;
 
     // Validate required fields
