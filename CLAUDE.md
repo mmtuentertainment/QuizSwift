@@ -24,7 +24,7 @@ Kill by PID or use `KillShell` tool instead.
 - Prisma 7 + PostgreSQL + pgvector
 - Vercel AI SDK (Ollama/OpenAI)
 - Inngest background jobs
-- Vercel Blob storage
+- Cloudflare R2 storage
 
 ## Structure
 

@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upload to Vercel Blob
+    // Upload to Cloudflare R2
     const uploadResult = await uploadPdf(file, session.user.id);
 
     // Create Document record - cleanup blob on failure

@@ -13,7 +13,7 @@ export default async function NewQuizPage({
   const session = await auth();
 
   if (!session?.user?.id) {
-    redirect('/api/auth/signin');
+    redirect('/login');
   }
 
   // Verify document and get selected questions

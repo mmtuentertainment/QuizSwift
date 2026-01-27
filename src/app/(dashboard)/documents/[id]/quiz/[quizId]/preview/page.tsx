@@ -25,7 +25,7 @@ export default async function TeacherPreviewPage({
   const session = await auth();
 
   if (!session?.user?.id) {
-    redirect('/api/auth/signin');
+    redirect('/login');
   }
 
   // Fetch quiz with questions

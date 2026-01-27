@@ -22,7 +22,7 @@ export default async function QuizDetailPage({
   const session = await auth();
 
   if (!session?.user?.id) {
-    redirect('/api/auth/signin');
+    redirect('/login');
   }
 
   const result = await getQuizWithQuestions(quizId);
