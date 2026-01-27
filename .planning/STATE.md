@@ -1,28 +1,29 @@
 # Project State: QuizSwift
 
 **Last Updated:** 2026-01-27
-**Session:** Phase 3.2 Complete - Centralize QuestionType (Verified)
+**Session:** Phase 3.1 Plan 01 Complete - Define Prisma Enums
 
 ## Project Reference
 
 **Core Value:** 100% factual accuracy - every question extracted from source material, never generated
 
-**Current Focus:** Phase 3 - Question Bank & Teacher Workflow (8/9 plans) + Phase 3.2 COMPLETE
+**Current Focus:** Phase 3.1 - Convert Prisma Status Enums (Plan 01 of 4 complete)
 
 ## Current Position
 
-**Phase:** 3 of 8 - Question Bank & Teacher Workflow
-**Plan:** 8 of 9 complete (01, 02, 03, 04, 05, 06, 07, 08)
-**Status:** In progress (Phase 3.2 sub-phase COMPLETE)
-**Last activity:** 2026-01-27 - Phase 3.2 verified complete: Centralize QuestionType
+**Phase:** 3.1 of 8 - Convert Prisma Status Fields to Enums
+**Plan:** 1 of 4 complete
+**Status:** In progress
+**Last activity:** 2026-01-27 - Completed 03.1-01: Define Prisma Enums in Schema
 
 **Progress:**
 Phase 1: 100% (5/5 plans)     [========================================]
 Phase 2: 100% (4/4 plans)     [========================================]
 Phase 2.1: 100% (6/6 plans)   [========================================]
 Phase 3: 89% (8/9 plans)      [====================================    ]
+Phase 3.1: 25% (1/4 plans)    [==========                              ]
 Phase 3.2: 100% (1/1 plans)   [========================================]
-Overall: 66%                  [===================================     ]
+Overall: 67%                  [====================================    ]
 
 **Phases Overview:**
 | Phase | Name | Status | Plans |
@@ -31,7 +32,7 @@ Overall: 66%                  [===================================     ]
 | 2 | Content & AI Extraction | COMPLETE | 4/4 |
 | 2.1 | Intelligent Question Curation | COMPLETE | 6/6 |
 | 3 | Question Bank & Teacher Workflow | In Progress | 8/9 |
-| 3.1 | Convert Prisma Status Enums | Pending | - |
+| 3.1 | Convert Prisma Status Enums | In Progress | 1/4 |
 | 3.2 | Centralize QuestionType | COMPLETE | 1/1 |
 | 4 | Quiz Delivery & Student Experience | Pending | - |
 | 5 | Anti-Cheating & Randomization | Pending | - |
@@ -42,13 +43,13 @@ Overall: 66%                  [===================================     ]
 ## Performance Metrics
 
 **Session Stats:**
-- Plans completed: 1 (03.2-01)
-- Tasks completed: 3
-- Duration: 18 min
+- Plans completed: 1 (03.1-01)
+- Tasks completed: 5
+- Duration: 13 min
 
 **Cumulative Stats:**
-- Total phases: 8 (+ 2.1, 3.2 sub-phases)
-- Plans completed: 24/36+ (approximate)
+- Total phases: 8 (+ 2.1, 3.1, 3.2 sub-phases)
+- Plans completed: 25/38+ (approximate)
 
 ## Accumulated Context
 
@@ -86,6 +87,7 @@ Overall: 66%                  [===================================     ]
 | pdf-storage.ts naming | Renamed from blob.ts to eliminate Vercel Blob confusion | quick-003 |
 | isValidQuestionType() guard in attempts.ts | Validate database strings before passing to typed grading functions | 03.2-01 |
 | Cast unknown_type in test | Preserves runtime fallback test coverage while satisfying type checker | 03.2-01 |
+| Lowercase Prisma enum values | Match existing string values for zero-data-transformation migration | 03.1-01 |
 
 ### Roadmap Evolution
 
@@ -104,7 +106,7 @@ Overall: 66%                  [===================================     ]
 - **Drag-and-Drop:** @dnd-kit/core@6.3.1, @dnd-kit/sortable@10.0.0, @dnd-kit/utilities@3.2.2
 - **Storage:** Cloudflare R2 via @aws-sdk/client-s3 + @aws-sdk/s3-request-presigner
 
-### Patterns Established (03-02, 03-03, 03-05, 03-06, 03-07, 03-08, 03.2-01)
+### Patterns Established (03-02, 03-03, 03-05, 03-06, 03-07, 03-08, 03.1-01, 03.2-01)
 
 - QuestionRenderer switch pattern for dispatching to type-specific components
 - Consistent props interface: options, answer/value, onChange, readOnly, showCorrect
@@ -119,6 +121,7 @@ Overall: 66%                  [===================================     ]
 - Quiz status workflow: draft -> preview_required -> published
 - QUESTION_TYPES const array: single source of truth for all valid question types
 - isValidQuestionType() guard: validate strings from external sources before use as QuestionType
+- Prisma enum definition: enum Name { value1 value2 } for type-safe status fields
 
 ### Quick Tasks Completed
 
@@ -139,35 +142,35 @@ Overall: 66%                  [===================================     ]
 - Client components cannot import server-only modules - duplicate constants locally
 - ShowYourWorkData includes Blob which cannot be JSON serialized - use null when restoring
 - Type parameter changes propagate to callers - use type guards to bridge string types from database
+- PostgreSQL USING clause required for TEXT to ENUM migration - Prisma will not generate it automatically
 
 ## Session Continuity
 
 ### What Just Happened
 
-Phase 3.2 execution and verification completed:
+Completed Phase 3.1 Plan 01 - Define Prisma Enums in Schema:
 
-**Phase 3.2 Plan 01:** Centralize QuestionType Definition
-- Created QUESTION_TYPES const array with 9 values in types.ts
-- Derived QuestionType union type from const array
-- Added isValidQuestionType() type guard for runtime validation
-- Updated grading.ts functions to accept typed QuestionType parameter
-- Removed duplicate QuestionType from question-renderer.tsx
-- All 43 tests pass, build succeeds
+**Tasks completed:**
+1. Added three enum definitions to schema.prisma (QuizStatus, ShowResultsOption, AttemptStatus)
+2. Converted Quiz.status from String to QuizStatus enum
+3. Converted Quiz.showResults from String to ShowResultsOption enum
+4. Converted QuizAttempt.status from String to AttemptStatus enum
+5. Validated schema with npx prisma validate - passes
 
-**Verification:** Goal verified (4/4 must-haves)
-- TECH-DEBT-04: QuestionType defined once in types.ts
-- TECH-DEBT-05: grading.ts uses QuestionType parameter
-- TECH-DEBT-06: Components import QuestionType from types.ts
+**Commits:**
+- b338a05: feat(03.1-01): convert status fields to Prisma enums
+- 24116b0: docs(03.1-01): complete Define Prisma Enums plan
 
-**Pattern established:** QUESTION_TYPES const array -> QuestionType union -> isValidQuestionType() guard
+**Key insight:** Lowercase enum values (draft, in_progress) match existing string values exactly, enabling migration without data transformation.
 
 ### What Happens Next
 
-Two options:
-1. **Phase 3 Plan 09** - Final workflow polish (completes Phase 3)
-2. **Phase 3.1** - Convert Prisma status fields to enums (tech debt)
+Continue Phase 3.1:
+- **Plan 02:** Database Migration - generate and apply migration with USING clause
+- **Plan 03:** Update Code - replace string literals with enum values
+- **Plan 04:** Verification - run tests and validate type safety
 
 ---
 
 *State captured: 2026-01-27*
-*Next command: /gsd:execute-phase 03 plan 09 OR /gsd:plan-phase 3.1*
+*Next command: /gsd:execute-phase 3.1 plan 02*
