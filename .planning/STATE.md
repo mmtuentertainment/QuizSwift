@@ -1,27 +1,28 @@
 # Project State: QuizSwift
 
 **Last Updated:** 2026-01-27
-**Session:** Quick Task 004 Complete - Fix Silent Failure Issues
+**Session:** Phase 3.2 Plan 01 Complete - Centralize QuestionType
 
 ## Project Reference
 
 **Core Value:** 100% factual accuracy - every question extracted from source material, never generated
 
-**Current Focus:** Phase 3 - Question Bank & Teacher Workflow (Plan 06 of 9 complete)
+**Current Focus:** Phase 3.2 - Centralize QuestionType (Plan 01 of 1 complete)
 
 ## Current Position
 
-**Phase:** 3 of 8 - Question Bank & Teacher Workflow
-**Plan:** 8 of 9 complete (01, 02, 03, 04, 05, 06, 07, 08)
-**Status:** In progress
-**Last activity:** 2026-01-27 - Completed quick task 004: Fix 5 silent failure issues in server actions
+**Phase:** 3.2 of 8 - Centralize QuestionType Definition
+**Plan:** 1 of 1 complete
+**Status:** Phase 3.2 COMPLETE
+**Last activity:** 2026-01-27 - Completed 03.2-01: Centralize QuestionType
 
 **Progress:**
-Phase 1: 100% (5/5 plans)   [========================================]
-Phase 2: 100% (4/4 plans)   [========================================]
-Phase 2.1: 100% (6/6 plans) [========================================]
-Phase 3: 89% (8/9 plans)    [====================================    ]
-Overall: 64%                [==================================      ]
+Phase 1: 100% (5/5 plans)     [========================================]
+Phase 2: 100% (4/4 plans)     [========================================]
+Phase 2.1: 100% (6/6 plans)   [========================================]
+Phase 3: 89% (8/9 plans)      [====================================    ]
+Phase 3.2: 100% (1/1 plans)   [========================================]
+Overall: 66%                  [===================================     ]
 
 **Phases Overview:**
 | Phase | Name | Status | Plans |
@@ -30,6 +31,7 @@ Overall: 64%                [==================================      ]
 | 2 | Content & AI Extraction | COMPLETE | 4/4 |
 | 2.1 | Intelligent Question Curation | COMPLETE | 6/6 |
 | 3 | Question Bank & Teacher Workflow | In Progress | 8/9 |
+| 3.2 | Centralize QuestionType | COMPLETE | 1/1 |
 | 4 | Quiz Delivery & Student Experience | Pending | - |
 | 5 | Anti-Cheating & Randomization | Pending | - |
 | 6 | Grading & Analytics | Pending | - |
@@ -39,13 +41,13 @@ Overall: 64%                [==================================      ]
 ## Performance Metrics
 
 **Session Stats:**
-- Plans completed: 1 (03-06)
+- Plans completed: 1 (03.2-01)
 - Tasks completed: 3
-- Duration: 10 min
+- Duration: 18 min
 
 **Cumulative Stats:**
-- Total phases: 8 (+ 2.1 sub-phase)
-- Plans completed: 23/36+ (approximate)
+- Total phases: 8 (+ 2.1, 3.2 sub-phases)
+- Plans completed: 24/36+ (approximate)
 
 ## Accumulated Context
 
@@ -81,13 +83,15 @@ Overall: 64%                [==================================      ]
 | Upsert pattern for race conditions | Prevents duplicate quiz attempts with compound unique keys | quick-003 |
 | Pagination input clamping | page >= 1, limit 1-100, offset >= 0 prevents performance issues | quick-003 |
 | pdf-storage.ts naming | Renamed from blob.ts to eliminate Vercel Blob confusion | quick-003 |
+| isValidQuestionType() guard in attempts.ts | Validate database strings before passing to typed grading functions | 03.2-01 |
+| Cast unknown_type in test | Preserves runtime fallback test coverage while satisfying type checker | 03.2-01 |
 
 ### Roadmap Evolution
 
 | Phase | Type | Description | Date |
 |-------|------|-------------|------|
 | 3.1 | INSERTED | Convert Prisma Status Fields to Enums - address tech debt identified in PR review | 2026-01-27 |
-| 3.2 | INSERTED | Centralize QuestionType Definition - single source of truth for type safety | 2026-01-27 |
+| 3.2 | INSERTED/COMPLETE | Centralize QuestionType Definition - single source of truth for type safety | 2026-01-27 |
 
 ### Technical Stack
 
@@ -99,7 +103,7 @@ Overall: 64%                [==================================      ]
 - **Drag-and-Drop:** @dnd-kit/core@6.3.1, @dnd-kit/sortable@10.0.0, @dnd-kit/utilities@3.2.2
 - **Storage:** Cloudflare R2 via @aws-sdk/client-s3 + @aws-sdk/s3-request-presigner
 
-### Patterns Established (03-02, 03-03, 03-05, 03-06, 03-07, 03-08)
+### Patterns Established (03-02, 03-03, 03-05, 03-06, 03-07, 03-08, 03.2-01)
 
 - QuestionRenderer switch pattern for dispatching to type-specific components
 - Consistent props interface: options, answer/value, onChange, readOnly, showCorrect
@@ -112,6 +116,8 @@ Overall: 64%                [==================================      ]
 - Auto-grading with partial credit for objective question types
 - Modal editor pattern: QuestionEditor with isOpen/onClose/onSave props
 - Quiz status workflow: draft -> preview_required -> published
+- QUESTION_TYPES const array: single source of truth for all valid question types
+- isValidQuestionType() guard: validate strings from external sources before use as QuestionType
 
 ### Quick Tasks Completed
 
@@ -120,7 +126,6 @@ Overall: 64%                [==================================      ]
 | 001 | Phase 3 tech debt audit | 2026-01-26 | dfc96e2 | [001-audit-phase-3-tech-debt](./quick/001-audit-phase-3-tech-debt/) |
 | 002 | Fix CodeRabbit AI configuration | 2026-01-26 | dba0688 | [002-fix-coderabbit-config](./quick/002-fix-coderabbit-config/) |
 | 003 | Fix CodeRabbit PR #2 review issues (26 fixes) | 2026-01-27 | bdde6e2 | [003-fix-pr2-coderabbit-review](./quick/003-fix-pr2-coderabbit-review/) |
-| 004 | Fix 5 silent failure issues in server actions | 2026-01-27 | 0b26ddd | [004-fix-pr2-silent-failures](./quick/004-fix-pr2-silent-failures/) |
 
 ### Lessons Learned
 
@@ -132,37 +137,34 @@ Overall: 64%                [==================================      ]
 - useSearchParams + router.push pattern enables URL-based filter state
 - Client components cannot import server-only modules - duplicate constants locally
 - ShowYourWorkData includes Blob which cannot be JSON serialized - use null when restoring
+- Type parameter changes propagate to callers - use type guards to bridge string types from database
 
 ## Session Continuity
 
 ### What Just Happened
 
-Completed quick task 003 - Fixed all 26 CodeRabbit PR #2 review issues:
+Completed Phase 3.2 Plan 01 - Centralized QuestionType definition:
 
-**Round 1 (19 fixes):**
-- Security: Quiz authorization, upsert pattern, pagination clamping
-- Validation: Discriminated union Zod schemas, empty updateData guard
-- Accessibility: Aria-labels on filter selects
-- Navigation: window.location.href → router.push
-- State: Modal reset, immutable updates, controlled inputs
-- Consistency: Global underscore replacement in 4 files
-- Tech debt: Renamed blob.ts → pdf-storage.ts
+**Task 1:** Added QUESTION_TYPES const array with 9 values, QuestionType union type, and isValidQuestionType() type guard to types.ts
 
-**Round 2 (7 fixes):**
-- Preserve imageUrl/imageAltText in question editing
-- Sanitize page query param to avoid NaN
-- Return 400 for invalid JSON in image upload
-- Pass through T/F justification in review mode
-- Guard missing R2 URL for storage keys
-- Warn on [BLANK] marker count mismatch
-- Report initial shuffle state in matching component
+**Task 2:** Updated grading.ts functions to accept QuestionType instead of string, fixed caller sites with type guard
+
+**Task 3:** Removed duplicate QuestionType from question-renderer.tsx, updated imports and re-exports in index.ts
+
+**Commits:**
+- 9410b16: feat(03.2-01): add QUESTION_TYPES const and QuestionType type to types.ts
+- 011eb87: feat(03.2-01): update grading.ts to use typed QuestionType parameter
+- 4c248e8: feat(03.2-01): import QuestionType from types.ts in components
 
 ### What Happens Next
 
 Phase 3 continues with final plan:
 - 03-09: Final workflow polish
 
+Or:
+- Phase 3.1: Convert Prisma Status Fields to Enums (tech debt)
+
 ---
 
-*State captured: 2026-01-26*
-*Next command: /gsd:execute-phase 03 plan 09*
+*State captured: 2026-01-27*
+*Next command: /gsd:execute-phase 03 plan 09 OR /gsd:execute-phase 03.1*
