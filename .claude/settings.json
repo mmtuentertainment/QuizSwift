@@ -45,8 +45,13 @@
   "hooks": {
     "PostToolUse": [
       {
-        "tools": ["Write", "Edit"],
-        "command": "npm run format 2>/dev/null || npx prettier --write \"$CLAUDE_FILE_PATH\" 2>/dev/null || true"
+        "matcher": { "tools": ["Write", "Edit"] },
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm run format 2>/dev/null || npx prettier --write \"$CLAUDE_FILE_PATH\" 2>/dev/null || true"
+          }
+        ]
       }
     ]
   }
