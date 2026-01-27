@@ -70,7 +70,7 @@ export function QuestionList({
                     {question.document.fileName}
                   </Link>
                   <span className="rounded bg-gray-100 px-2 py-0.5 text-xs capitalize">
-                    {question.questionType.replace(/_/g, ' ')}
+                    {question.questionType.replaceAll('_', ' ')}
                   </span>
                   <span className="rounded bg-purple-100 px-2 py-0.5 text-xs capitalize text-purple-700">
                     {question.bloomLevel}

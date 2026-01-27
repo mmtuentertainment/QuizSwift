@@ -157,9 +157,9 @@ export function QuestionRenderer({
           correctBool = correctAnswer.toLowerCase() === 'true';
         }
 
-        // Get justification from options if available (cast to access optional property)
+        // Get justification from options if available (TrueFalseOptions has optional justification)
         const justification = (options && isTF(options))
-          ? (options as { justification?: string }).justification
+          ? options.justification
           : undefined;
 
         return (

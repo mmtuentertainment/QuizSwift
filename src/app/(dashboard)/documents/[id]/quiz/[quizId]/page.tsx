@@ -58,7 +58,7 @@ export default async function QuizDetailPage({
   return (
     <div className="container mx-auto max-w-4xl p-6">
       {/* Breadcrumb */}
-      <nav className="mb-6 text-sm">
+      <nav className="mb-6 text-sm" aria-label="Breadcrumb">
         <ol className="flex items-center gap-2">
           <li>
             <Link href="/documents" className="text-blue-600 hover:text-blue-800">
