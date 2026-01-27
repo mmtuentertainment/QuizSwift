@@ -203,10 +203,12 @@ Plans:
 
 **Goal:** Create a single source of truth for QuestionType to eliminate duplicate definitions and improve type safety across the codebase.
 
+**Status:** COMPLETE
+
 **Plans:** 1 plan
 
 Plans:
-- [ ] 03.2-01-PLAN.md - Add QUESTION_TYPES const, QuestionType type, and update consumers
+- [x] 03.2-01-PLAN.md - Add QUESTION_TYPES const, QuestionType type, and update consumers
 
 **Requirements:**
 - TECH-DEBT-04: QuestionType defined once in src/lib/questions/types.ts
@@ -438,7 +440,7 @@ Phase 3 (Question Bank) - IN PROGRESS
 Phase 3.1 (Prisma Enums) - INSERTED
     |
     v
-Phase 3.2 (QuestionType) - PLANNED
+Phase 3.2 (QuestionType) - COMPLETE
     |
     v
 Phase 4 (Quiz Delivery)
@@ -461,5 +463,5 @@ Phase 6 (Grading) ---------> Phase 7 (Google Classroom)
 *Phase 2 completed: 2026-01-23*
 *Phase 2.1 completed: 2026-01-25*
 *Phase 3 planned: 2026-01-26*
-*Phase 3.2 planned: 2026-01-27*
-*Next step: /gsd:execute-phase 3.2*
+*Phase 3.2 completed: 2026-01-27*
+*Next step: /gsd:execute-phase 03 plan 09 OR /gsd:execute-phase 3.1*

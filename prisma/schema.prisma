@@ -9,6 +9,29 @@ datasource db {
   extensions = [vector]
 }
 
+// =============================================================================
+// Enums for type-safe status fields
+// =============================================================================
+
+enum QuizStatus {
+  draft
+  preview_required
+  published
+  archived
+}
+
+enum ShowResultsOption {
+  after_submit
+  after_due
+  manual
+}
+
+enum AttemptStatus {
+  in_progress
+  submitted
+  graded
+}
+
 model User {
   id            String        @id @default(cuid())
   name          String?

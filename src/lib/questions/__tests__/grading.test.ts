@@ -161,7 +161,7 @@ describe('gradeAnswer', () => {
     });
 
     it('short_answer requires manual grading', () => {
-      const answer: AnswerData = { type: 'essay', text: 'Short answer', wordCount: 2 };
+      const answer: AnswerData = { type: 'short_answer', text: 'Short answer', wordCount: 2 };
       const result = gradeAnswer('short_answer', null, answer);
       expect(result.feedback).toBe('Requires manual grading');
     });
