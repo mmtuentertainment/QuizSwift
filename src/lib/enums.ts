@@ -4,7 +4,7 @@
  * Client components receive serialized enum values (strings), but these
  * type definitions ensure consistency with the Prisma schema.
  */
-export { QuizStatus, ShowResultsOption, AttemptStatus } from '@/generated/prisma';
+export { QuizStatus, ShowResultsOption, AttemptStatus } from '@/generated/prisma/client';
 
 /**
  * String literal types matching the Prisma enum values
