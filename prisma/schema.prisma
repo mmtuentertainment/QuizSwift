@@ -9,6 +9,29 @@ datasource db {
   extensions = [vector]
 }
 
+// =============================================================================
+// Enums for type-safe status fields
+// =============================================================================
+
+enum QuizStatus {
+  draft
+  preview_required
+  published
+  archived
+}
+
+enum ShowResultsOption {
+  after_submit
+  after_due
+  manual
+}
+
+enum AttemptStatus {
+  in_progress
+  submitted
+  graded
+}
+
 model User {
   id            String        @id @default(cuid())
   name          String?
@@ -212,14 +235,14 @@ model Quiz {
   description         String?
 
   // Workflow status
-  status              String        @default("draft") // draft, preview_required, published, archived
+  status              QuizStatus    @default(draft)
   teacherPreviewedAt  DateTime?     // CONT-06: must be set before publish
   publishedAt         DateTime?
 
   // Quiz settings
   timeLimit           Int?          // Minutes, null = unlimited
   shuffleQuestions    Boolean       @default(false)
-  showResults         String        @default("after_submit") // after_submit, after_due, manual
+  showResults         ShowResultsOption  @default(after_submit)
 
   // Audit fields
   createdById         String
@@ -259,7 +282,7 @@ model QuizAttempt {
   userId      String
 
   // Attempt status
-  status      String           @default("in_progress") // in_progress, submitted, graded
+  status      AttemptStatus    @default(in_progress)
   startedAt   DateTime         @default(now())
   submittedAt DateTime?
   gradedAt    DateTime?
