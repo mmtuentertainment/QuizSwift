@@ -14,7 +14,8 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { gradeAnswer, isAutoGradable } from '@/lib/questions/grading';
-import type { AnswerData, QuestionOptions } from '@/lib/questions/types';
+import type { AnswerData, QuestionOptions, QuestionType } from '@/lib/questions/types';
+import { isValidQuestionType } from '@/lib/questions/types';
 import { handlePrismaError } from '@/lib/prisma-errors';
 import { AttemptStatus, QuizStatus } from '@/generated/prisma/client';
 
@@ -114,11 +115,12 @@ export async function submitAnswer(
   const question = quizQuestion.question;
   const points = quizQuestion.points;
 
-  // Grade if auto-gradable
+  // Grade if auto-gradable (validate questionType from database first)
   let gradeResult = null;
-  if (isAutoGradable(question.questionType)) {
+  const questionType = question.questionType;
+  if (isValidQuestionType(questionType) && isAutoGradable(questionType)) {
     gradeResult = gradeAnswer(
-      question.questionType,
+      questionType,
       question.options as QuestionOptions | null,
       answerData,
       points

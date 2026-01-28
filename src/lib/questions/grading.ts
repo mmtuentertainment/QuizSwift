@@ -10,7 +10,7 @@
  * Essay, short_answer, and show_work require manual grading.
  */
 
-import type { QuestionOptions, AnswerData } from './types';
+import type { QuestionOptions, AnswerData, QuestionType } from './types';
 
 import {
   isMultipleChoiceOptions,
@@ -35,7 +35,7 @@ export interface GradeResult {
  * Returns partial credit for fill-in-blank and matching
  */
 export function gradeAnswer(
-  questionType: string,
+  questionType: QuestionType,
   options: QuestionOptions | null,
   answerData: AnswerData | null,
   maxPoints: number = 1.0
@@ -203,7 +203,7 @@ export function gradeAnswer(
 /**
  * Check if a question type can be auto-graded
  */
-export function isAutoGradable(questionType: string): boolean {
+export function isAutoGradable(questionType: QuestionType): boolean {
   return [
     'multiple_choice',
     'true_false',
