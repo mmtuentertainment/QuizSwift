@@ -16,7 +16,7 @@ import prisma from '@/lib/prisma';
 import { gradeAnswer, isAutoGradable } from '@/lib/questions/grading';
 import type { AnswerData, QuestionOptions } from '@/lib/questions/types';
 import { handlePrismaError } from '@/lib/prisma-errors';
-import { AttemptStatus, QuizStatus } from '@/generated/prisma';
+import { AttemptStatus, QuizStatus } from '@/generated/prisma/client';
 
 /**
  * Start or retrieve an existing quiz attempt for the current user
