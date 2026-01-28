@@ -16,6 +16,7 @@ import prisma from '@/lib/prisma';
 import { gradeAnswer, isAutoGradable } from '@/lib/questions/grading';
 import type { AnswerData, QuestionOptions } from '@/lib/questions/types';
 import { handlePrismaError } from '@/lib/prisma-errors';
+import { AttemptStatus, QuizStatus } from '@/generated/prisma';
 
 /**
  * Start or retrieve an existing quiz attempt for the current user
@@ -58,7 +59,7 @@ export async function startAttempt(quizId: string) {
       create: {
         quizId,
         userId: session.user.id,
-        status: 'in_progress',
+        status: AttemptStatus.in_progress,
       },
     });
 
@@ -101,7 +102,7 @@ export async function submitAnswer(
     return { error: 'Attempt not found' };
   }
 
-  if (attempt.status !== 'in_progress') {
+  if (attempt.status !== AttemptStatus.in_progress) {
     return { error: 'Attempt already submitted' };
   }
 
@@ -181,7 +182,7 @@ export async function completeAttempt(attemptId: string) {
     return { error: 'Attempt not found' };
   }
 
-  if (attempt.status !== 'in_progress') {
+  if (attempt.status !== AttemptStatus.in_progress) {
     return { error: 'Attempt already submitted' };
   }
 
@@ -200,7 +201,7 @@ export async function completeAttempt(attemptId: string) {
     await prisma.quizAttempt.update({
       where: { id: attemptId },
       data: {
-        status: 'submitted',
+        status: AttemptStatus.submitted,
         submittedAt: new Date(),
         score: totalScore,
         maxScore,
@@ -244,7 +245,7 @@ export async function markQuizPreviewed(quizId: string) {
       data: {
         teacherPreviewedAt: new Date(),
         // After preview, quiz can now be published
-        status: quiz.status === 'draft' ? 'preview_required' : quiz.status,
+        status: quiz.status === QuizStatus.draft ? QuizStatus.preview_required : quiz.status,
       },
     });
 
