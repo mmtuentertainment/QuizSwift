@@ -17,6 +17,7 @@ import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { handlePrismaError } from '@/lib/prisma-errors';
+import { QuizStatus, ShowResultsOption } from '@/generated/prisma';
 
 const CreateQuizSchema = z.object({
   documentId: z.string().cuid(),
@@ -76,7 +77,7 @@ export async function createQuiz(formData: FormData) {
         timeLimit: parsed.data.timeLimit,
         shuffleQuestions: parsed.data.shuffleQuestions ?? false,
         createdById: session.user.id,
-        status: 'draft',
+        status: QuizStatus.draft,
         questions: {
           create: parsed.data.questionIds.map((questionId, idx) => ({
             questionId,
@@ -183,7 +184,7 @@ const UpdateQuizSettingsSchema = z.object({
   description: z.string().max(500).nullable().optional(),
   timeLimit: z.number().int().min(1).max(300).nullable().optional(),
   shuffleQuestions: z.boolean().optional(),
-  showResults: z.enum(['after_submit', 'after_due', 'manual']).optional(),
+  showResults: z.nativeEnum(ShowResultsOption).optional(),
 });
 
 export type UpdateQuizSettingsInput = z.infer<typeof UpdateQuizSettingsSchema>;
@@ -270,7 +271,7 @@ export async function publishQuiz(
     return { success: false, error: 'Access denied' };
   }
 
-  if (quiz.status === 'published') {
+  if (quiz.status === QuizStatus.published) {
     return { success: false, error: 'Quiz is already published' };
   }
 
@@ -287,7 +288,7 @@ export async function publishQuiz(
     await prisma.quiz.update({
       where: { id: quizId },
       data: {
-        status: 'published',
+        status: QuizStatus.published,
         publishedAt: new Date(),
       },
     });
@@ -319,7 +320,7 @@ export async function unpublishQuiz(
     return { success: false, error: 'Quiz not found or access denied' };
   }
 
-  if (quiz.status !== 'published') {
+  if (quiz.status !== QuizStatus.published) {
     return { success: false, error: 'Quiz is not published' };
   }
 
@@ -327,7 +328,7 @@ export async function unpublishQuiz(
     await prisma.quiz.update({
       where: { id: quizId },
       data: {
-        status: 'draft',
+        status: QuizStatus.draft,
         publishedAt: null,
       },
     });
@@ -362,7 +363,7 @@ export async function archiveQuiz(
   try {
     await prisma.quiz.update({
       where: { id: quizId },
-      data: { status: 'archived' },
+      data: { status: QuizStatus.archived },
     });
 
     revalidatePath(`/documents/${quiz.documentId}/quiz/${quizId}`);
