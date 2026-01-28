@@ -17,7 +17,7 @@ import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { handlePrismaError } from '@/lib/prisma-errors';
-import { QuizStatus, ShowResultsOption } from '@/generated/prisma';
+import { QuizStatus, ShowResultsOption } from '@/generated/prisma/client';
 
 const CreateQuizSchema = z.object({
   documentId: z.string().cuid(),
