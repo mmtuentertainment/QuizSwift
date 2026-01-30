@@ -187,7 +187,11 @@ export type UpdateQuestionInput = z.infer<typeof UpdateQuestionSchema>;
 export async function updateQuestion(
   questionId: string,
   data: UpdateQuestionInput
-): Promise<{ success: boolean; error?: string; details?: ReturnType<z.ZodError['flatten']> }> {
+): Promise<{
+  success: boolean;
+  error?: string;
+  fieldErrors?: Record<string, string[] | undefined>;
+}> {
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'Not authenticated' };
@@ -196,7 +200,17 @@ export async function updateQuestion(
   // Validate input with Zod
   const parsed = UpdateQuestionSchema.safeParse(data);
   if (!parsed.success) {
-    return { success: false, error: 'Invalid input', details: parsed.error.flatten() };
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    // Build a summary error message from first field error
+    const firstError = Object.entries(fieldErrors).find(([, errs]) => errs && errs.length > 0);
+    const errorSummary = firstError
+      ? `${firstError[0]}: ${firstError[1]?.[0]}`
+      : 'Validation failed';
+    return {
+      success: false,
+      error: errorSummary,
+      fieldErrors,
+    };
   }
 
   // Verify ownership - user must own the document the question belongs to
