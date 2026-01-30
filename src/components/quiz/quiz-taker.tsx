@@ -26,12 +26,29 @@ interface QuizTakerProps {
   questions: CuratedQuestion[];
   isPreview?: boolean;
   onComplete?: (score: number, maxScore: number) => void;
-  // Note: timeLimit will be implemented in Phase 4
+  // TODO(QUIZ-TIMER): Implement quiz timer with countdown and auto-submit
+  // Tracked in: .planning/STATE.md pending_todos
   timeLimit?: number | null;
 }
 
 /**
- * Convert renderer answer format to library format for grading
+ * Convert renderer answer format to library answer format for server submission.
+ *
+ * DUAL TYPE SYSTEM ARCHITECTURE:
+ * - RendererAnswerData: UI layer format, used by QuestionRenderer components
+ *   - Optimized for React state management (null for unselected, arrays, etc.)
+ *   - Defined in @/components/questions/question-renderer.tsx
+ *
+ * - LibAnswerData (AnswerData): Storage/grading layer format
+ *   - Optimized for database persistence and grading logic
+ *   - Defined in @/lib/questions/types.ts
+ *
+ * This function bridges the gap:
+ * - UI collects answers in RendererAnswerData format
+ * - Before submitting to server, convert to LibAnswerData
+ * - Server stores LibAnswerData in database, uses for grading
+ *
+ * The reverse (toRendererAnswerData) loads saved answers for display.
  */
 function toLibAnswerData(answer: RendererAnswerData): LibAnswerData | null {
   switch (answer.type) {
@@ -71,7 +88,10 @@ function toLibAnswerData(answer: RendererAnswerData): LibAnswerData | null {
 }
 
 /**
- * Convert library answer format back to renderer format for display
+ * Convert library answer format back to renderer format for display.
+ *
+ * Used when loading saved answers from the database to populate UI.
+ * This is the reverse of toLibAnswerData - see that function for architecture docs.
  */
 function toRendererAnswerData(
   questionType: string,

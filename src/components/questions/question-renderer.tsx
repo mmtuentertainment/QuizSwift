@@ -28,9 +28,26 @@ import {
 
 /**
  * Union type for answer data in the UI layer.
- * This is the format used by renderer components for display and interaction.
- * Named RendererAnswerData to avoid collision with lib/questions/types.ts AnswerData.
- * Note: Converted to/from LibAnswerData (in @/lib/questions/types) for server storage.
+ *
+ * DUAL TYPE SYSTEM:
+ * The application uses two answer data formats:
+ *
+ * 1. RendererAnswerData (this type) - UI Layer
+ *    - Used by QuestionRenderer and type-specific components
+ *    - Optimized for React state (null for unselected, simple arrays)
+ *    - Lives in components/questions/
+ *
+ * 2. AnswerData (LibAnswerData) - Storage/Grading Layer
+ *    - Used by server actions, grading, and database
+ *    - Optimized for persistence and grading logic
+ *    - Lives in lib/questions/types.ts
+ *
+ * Conversion functions in quiz-taker.tsx:
+ * - toLibAnswerData(): RendererAnswerData -> LibAnswerData (for submission)
+ * - toRendererAnswerData(): LibAnswerData -> RendererAnswerData (for display)
+ *
+ * This separation allows UI components to work with convenient formats
+ * while maintaining a consistent storage/grading schema.
  */
 export type RendererAnswerData =
   | { type: 'multiple_choice'; selectedId: string | null }

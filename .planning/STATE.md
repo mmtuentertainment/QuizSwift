@@ -147,6 +147,13 @@ Overall: 74%                  [======================================  ]
 | 012 | Waves 3-5 fixes (performance + type safety + a11y) | 2026-01-30 | 9fdc3b5 | [012-continue-pr2-fixes](./quick/012-continue-pr2-fixes/) |
 | 013 | Waves 6-7 fixes (error handling + React patterns) | 2026-01-30 | eb91103 | [013-pr2-waves-6-7-fixes](./quick/013-pr2-waves-6-7-fixes/) |
 
+### Pending TODOs
+
+| Tag | Description | File | Added |
+|-----|-------------|------|-------|
+| QUIZ-TIMER | Implement quiz timer with countdown and auto-submit | src/components/quiz/quiz-taker.tsx | quick-014 |
+| LEGACY-TYPES | Remove deprecated type aliases when no longer in use | src/lib/questions/types.ts | quick-014 |
+
 ### Lessons Learned
 
 - AI provider version incompatibility: ollama uses V1, @ai-sdk/openai uses V3 - use any type
