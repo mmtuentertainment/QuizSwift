@@ -218,14 +218,17 @@ export function QuizTaker({
   const currentQuestion = questions[currentIndex];
   const currentAnswer = currentQuestion ? optimisticAnswers.get(currentQuestion.id) ?? null : null;
 
+  // Extract primitive for stable useCallback dependency (object reference changes each render)
+  const currentQuestionId = currentQuestion?.id;
+
   const handleAnswer = useCallback(async (answerData: RendererAnswerData) => {
-    if (!attemptId || !currentQuestion) return;
+    if (!attemptId || !currentQuestionId) return;
 
     // Clear any previous save error
     setSaveError(null);
 
     // Show optimistic update immediately
-    addOptimisticAnswer({ questionId: currentQuestion.id, answer: answerData });
+    addOptimisticAnswer({ questionId: currentQuestionId, answer: answerData });
 
     // Convert to library format and submit to server
     const libAnswer = toLibAnswerData(answerData);
@@ -235,32 +238,32 @@ export function QuizTaker({
       // On failure: transition ends without updating savedAnswers (auto-reverts)
       startTransition(async () => {
         try {
-          const result = await submitAnswer(attemptId, currentQuestion.id, libAnswer);
+          const result = await submitAnswer(attemptId, currentQuestionId, libAnswer);
           if (result.error) {
             console.error('Failed to save answer:', result.error);
             setSaveError(`Failed to save answer: ${result.error}`);
-            setFailedSaveQuestionIds(prev => new Set(prev).add(currentQuestion.id));
+            setFailedSaveQuestionIds(prev => new Set(prev).add(currentQuestionId));
           } else {
             // Success: update saved answers so optimistic becomes permanent
-            setSavedAnswers((prev) => new Map(prev).set(currentQuestion.id, answerData));
+            setSavedAnswers((prev) => new Map(prev).set(currentQuestionId, answerData));
             // Clear from failed set if it was there (retry succeeded)
             setFailedSaveQuestionIds(prev => {
               const next = new Set(prev);
-              next.delete(currentQuestion.id);
+              next.delete(currentQuestionId);
               return next;
             });
           }
         } catch (err) {
           console.error('Failed to save answer:', err);
           setSaveError('Failed to save your answer. Please check your connection and try again.');
-          setFailedSaveQuestionIds(prev => new Set(prev).add(currentQuestion.id));
+          setFailedSaveQuestionIds(prev => new Set(prev).add(currentQuestionId));
         }
       });
     } else {
       // For answers that don't need server save (empty), just update saved state
-      setSavedAnswers((prev) => new Map(prev).set(currentQuestion.id, answerData));
+      setSavedAnswers((prev) => new Map(prev).set(currentQuestionId, answerData));
     }
-  }, [attemptId, currentQuestion, addOptimisticAnswer]);
+  }, [attemptId, currentQuestionId, addOptimisticAnswer]);
 
   const handleNext = useCallback(() => {
     if (currentIndex < questions.length - 1) {
