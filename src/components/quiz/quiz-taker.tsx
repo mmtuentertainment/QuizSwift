@@ -151,6 +151,7 @@ export function QuizTaker({
     }
   );
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [failedSaveQuestionIds, setFailedSaveQuestionIds] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [score, setScore] = useState<{ earned: number; max: number } | null>(null);
@@ -238,15 +239,21 @@ export function QuizTaker({
           if (result.error) {
             console.error('Failed to save answer:', result.error);
             setSaveError(`Failed to save answer: ${result.error}`);
-            // Don't update savedAnswers - optimistic will revert
+            setFailedSaveQuestionIds(prev => new Set(prev).add(currentQuestion.id));
           } else {
             // Success: update saved answers so optimistic becomes permanent
             setSavedAnswers((prev) => new Map(prev).set(currentQuestion.id, answerData));
+            // Clear from failed set if it was there (retry succeeded)
+            setFailedSaveQuestionIds(prev => {
+              const next = new Set(prev);
+              next.delete(currentQuestion.id);
+              return next;
+            });
           }
         } catch (err) {
           console.error('Failed to save answer:', err);
           setSaveError('Failed to save your answer. Please check your connection and try again.');
-          // Don't update savedAnswers - optimistic will revert
+          setFailedSaveQuestionIds(prev => new Set(prev).add(currentQuestion.id));
         }
       });
     } else {
@@ -445,12 +452,26 @@ export function QuizTaker({
               className={`h-3 w-3 rounded-full transition-all ${
                 idx === currentIndex
                   ? 'scale-125 bg-blue-600 ring-2 ring-blue-300'
-                  : optimisticAnswers.has(q.id)
-                    ? 'bg-green-500 hover:bg-green-400'
-                    : 'bg-gray-300 hover:bg-gray-400'
+                  : failedSaveQuestionIds.has(q.id)
+                    ? 'bg-red-500 ring-2 ring-red-300 hover:bg-red-400'
+                    : optimisticAnswers.has(q.id)
+                      ? 'bg-green-500 hover:bg-green-400'
+                      : 'bg-gray-300 hover:bg-gray-400'
               }`}
-              aria-label={`Go to question ${idx + 1}${optimisticAnswers.has(q.id) ? ' (answered)' : ''}`}
-              title={`Question ${idx + 1}${optimisticAnswers.has(q.id) ? ' (answered)' : ''}`}
+              aria-label={`Go to question ${idx + 1}${
+                failedSaveQuestionIds.has(q.id)
+                  ? ' (save failed)'
+                  : optimisticAnswers.has(q.id)
+                    ? ' (answered)'
+                    : ''
+              }`}
+              title={`Question ${idx + 1}${
+                failedSaveQuestionIds.has(q.id)
+                  ? ' (save failed)'
+                  : optimisticAnswers.has(q.id)
+                    ? ' (answered)'
+                    : ''
+              }`}
             />
           ))}
         </div>
@@ -496,6 +517,17 @@ export function QuizTaker({
               Dismiss
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Failed saves warning on last question */}
+      {currentIndex === questions.length - 1 && failedSaveQuestionIds.size > 0 && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <p className="text-sm text-red-800">
+            <strong>Warning:</strong> {failedSaveQuestionIds.size} answer
+            {failedSaveQuestionIds.size > 1 ? 's' : ''} failed to save.
+            Please check your connection before submitting.
+          </p>
         </div>
       )}
 
