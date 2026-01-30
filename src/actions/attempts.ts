@@ -14,8 +14,9 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { gradeAnswer, isAutoGradable } from '@/lib/questions/grading';
-import type { AnswerData, QuestionOptions } from '@/lib/questions/types';
+import type { AnswerData } from '@/lib/questions/types';
 import { isValidQuestionType } from '@/lib/questions/types';
+import { parseQuestionOptions } from '@/lib/questions/schemas';
 import { handlePrismaError } from '@/lib/prisma-errors';
 import { AttemptStatus, QuizStatus } from '@/generated/prisma/client';
 
@@ -121,16 +122,24 @@ export async function submitAnswer(
   const question = quizQuestion.question;
   const points = quizQuestion.points;
 
-  // Grade if auto-gradable (validate questionType from database first)
+  // Grade if auto-gradable
   let gradeResult = null;
   const questionType = question.questionType;
+
+  // Validate question options from database JSON before grading
+  const validatedOptions = parseQuestionOptions(question.options);
+
   if (isValidQuestionType(questionType) && isAutoGradable(questionType)) {
-    gradeResult = gradeAnswer(
-      questionType,
-      question.options as QuestionOptions | null,
-      answerData,
-      points
-    );
+    if (!validatedOptions) {
+      console.warn(`[submitAnswer] Invalid options for question ${questionId}, skipping auto-grade`);
+    } else {
+      gradeResult = gradeAnswer(
+        questionType,
+        validatedOptions,
+        answerData,
+        points
+      );
+    }
   }
 
   // Upsert answer (update if already exists)
