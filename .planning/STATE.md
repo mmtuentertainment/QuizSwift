@@ -1,7 +1,7 @@
 # Project State: QuizSwift
 
-**Last Updated:** 2026-01-27
-**Session:** Quick Task 004 Complete - Fix Silent Failure Issues
+**Last Updated:** 2026-01-30
+**Session:** Quick Task 005 Complete - Fix 13 HIGH Priority CodeRabbit Issues
 
 ## Project Reference
 
@@ -14,7 +14,7 @@
 **Phase:** 3 of 8 - Question Bank & Teacher Workflow
 **Plan:** 8 of 9 complete (01, 02, 03, 04, 05, 06, 07, 08)
 **Status:** In progress
-**Last activity:** 2026-01-27 - Completed quick task 004: Fix 5 silent failure issues in server actions
+**Last activity:** 2026-01-30 - Completed quick-005: Fix 13 HIGH Priority CodeRabbit Issues (PR #4)
 
 **Progress:**
 Phase 1: 100% (5/5 plans)   [========================================]
@@ -121,6 +121,7 @@ Overall: 64%                [==================================      ]
 | 002 | Fix CodeRabbit AI configuration | 2026-01-26 | dba0688 | [002-fix-coderabbit-config](./quick/002-fix-coderabbit-config/) |
 | 003 | Fix CodeRabbit PR #2 review issues (26 fixes) | 2026-01-27 | bdde6e2 | [003-fix-pr2-coderabbit-review](./quick/003-fix-pr2-coderabbit-review/) |
 | 004 | Fix 5 silent failure issues in server actions | 2026-01-27 | 0b26ddd | [004-fix-pr2-silent-failures](./quick/004-fix-pr2-silent-failures/) |
+| 005 | Fix 13 HIGH priority CodeRabbit issues (PR #4) | 2026-01-30 | a05c4f7 | [005-fix-high-priority-coderabbit-issues](./quick/005-fix-high-priority-coderabbit-issues/) |
 
 ### Lessons Learned
 
@@ -137,32 +138,37 @@ Overall: 64%                [==================================      ]
 
 ### What Just Happened
 
-Completed quick task 003 - Fixed all 26 CodeRabbit PR #2 review issues:
+Completed Quick Task 005 - Fix 13 HIGH Priority CodeRabbit Issues (PR #4):
 
-**Round 1 (19 fixes):**
-- Security: Quiz authorization, upsert pattern, pagination clamping
-- Validation: Discriminated union Zod schemas, empty updateData guard
-- Accessibility: Aria-labels on filter selects
-- Navigation: window.location.href → router.push
-- State: Modal reset, immutable updates, controlled inputs
-- Consistency: Global underscore replacement in 4 files
-- Tech debt: Renamed blob.ts → pdf-storage.ts
+**Issues fixed:**
+1. `.claude/settings.json` - Fixed npm permission patterns (colon-wildcards → suffix wildcards)
+2. `package.json` - Added @vitest/coverage-v8 devDependency
+3. `vitest.config.ts` - Fixed Windows path with fileURLToPath
+4. `src/actions/questions.ts` - Imported centralized schema from validation.ts
+5. `src/actions/questions.ts` - Added options.type mismatch validation guard
+6. `src/components/question-bank/question-editor.tsx` - Added useEffect to sync form state
+7. `src/components/question-bank/question-editor.tsx` - Added ARIA dialog semantics + ESC key
+8. `src/components/questions/image-upload.tsx` - Added useEffect to sync preview state
+9. `src/components/questions/types/matching.tsx` - Added useEffect to sync rightOrder
+10. `src/components/quiz/quiz-taker.tsx` - Return empty arrays instead of null
+11. `src/lib/questions/grading.ts` - Fixed duplicate match scoring with canonical Map
+12. `src/lib/questions/types.ts` - Added CANONICAL_QUESTION_TYPES + normalizeQuestionType
+13. `src/lib/questions/validation.ts` - Added short_answer to discriminated union
 
-**Round 2 (7 fixes):**
-- Preserve imageUrl/imageAltText in question editing
-- Sanitize page query param to avoid NaN
-- Return 400 for invalid JSON in image upload
-- Pass through T/F justification in review mode
-- Guard missing R2 URL for storage keys
-- Warn on [BLANK] marker count mismatch
-- Report initial shuffle state in matching component
+**Commits:**
+- d74f86c: fix(quick-005): fix config and tooling issues
+- ec00cb0: fix(quick-005): fix 12 HIGH priority CodeRabbit issues
+- a494aff: docs(quick-005): add planning files for CodeRabbit HIGH issues fix
 
 ### What Happens Next
 
-Phase 3 continues with final plan:
-- 03-09: Final workflow polish
+Quick task 005 is COMPLETE.
+
+Next steps:
+- Complete Phase 3 Plan 09 (final plan)
+- Or proceed to Phase 4: Quiz Delivery & Student Experience
 
 ---
 
-*State captured: 2026-01-26*
-*Next command: /gsd:execute-phase 03 plan 09*
+*State captured: 2026-01-30*
+*Next command: /gsd:execute-phase 3 plan 09 or /gsd:progress*
