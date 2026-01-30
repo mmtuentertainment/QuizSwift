@@ -14,7 +14,7 @@ import type {
   QuestionType,
 } from '@/lib/questions/types';
 
-// Import type guards
+// Import type guards and normalization
 import {
   isMultipleChoiceOptions as isMC,
   isTrueFalseOptions as isTF,
@@ -22,6 +22,7 @@ import {
   isMatchingOptions as isMatch,
   isEssayOptions as isEss,
   isShowWorkOptions as isSW,
+  normalizeQuestionType,
 } from '@/lib/questions/types';
 
 /**
@@ -104,7 +105,10 @@ export function QuestionRenderer({
    * Render the question input based on type.
    */
   const renderQuestionInput = () => {
-    switch (questionType) {
+    // Normalize legacy type aliases to canonical types
+    const normalizedType = normalizeQuestionType(questionType);
+
+    switch (normalizedType) {
       case 'multiple_choice': {
         // Check if options match MultipleChoiceOptions structure
         if (!options || !isMC(options)) {
@@ -136,8 +140,8 @@ export function QuestionRenderer({
         );
       }
 
-      case 'true_false':
-      case 'true_false_justify': {
+      case 'true_false': {
+        // Note: 'true_false_justify' is normalized to 'true_false' above
         const tfAnswer = getTypedAnswer('true_false');
 
         // Try to get options, or derive from correctAnswer
@@ -169,8 +173,8 @@ export function QuestionRenderer({
         );
       }
 
-      case 'fill_in_blank':
-      case 'fill_blank': {
+      case 'fill_in_blank': {
+        // Note: 'fill_blank' is normalized to 'fill_in_blank' above
         const fibAnswer = getTypedAnswer('fill_in_blank');
 
         // Convert FillInBlankOptions to component format
@@ -237,15 +241,15 @@ export function QuestionRenderer({
             options={essayConfig}
             text={answerText}
             onTextChange={(text) =>
-              onAnswer({ type: questionType as 'essay' | 'short_answer', text })
+              onAnswer({ type: normalizedType as 'essay' | 'short_answer', text })
             }
             readOnly={readOnly}
             placeholder={
-              questionType === 'short_answer'
+              normalizedType === 'short_answer'
                 ? 'Enter your short answer...'
                 : 'Enter your essay response...'
             }
-            minRows={questionType === 'short_answer' ? 3 : 6}
+            minRows={normalizedType === 'short_answer' ? 3 : 6}
           />
         );
       }
@@ -309,10 +313,11 @@ export function QuestionRenderer({
   };
 
   // For fill-in-blank and show_work, the question text is rendered within the component
+  // Normalize here as well for consistency with legacy type aliases
+  const normalizedTypeForText = normalizeQuestionType(questionType);
   const shouldRenderQuestionText =
-    questionType !== 'fill_in_blank' &&
-    questionType !== 'fill_blank' &&
-    questionType !== 'show_work';
+    normalizedTypeForText !== 'fill_in_blank' &&
+    normalizedTypeForText !== 'show_work';
 
   // Build image URL - if it's a storage key, prepend the public URL
   // Guard: if R2 URL not configured and imageUrl is a storage key, return null
