@@ -222,6 +222,7 @@ model CuratedQuestion {
   @@index([inCurationPool])
   @@index([teacherSelected])
   @@index([bloomLevel])
+  @@index([documentId, teacherSelected])
 }
 
 // =============================================================================
@@ -258,6 +259,7 @@ model Quiz {
   @@index([documentId])
   @@index([createdById])
   @@index([status])
+  @@index([publishedAt])
 }
 
 model QuizQuestion {
@@ -327,4 +329,5 @@ model QuestionAnswer {
 
   @@unique([attemptId, questionId])
   @@index([attemptId])
+  @@index([questionId])
 }
