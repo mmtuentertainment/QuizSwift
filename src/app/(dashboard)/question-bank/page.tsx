@@ -43,6 +43,12 @@ export default async function QuestionBankPage({ searchParams }: PageProps) {
     }),
   ]);
 
+  // Check for errors and track them for display
+  const hasDocumentsError = !documentsResult.success;
+  const hasQuestionsError = !questionsResult.success;
+  const documentsError = !documentsResult.success ? documentsResult.error : null;
+  const questionsError = !questionsResult.success ? questionsResult.error : null;
+
   // Extract data with fallbacks for error cases
   const documents = documentsResult.success ? documentsResult.documents : [];
   const questions = questionsResult.success ? questionsResult.questions : [];
@@ -59,6 +65,20 @@ export default async function QuestionBankPage({ searchParams }: PageProps) {
           Browse and manage all your questions across documents.
         </p>
       </div>
+
+      {/* Error banners */}
+      {(hasDocumentsError || hasQuestionsError) && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
+          <h3 className="font-medium text-red-800">Error loading data</h3>
+          <ul className="mt-2 list-inside list-disc text-sm text-red-700">
+            {documentsError && <li>Documents: {documentsError}</li>}
+            {questionsError && <li>Questions: {questionsError}</li>}
+          </ul>
+          <p className="mt-2 text-sm text-red-600">
+            Please refresh the page or try again later.
+          </p>
+        </div>
+      )}
 
       {/* Stats summary */}
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
