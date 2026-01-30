@@ -155,10 +155,13 @@ export function gradeAnswer(
       }
 
       // Count correct matches from expected pairs (iterate canonical options, not student answers)
+      // The matching data model uses pair.id as the identifier for BOTH left and right sides:
+      // - Left side: options.pairs[i] is rendered at position i, identified by pair.id
+      // - Right side: the same pair.id identifies the correct match for that left item
+      // - Correct matching: student places rightId equal to leftId for each row
       let correctCount = 0;
       for (const expectedPair of options.pairs) {
         const studentRightId = studentMatches.get(expectedPair.id);
-        // Matching is correct when student's rightId for this leftId matches the expected pair's id
         if (studentRightId === expectedPair.id) {
           correctCount++;
         }

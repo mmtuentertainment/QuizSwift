@@ -85,13 +85,6 @@ export function Matching({
     return [...options.pairs.map((p) => p.id)].sort(() => Math.random() - 0.5);
   });
 
-  // Sync rightOrder when answer prop changes (e.g., navigating between questions)
-  useEffect(() => {
-    if (answer?.pairs?.length) {
-      setRightOrder(answer.pairs.map((p) => p.rightId));
-    }
-  }, [answer]);
-
   // Report initial shuffled state to parent if no existing answer
   useEffect(() => {
     if (!answer?.pairs && !readOnly) {
@@ -105,15 +98,15 @@ export function Matching({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Sync rightOrder when answer prop changes (restoring from saved state)
+  // Sync rightOrder when answer prop changes (restoring from saved state or navigating)
   useEffect(() => {
-    if (answer?.pairs && !readOnly) {
+    if (answer?.pairs?.length) {
       setRightOrder(answer.pairs.map((p) => p.rightId));
     } else if (!answer?.pairs && readOnly) {
       // Reset to original order when no answer in readOnly mode
       setRightOrder(options.pairs.map((p) => p.id));
     }
-  }, [answer, options, readOnly]);
+  }, [answer, options.pairs, readOnly]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
