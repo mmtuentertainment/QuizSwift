@@ -84,18 +84,14 @@ export async function submitAnswer(
     return { error: 'Unauthorized' };
   }
 
-  // Verify attempt ownership and get question details
+  // Query 1: Verify attempt ownership and status (targeted query)
   const attempt = await prisma.quizAttempt.findUnique({
     where: { id: attemptId },
-    include: {
-      quiz: {
-        include: {
-          questions: {
-            where: { questionId },
-            include: { question: true },
-          },
-        },
-      },
+    select: {
+      id: true,
+      userId: true,
+      status: true,
+      quizId: true,
     },
   });
 
@@ -107,7 +103,17 @@ export async function submitAnswer(
     return { error: 'Attempt already submitted' };
   }
 
-  const quizQuestion = attempt.quiz.questions[0];
+  // Query 2: Get the specific quiz question with its curated question
+  const quizQuestion = await prisma.quizQuestion.findFirst({
+    where: {
+      quizId: attempt.quizId,
+      questionId: questionId,
+    },
+    include: {
+      question: true,
+    },
+  });
+
   if (!quizQuestion) {
     return { error: 'Question not in quiz' };
   }
