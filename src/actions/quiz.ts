@@ -17,6 +17,7 @@ import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { handlePrismaError } from '@/lib/prisma-errors';
+import { cuidSchema } from '@/lib/action-utils';
 import { QuizStatus, ShowResultsOption } from '@/generated/prisma/client';
 
 const CreateQuizSchema = z.object({
@@ -123,6 +124,10 @@ export type GetQuizzesResult =
   | { success: false; error: string };
 
 export async function getQuizzesForDocument(documentId: string): Promise<GetQuizzesResult> {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(documentId);
+  if (!idCheck.success) return { success: false, error: 'Invalid document ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'Authentication required' };
@@ -158,6 +163,10 @@ export type GetQuizWithQuestionsResult =
   | { success: false; error: 'unauthenticated' | 'not_found' | 'access_denied' | 'database_error' };
 
 export async function getQuizWithQuestions(quizId: string): Promise<GetQuizWithQuestionsResult> {
+  // Validate CUID format - return 'not_found' for consistency with existing error types
+  const idCheck = cuidSchema.safeParse(quizId);
+  if (!idCheck.success) return { success: false, error: 'not_found' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'unauthenticated' };
@@ -203,6 +212,10 @@ export async function updateQuizSettings(
   quizId: string,
   data: UpdateQuizSettingsInput
 ): Promise<{ success: boolean; error?: string }> {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(quizId);
+  if (!idCheck.success) return { success: false, error: 'Invalid quiz ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'Unauthorized' };
@@ -254,6 +267,10 @@ export async function updateQuizSettings(
 export async function publishQuiz(
   quizId: string
 ): Promise<{ success: boolean; error?: string }> {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(quizId);
+  if (!idCheck.success) return { success: false, error: 'Invalid quiz ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'Unauthorized' };
@@ -313,6 +330,10 @@ export async function publishQuiz(
 export async function unpublishQuiz(
   quizId: string
 ): Promise<{ success: boolean; error?: string }> {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(quizId);
+  if (!idCheck.success) return { success: false, error: 'Invalid quiz ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'Unauthorized' };
@@ -353,6 +374,10 @@ export async function unpublishQuiz(
 export async function archiveQuiz(
   quizId: string
 ): Promise<{ success: boolean; error?: string }> {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(quizId);
+  if (!idCheck.success) return { success: false, error: 'Invalid quiz ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'Unauthorized' };

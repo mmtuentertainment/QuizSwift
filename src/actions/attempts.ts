@@ -17,13 +17,19 @@ import { gradeAnswer, isAutoGradable } from '@/lib/questions/grading';
 import type { AnswerData } from '@/lib/questions/types';
 import { isValidQuestionType } from '@/lib/questions/types';
 import { parseQuestionOptions } from '@/lib/questions/schemas';
+import { answerDataSchema } from '@/lib/questions/validation';
 import { handlePrismaError } from '@/lib/prisma-errors';
+import { cuidSchema } from '@/lib/action-utils';
 import { AttemptStatus, QuizStatus } from '@/generated/prisma/client';
 
 /**
  * Start or retrieve an existing quiz attempt for the current user
  */
 export async function startAttempt(quizId: string) {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(quizId);
+  if (!idCheck.success) return { error: 'Invalid quiz ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { error: 'Unauthorized' };
@@ -78,8 +84,19 @@ export async function startAttempt(quizId: string) {
 export async function submitAnswer(
   attemptId: string,
   questionId: string,
-  answerData: AnswerData
+  answerData: unknown
 ) {
+  // Validate CUID formats
+  const attemptCheck = cuidSchema.safeParse(attemptId);
+  if (!attemptCheck.success) return { error: 'Invalid attempt ID format' };
+  const questionCheck = cuidSchema.safeParse(questionId);
+  if (!questionCheck.success) return { error: 'Invalid question ID format' };
+
+  // Validate answerData structure
+  const answerCheck = answerDataSchema.safeParse(answerData);
+  if (!answerCheck.success) return { error: 'Invalid answer format' };
+  const validatedAnswer = answerCheck.data;
+
   const session = await auth();
   if (!session?.user?.id) {
     return { error: 'Unauthorized' };
@@ -133,10 +150,11 @@ export async function submitAnswer(
     if (!validatedOptions) {
       console.warn(`[submitAnswer] Invalid options for question ${questionId}, skipping auto-grade`);
     } else {
+      // Cast to AnswerData - Zod schema validates the structure matches
       gradeResult = gradeAnswer(
         questionType,
         validatedOptions,
-        answerData,
+        validatedAnswer as AnswerData,
         points
       );
     }
@@ -154,13 +172,13 @@ export async function submitAnswer(
       create: {
         attemptId,
         questionId,
-        answerData: answerData as object,
+        answerData: validatedAnswer as object,
         isCorrect: gradeResult?.isCorrect ?? null,
         pointsEarned: gradeResult?.pointsEarned ?? null,
         feedback: gradeResult?.feedback ?? null,
       },
       update: {
-        answerData: answerData as object,
+        answerData: validatedAnswer as object,
         isCorrect: gradeResult?.isCorrect ?? null,
         pointsEarned: gradeResult?.pointsEarned ?? null,
         feedback: gradeResult?.feedback ?? null,
@@ -178,6 +196,10 @@ export async function submitAnswer(
  * Complete a quiz attempt and calculate the final score
  */
 export async function completeAttempt(attemptId: string) {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(attemptId);
+  if (!idCheck.success) return { error: 'Invalid attempt ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { error: 'Unauthorized' };
@@ -238,6 +260,10 @@ export async function completeAttempt(attemptId: string) {
  * Required before quiz can be published (CONT-06 workflow requirement)
  */
 export async function markQuizPreviewed(quizId: string) {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(quizId);
+  if (!idCheck.success) return { error: 'Invalid quiz ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { error: 'Unauthorized' };
@@ -278,6 +304,10 @@ export async function markQuizPreviewed(quizId: string) {
  * Get an existing attempt with all answers for resuming
  */
 export async function getAttemptWithAnswers(quizId: string) {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(quizId);
+  if (!idCheck.success) return { error: 'Invalid quiz ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { error: 'Unauthorized' };

@@ -92,6 +92,7 @@ export const questionOptionsSchema = z.discriminatedUnion('type', [
 // Answer Validation Schemas
 // =============================================================================
 
+// Non-typed answer schemas (for backward compatibility)
 export const mcAnswerSchema = z.object({
   selectedChoiceId: z.string().min(1),
 });
@@ -120,6 +121,100 @@ export const showWorkAnswerSchema = z.object({
   finalAnswer: z.string(),
   canvasState: z.record(z.unknown()),
 });
+
+// =============================================================================
+// Typed Answer Schemas (for discriminated union)
+// =============================================================================
+
+/**
+ * Typed answer schema for multiple choice questions.
+ * Includes 'type' field for discriminated union validation.
+ */
+export const mcAnswerSchemaTyped = z.object({
+  type: z.literal('multiple_choice'),
+  selectedChoiceId: z.string().min(1),
+});
+
+/**
+ * Typed answer schema for true/false questions.
+ */
+export const tfAnswerSchemaTyped = z.object({
+  type: z.literal('true_false'),
+  answer: z.boolean(),
+});
+
+/**
+ * Typed answer schema for fill-in-blank questions.
+ */
+export const fillBlankAnswerSchemaTyped = z.object({
+  type: z.literal('fill_in_blank'),
+  blanks: z.array(z.string()),
+});
+
+/**
+ * Typed answer schema for matching questions.
+ */
+export const matchingAnswerSchemaTyped = z.object({
+  type: z.literal('matching'),
+  pairs: z.array(z.object({
+    leftId: z.string().min(1),
+    rightId: z.string().min(1),
+  })),
+});
+
+/**
+ * Typed answer schema for essay questions.
+ */
+export const essayAnswerSchemaTyped = z.object({
+  type: z.literal('essay'),
+  text: z.string(),
+  wordCount: z.number().int().min(0),
+});
+
+/**
+ * Typed answer schema for short answer questions.
+ */
+export const shortAnswerSchemaTyped = z.object({
+  type: z.literal('short_answer'),
+  text: z.string(),
+  wordCount: z.number().int().min(0),
+});
+
+/**
+ * Typed answer schema for show-your-work questions.
+ * canvasState can be any value (tldraw snapshot) but must be present.
+ */
+export const showWorkAnswerSchemaTyped = z.object({
+  type: z.literal('show_work'),
+  finalAnswer: z.string(),
+  // Use .transform() to ensure canvasState is always present in output
+  canvasState: z.any().transform((v) => v as unknown),
+});
+
+/**
+ * Discriminated union for validating answer data at runtime.
+ *
+ * Use this to validate answerData received from untrusted sources
+ * (e.g., server action parameters) before processing.
+ *
+ * @example
+ * ```typescript
+ * const result = answerDataSchema.safeParse(answerData);
+ * if (!result.success) return { error: 'Invalid answer format' };
+ * const validatedAnswer = result.data;
+ * ```
+ */
+export const answerDataSchema = z.discriminatedUnion('type', [
+  mcAnswerSchemaTyped,
+  tfAnswerSchemaTyped,
+  fillBlankAnswerSchemaTyped,
+  matchingAnswerSchemaTyped,
+  essayAnswerSchemaTyped,
+  shortAnswerSchemaTyped,
+  showWorkAnswerSchemaTyped,
+]);
+
+export type AnswerDataSchema = z.infer<typeof answerDataSchema>;
 
 // =============================================================================
 // Type Exports (inferred from schemas)

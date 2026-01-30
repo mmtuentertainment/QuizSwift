@@ -14,6 +14,7 @@ import prisma from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { z } from 'zod';
 import { handlePrismaError } from '@/lib/prisma-errors';
+import { cuidSchema } from '@/lib/action-utils';
 import { questionOptionsSchema } from '@/lib/questions/validation';
 
 export interface QuestionFilters {
@@ -192,6 +193,10 @@ export async function updateQuestion(
   error?: string;
   fieldErrors?: Record<string, string[] | undefined>;
 }> {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(questionId);
+  if (!idCheck.success) return { success: false, error: 'Invalid question ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'Not authenticated' };
@@ -296,6 +301,10 @@ export type GetQuestionForEditResult =
  * Returns error result if unauthenticated or question not found/accessible.
  */
 export async function getQuestionForEdit(questionId: string): Promise<GetQuestionForEditResult> {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(questionId);
+  if (!idCheck.success) return { success: false, error: 'Invalid question ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'Authentication required' };
