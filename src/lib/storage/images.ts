@@ -37,6 +37,28 @@ export function isAllowedImageType(
 }
 
 /**
+ * Sanitize filename to prevent path traversal attacks
+ * - Removes all path separators (/, \)
+ * - Removes .. patterns
+ * - Keeps only alphanumeric, single dots, hyphens, underscores
+ */
+function sanitizeFileName(fileName: string): string {
+  // Extract just the filename (remove any path components)
+  const baseName = fileName.split(/[/\\]/).pop() || 'file';
+
+  // Remove any .. patterns (path traversal attempts)
+  const noDotDot = baseName.replace(/\.\./g, '');
+
+  // Keep only safe characters, but preserve single dots for extension
+  const safeName = noDotDot.replace(/[^a-zA-Z0-9._-]/g, '_');
+
+  // Collapse multiple consecutive dots/underscores
+  const collapsed = safeName.replace(/\.{2,}/g, '.').replace(/_{2,}/g, '_');
+
+  return collapsed || 'file';
+}
+
+/**
  * Generate presigned URL for client-side image upload
  *
  * @param userId - The user uploading the image
@@ -59,6 +81,13 @@ export async function getImageUploadUrl(
     );
   }
 
+  // Validate file extension matches allowed image types
+  if (!isValidImageExtension(fileName)) {
+    throw new Error(
+      'Invalid file extension. Allowed: .jpg, .jpeg, .png, .gif, .webp'
+    );
+  }
+
   // Validate file size
   if (fileSize > MAX_IMAGE_SIZE) {
     throw new Error(
@@ -73,7 +102,7 @@ export async function getImageUploadUrl(
 
   // Create unique path: questions/images/{userId}/{timestamp}-{filename}
   const timestamp = Date.now();
-  const safeName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+  const safeName = sanitizeFileName(fileName);
   const storageKey = `questions/images/${userId}/${timestamp}-${safeName}`;
 
   const command = new PutObjectCommand({

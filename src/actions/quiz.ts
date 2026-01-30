@@ -149,7 +149,7 @@ async function fetchQuizWithQuestions(quizId: string) {
 
 export type GetQuizWithQuestionsResult =
   | { success: true; quiz: QuizWithQuestions }
-  | { success: false; error: 'unauthenticated' | 'not_found' | 'access_denied' };
+  | { success: false; error: 'unauthenticated' | 'not_found' | 'access_denied' | 'database_error' };
 
 export async function getQuizWithQuestions(quizId: string): Promise<GetQuizWithQuestionsResult> {
   const session = await auth();
@@ -169,9 +169,10 @@ export async function getQuizWithQuestions(quizId: string): Promise<GetQuizWithQ
     }
 
     return { success: true, quiz };
-  } catch {
-    // Database error - treat as not found to avoid leaking error details
-    return { success: false, error: 'not_found' };
+  } catch (error) {
+    // Log full error for debugging, return appropriate error type
+    console.error('[getQuizWithQuestions] Database error:', error);
+    return { success: false, error: 'database_error' };
   }
 }
 
