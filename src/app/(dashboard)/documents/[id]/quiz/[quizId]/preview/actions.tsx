@@ -65,7 +65,7 @@ export function TeacherPreviewWrapper({
 
       {/* Preview error warning */}
       {previewError && (
-        <div className="mt-4 rounded-lg border border-yellow-300 bg-yellow-50 p-4">
+        <div role="alert" className="mt-4 rounded-lg border border-yellow-300 bg-yellow-50 p-4">
           <p className="text-sm text-yellow-800">
             <strong>Warning:</strong> {previewError}
           </p>
@@ -76,6 +76,7 @@ export function TeacherPreviewWrapper({
       {completionState?.completed && (
         <div className="mt-6 flex justify-center gap-4">
           <button
+            type="button"
             onClick={() => router.push(`/documents/${documentId}/quiz/${quizId}`)}
             className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700"
           >
