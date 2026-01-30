@@ -100,6 +100,14 @@ export function normalizeQuestionType(type: string): string {
   }
 }
 
+/**
+ * Type guard to validate if a string is a valid canonical question type.
+ * Use for runtime validation of untrusted input.
+ */
+export function isValidCanonicalQuestionType(type: string): type is CanonicalQuestionType {
+  return (CANONICAL_QUESTION_TYPES as readonly string[]).includes(type);
+}
+
 // =============================================================================
 // Answer Data (stored in QuestionAnswer.answerData)
 // Discriminated union with 'type' field for runtime type checking
