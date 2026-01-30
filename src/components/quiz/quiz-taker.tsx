@@ -42,15 +42,13 @@ function toLibAnswerData(answer: RendererAnswerData): LibAnswerData | null {
         ? { type: 'true_false', answer: answer.selectedAnswer }
         : null;
     case 'fill_in_blank':
-      // Return null for empty blanks to be consistent with MC/TF behavior
-      return answer.answers.length > 0 && answer.answers.some(a => a !== '')
-        ? { type: 'fill_in_blank', blanks: answer.answers }
-        : null;
+      // Always return blanks array (even if empty/all-empty-strings)
+      // Grading functions handle partial credit logic for empty answers
+      return { type: 'fill_in_blank', blanks: answer.answers };
     case 'matching':
-      // Return null for empty pairs to be consistent with MC/TF behavior
-      return answer.pairs.length > 0
-        ? { type: 'matching', pairs: answer.pairs }
-        : null;
+      // Always return pairs array (even if empty)
+      // Grading functions handle partial credit logic for missing pairs
+      return { type: 'matching', pairs: answer.pairs };
     case 'essay':
     case 'short_answer':
       // Return explicit empty payload to allow clearing answers on server

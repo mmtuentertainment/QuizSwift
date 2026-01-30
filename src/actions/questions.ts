@@ -14,6 +14,7 @@ import prisma from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { z } from 'zod';
 import { handlePrismaError } from '@/lib/prisma-errors';
+import { questionOptionsSchema } from '@/lib/questions/validation';
 
 export interface QuestionFilters {
   documentId?: string;
@@ -165,61 +166,6 @@ export async function getTeacherDocuments(): Promise<TeacherDocumentsResult> {
 // Question Update with Zod Validation
 // =============================================================================
 
-/**
- * Zod schema for question update validation.
- *
- * Validates structure of: questionText, options, correctAnswer, explanation,
- * sourceEvidence, imageUrl, imageAltText.
- *
- * Note: Business rules (e.g., "exactly one correct choice") are enforced
- * separately in @/lib/questions/validation.ts. This schema validates
- * API input structure only.
- */
-const questionOptionsSchema = z.discriminatedUnion('type', [
-  z.object({
-    type: z.literal('multiple_choice'),
-    choices: z.array(z.object({
-      id: z.string(),
-      text: z.string(),
-      isCorrect: z.boolean()
-    }))
-  }),
-  z.object({
-    type: z.literal('fill_in_blank'),
-    blanks: z.array(z.object({
-      index: z.number(),
-      acceptedAnswers: z.array(z.string()),
-      caseSensitive: z.boolean()
-    }))
-  }),
-  z.object({
-    type: z.literal('matching'),
-    pairs: z.array(z.object({
-      id: z.string(),
-      left: z.string(),
-      right: z.string()
-    }))
-  }),
-  z.object({
-    type: z.literal('true_false'),
-    correctAnswer: z.boolean(),
-    justification: z.string().optional()
-  }),
-  z.object({
-    type: z.literal('essay'),
-    minWords: z.number().optional(),
-    maxWords: z.number().optional(),
-    rubric: z.string().optional()
-  }),
-  z.object({
-    type: z.literal('short_answer')
-  }),
-  z.object({
-    type: z.literal('show_work'),
-    workingSteps: z.array(z.string())
-  }),
-]);
-
 const UpdateQuestionSchema = z.object({
   questionText: z.string().min(1, 'Question text cannot be empty').max(5000).optional(),
   correctAnswer: z.string().min(1, 'Correct answer cannot be empty').max(2000).optional(),
@@ -265,6 +211,14 @@ export async function updateQuestion(
 
   if (!question) {
     return { success: false, error: 'Question not found or access denied' };
+  }
+
+  // Validate options.type matches questionType if options provided
+  if (parsed.data.options && parsed.data.options.type !== question.questionType) {
+    return {
+      success: false,
+      error: `Options type '${parsed.data.options.type}' does not match question type '${question.questionType}'`,
+    };
   }
 
   // Build update data, only including fields that were provided

@@ -66,6 +66,41 @@ export type QuestionOptions =
   | ShowWorkOptions;
 
 // =============================================================================
+// Canonical Question Types
+// =============================================================================
+
+/**
+ * Canonical question types used throughout the application.
+ * Legacy aliases (fill_blank, true_false_justify) are supported via grading.ts switch cases.
+ */
+export const CANONICAL_QUESTION_TYPES = [
+  'multiple_choice',
+  'true_false',
+  'fill_in_blank',
+  'matching',
+  'essay',
+  'short_answer',
+  'show_work',
+] as const;
+
+export type CanonicalQuestionType = (typeof CANONICAL_QUESTION_TYPES)[number];
+
+/**
+ * Normalize legacy question type aliases to canonical types.
+ * Returns the input unchanged if already canonical or unrecognized.
+ */
+export function normalizeQuestionType(type: string): string {
+  switch (type) {
+    case 'fill_blank':
+      return 'fill_in_blank';
+    case 'true_false_justify':
+      return 'true_false';
+    default:
+      return type;
+  }
+}
+
+// =============================================================================
 // Answer Data (stored in QuestionAnswer.answerData)
 // Discriminated union with 'type' field for runtime type checking
 // Note: UI components use a different format (RendererAnswerData in question-renderer.tsx)

@@ -64,7 +64,19 @@ export const showWorkOptionsSchema = z.object({
   workingSteps: z.array(z.string()),
 });
 
-// Discriminated union uses base schema (refinements applied separately)
+export const shortAnswerOptionsSchema = z.object({
+  type: z.literal('short_answer'),
+});
+
+/**
+ * Discriminated union for question options.
+ *
+ * Note: Uses base schema for multiple_choice because Zod discriminatedUnion
+ * requires ZodObject schemas (refined schemas are ZodEffects which are incompatible).
+ *
+ * For multiple_choice validation with the "exactly one correct" business rule,
+ * use multipleChoiceOptionsSchema directly after discriminated union parsing.
+ */
 export const questionOptionsSchema = z.discriminatedUnion('type', [
   multipleChoiceOptionsBase,
   trueFalseOptionsSchema,
@@ -72,6 +84,7 @@ export const questionOptionsSchema = z.discriminatedUnion('type', [
   matchingOptionsSchema,
   essayOptionsSchema,
   showWorkOptionsSchema,
+  shortAnswerOptionsSchema,
 ]);
 
 // =============================================================================
@@ -117,6 +130,7 @@ export type FillInBlankOptionsSchema = z.infer<typeof fillInBlankOptionsSchema>;
 export type MatchingOptionsSchema = z.infer<typeof matchingOptionsSchema>;
 export type EssayOptionsSchema = z.infer<typeof essayOptionsSchema>;
 export type ShowWorkOptionsSchema = z.infer<typeof showWorkOptionsSchema>;
+export type ShortAnswerOptionsSchema = z.infer<typeof shortAnswerOptionsSchema>;
 export type QuestionOptionsSchema = z.infer<typeof questionOptionsSchema>;
 
 export type MCAnswerSchema = z.infer<typeof mcAnswerSchema>;

@@ -105,6 +105,16 @@ export function Matching({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Sync rightOrder when answer prop changes (restoring from saved state)
+  useEffect(() => {
+    if (answer?.pairs && !readOnly) {
+      setRightOrder(answer.pairs.map((p) => p.rightId));
+    } else if (!answer?.pairs && readOnly) {
+      // Reset to original order when no answer in readOnly mode
+      setRightOrder(options.pairs.map((p) => p.id));
+    }
+  }, [answer, options, readOnly]);
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {

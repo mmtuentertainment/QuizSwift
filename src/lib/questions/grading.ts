@@ -10,10 +10,7 @@
  * Essay, short_answer, and show_work require manual grading.
  */
 
-import type {
-  QuestionOptions,
-  AnswerData,
-} from './types';
+import type { QuestionOptions, AnswerData } from './types';
 
 import {
   isMultipleChoiceOptions,
@@ -51,7 +48,12 @@ export function gradeAnswer(
     case 'multiple_choice': {
       // Use type guards for safe type narrowing
       if (!options || !isMultipleChoiceOptions(options)) {
-        return { isCorrect: false, pointsEarned: 0, maxPoints, feedback: 'Invalid question options' };
+        return {
+          isCorrect: false,
+          pointsEarned: 0,
+          maxPoints,
+          feedback: 'Invalid question options',
+        };
       }
       if (!isMCAnswer(answerData)) {
         return { isCorrect: false, pointsEarned: 0, maxPoints, feedback: 'Invalid answer format' };
@@ -70,7 +72,12 @@ export function gradeAnswer(
     case 'true_false_justify': {
       // Use type guards for safe type narrowing
       if (!options || !isTrueFalseOptions(options)) {
-        return { isCorrect: false, pointsEarned: 0, maxPoints, feedback: 'Invalid question options' };
+        return {
+          isCorrect: false,
+          pointsEarned: 0,
+          maxPoints,
+          feedback: 'Invalid question options',
+        };
       }
       if (!isTFAnswer(answerData)) {
         return { isCorrect: false, pointsEarned: 0, maxPoints, feedback: 'Invalid answer format' };
@@ -88,7 +95,12 @@ export function gradeAnswer(
     case 'fill_blank': {
       // Use type guards for safe type narrowing
       if (!options || !isFillInBlankOptions(options)) {
-        return { isCorrect: false, pointsEarned: 0, maxPoints, feedback: 'Invalid question options' };
+        return {
+          isCorrect: false,
+          pointsEarned: 0,
+          maxPoints,
+          feedback: 'Invalid question options',
+        };
       }
       if (!isFillBlankAnswer(answerData)) {
         return { isCorrect: false, pointsEarned: 0, maxPoints, feedback: 'Invalid answer format' };
@@ -109,9 +121,7 @@ export function gradeAnswer(
       });
 
       const isCorrect = correctCount === totalBlanks;
-      const pointsEarned = totalBlanks > 0
-        ? (correctCount / totalBlanks) * maxPoints
-        : 0;
+      const pointsEarned = totalBlanks > 0 ? (correctCount / totalBlanks) * maxPoints : 0;
 
       return {
         isCorrect,
@@ -124,26 +134,39 @@ export function gradeAnswer(
     case 'matching': {
       // Use type guards for safe type narrowing
       if (!options || !isMatchingOptions(options)) {
-        return { isCorrect: false, pointsEarned: 0, maxPoints, feedback: 'Invalid question options' };
+        return {
+          isCorrect: false,
+          pointsEarned: 0,
+          maxPoints,
+          feedback: 'Invalid question options',
+        };
       }
       if (!isMatchingAnswer(answerData)) {
         return { isCorrect: false, pointsEarned: 0, maxPoints, feedback: 'Invalid answer format' };
       }
 
-      let correctCount = 0;
       const totalPairs = options.pairs.length;
 
-      // Matching is correct when leftId === rightId (since pairs share the same id)
-      answerData.pairs.forEach((match) => {
-        if (match.leftId === match.rightId) {
+      // Build map of student's answers: leftId -> rightId
+      // This prevents duplicate rightIds from inflating the score
+      const studentMatches = new Map<string, string>();
+      for (const match of answerData.pairs) {
+        studentMatches.set(match.leftId, match.rightId);
+      }
+
+      // Count correct matches from expected pairs (iterate canonical options, not student answers)
+      let correctCount = 0;
+      for (const expectedPair of options.pairs) {
+        const studentRightId = studentMatches.get(expectedPair.id);
+        // Matching is correct when student's rightId for this leftId matches the expected pair's id
+        if (studentRightId === expectedPair.id) {
           correctCount++;
         }
-      });
+      }
 
       const isCorrect = correctCount === totalPairs;
-      const pointsEarned = totalPairs > 0
-        ? (correctCount / totalPairs) * maxPoints
-        : 0;
+      const pointsEarned =
+        totalPairs > 0 ? (Math.min(correctCount, totalPairs) / totalPairs) * maxPoints : 0;
 
       return {
         isCorrect,
