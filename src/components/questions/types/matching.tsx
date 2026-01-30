@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -9,6 +9,7 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  type Announcements,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -50,12 +51,22 @@ function SortableItem({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  // Build accessible label based on state
+  const ariaLabel = showCorrect
+    ? isCorrect
+      ? `Definition: ${text}. Correctly matched`
+      : `Definition: ${text}. Incorrectly matched`
+    : `Draggable definition: ${text}. Press Space to grab, arrow keys to move, Space to drop`;
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
+      role="listitem"
+      aria-label={ariaLabel}
+      aria-grabbed={isDragging}
       className={`cursor-grab rounded border p-3 shadow-sm active:cursor-grabbing ${
         showCorrect
           ? isCorrect
@@ -140,18 +151,55 @@ export function Matching({
   // Check if a match is correct (for showCorrect mode)
   const isMatchCorrect = (leftId: string, rightId: string) => leftId === rightId;
 
+  // Memoize announcements for screen readers
+  const announcements: Announcements = useMemo(
+    () => ({
+      onDragStart({ active }) {
+        const item = options.pairs.find((p) => p.id === active.id);
+        return `Picked up definition: ${item?.right}. Use arrow keys to reorder.`;
+      },
+      onDragOver({ active, over }) {
+        if (over) {
+          const activeItem = options.pairs.find((p) => p.id === active.id);
+          const overItem = options.pairs.find((p) => p.id === over.id);
+          return `Definition ${activeItem?.right} is over ${overItem?.right}.`;
+        }
+        return `Definition is not over a droppable area.`;
+      },
+      onDragEnd({ active, over }) {
+        if (over) {
+          const activeItem = options.pairs.find((p) => p.id === active.id);
+          return `Dropped definition: ${activeItem?.right}. Position updated.`;
+        }
+        return `Drag cancelled.`;
+      },
+      onDragCancel({ active }) {
+        const item = options.pairs.find((p) => p.id === active.id);
+        return `Dragging cancelled. ${item?.right} returned to original position.`;
+      },
+    }),
+    [options.pairs]
+  );
+
   return (
     <div className="matching-question">
-      <div className="mb-2 text-sm text-gray-600">
-        Drag items on the right to match with items on the left
+      <div className="mb-2 text-sm text-gray-600" id="matching-instructions">
+        Drag items on the right to match with items on the left.
+        <span className="sr-only">
+          {' '}Keyboard users: Press Tab to navigate to items, Space to pick up, arrow keys to move, Space to drop.
+        </span>
       </div>
 
       <div className="grid grid-cols-2 gap-6">
         {/* Left column - fixed terms */}
-        <div className="space-y-3">
+        <div className="space-y-3" role="list" aria-label="Terms to match">
           <div className="text-sm font-medium text-gray-700">Terms</div>
           {options.pairs.map((pair) => (
-            <div key={pair.id} className="rounded border border-gray-300 bg-gray-50 p-3">
+            <div
+              key={pair.id}
+              role="listitem"
+              className="rounded border border-gray-300 bg-gray-50 p-3"
+            >
               {pair.left}
             </div>
           ))}
@@ -162,44 +210,53 @@ export function Matching({
           <div className="text-sm font-medium text-gray-700">Definitions</div>
           {readOnly ? (
             // Read-only: just render in current order
-            rightOrder.map((rightId, idx) => {
-              const pair = options.pairs.find((p) => p.id === rightId);
-              const leftId = options.pairs[idx]?.id;
-              return (
-                <div
-                  key={rightId}
-                  className={`rounded border p-3 ${
-                    showCorrect
-                      ? isMatchCorrect(leftId, rightId)
-                        ? 'border-green-500 bg-green-50'
-                        : 'border-red-500 bg-red-50'
-                      : 'border-gray-200 bg-gray-50'
-                  }`}
-                >
-                  {pair?.right}
-                </div>
-              );
-            })
+            <div role="list" aria-label="Definitions (read-only)">
+              {rightOrder.map((rightId, idx) => {
+                const pair = options.pairs.find((p) => p.id === rightId);
+                const leftId = options.pairs[idx]?.id;
+                return (
+                  <div
+                    key={rightId}
+                    role="listitem"
+                    className={`mb-3 rounded border p-3 ${
+                      showCorrect
+                        ? isMatchCorrect(leftId, rightId)
+                          ? 'border-green-500 bg-green-50'
+                          : 'border-red-500 bg-red-50'
+                        : 'border-gray-200 bg-gray-50'
+                    }`}
+                  >
+                    {pair?.right}
+                  </div>
+                );
+              })}
+            </div>
           ) : (
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
+              accessibility={{
+                announcements,
+              }}
             >
               <SortableContext items={rightOrder} strategy={verticalListSortingStrategy}>
-                {rightOrder.map((rightId, idx) => {
-                  const pair = options.pairs.find((p) => p.id === rightId);
-                  const leftId = options.pairs[idx]?.id;
-                  return (
-                    <SortableItem
-                      key={rightId}
-                      id={rightId}
-                      text={pair?.right || ''}
-                      isCorrect={showCorrect ? isMatchCorrect(leftId, rightId) : undefined}
-                      showCorrect={showCorrect}
-                    />
-                  );
-                })}
+                <div role="list" aria-label="Definitions to match with terms">
+                  {rightOrder.map((rightId, idx) => {
+                    const pair = options.pairs.find((p) => p.id === rightId);
+                    const leftId = options.pairs[idx]?.id;
+                    return (
+                      <div key={rightId} className="mb-3">
+                        <SortableItem
+                          id={rightId}
+                          text={pair?.right || ''}
+                          isCorrect={showCorrect ? isMatchCorrect(leftId, rightId) : undefined}
+                          showCorrect={showCorrect}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </SortableContext>
             </DndContext>
           )}
