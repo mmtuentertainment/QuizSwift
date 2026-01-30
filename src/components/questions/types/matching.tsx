@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -96,22 +96,31 @@ export function Matching({
     return [...options.pairs.map((p) => p.id)].sort(() => Math.random() - 0.5);
   });
 
+  // Track if we've initialized to avoid double-reporting
+  const hasInitialized = useRef(false);
+
   // Report initial shuffled state to parent if no existing answer
   useEffect(() => {
-    if (!answer?.pairs && !readOnly) {
-      const initialMatches = options.pairs.map((p, idx) => ({
-        leftId: p.id,
-        rightId: rightOrder[idx],
-      }));
-      onAnswer({ type: 'matching', pairs: initialMatches });
-    }
-    // Only run on mount - intentionally excluding dependencies
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // Only initialize once, and only if no existing answer
+    if (hasInitialized.current) return;
+    if (answer?.pairs || readOnly) return;
+
+    hasInitialized.current = true;
+
+    const initialMatches = options.pairs.map((p, idx) => ({
+      leftId: p.id,
+      rightId: rightOrder[idx],
+    }));
+    onAnswer({ type: 'matching', pairs: initialMatches });
+  }, [answer?.pairs, readOnly, options.pairs, rightOrder, onAnswer]);
 
   // Sync rightOrder when answer prop changes (restoring from saved state or navigating)
+  // This is the standard React pattern for syncing local state with props when
+  // the parent controls the canonical state (answer) but we need local state
+  // for the drag-and-drop interaction (rightOrder).
   useEffect(() => {
     if (answer?.pairs?.length) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional: syncing rightOrder from answer prop
       setRightOrder(answer.pairs.map((p) => p.rightId));
     } else if (!answer?.pairs && readOnly) {
       // Reset to original order when no answer in readOnly mode
