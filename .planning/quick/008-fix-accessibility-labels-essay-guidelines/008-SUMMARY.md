@@ -25,7 +25,7 @@ The docstring claimed all errors are logged, but known Prisma errors were not:
 ## Files Modified
 
 | File | Changes |
-|------|---------|
+| ------ | --------- |
 | src/components/questions/question-editor.tsx | Added 4 id/htmlFor pairs |
 | src/components/questions/question-renderer.tsx | Added guidelines to essayConfig |
 | src/lib/questions/types.ts | Added guidelines field to EssayOptions |
