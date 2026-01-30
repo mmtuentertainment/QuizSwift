@@ -1,7 +1,7 @@
 # Roadmap: QuizSwift
 
 **Created:** 2025-01-23
-**Phases:** 9 (including 2.1)
+**Phases:** 11 (including 2.1, 3.1, and 3.2)
 **Requirements:** 47 mapped + 5 new
 **Depth:** Comprehensive
 
@@ -13,6 +13,8 @@
 | 2 | Content & AI Extraction | Teachers can upload textbooks and receive accurately extracted questions | CONT-01, CONT-02, CONT-03, CONT-04, CONT-05 | 4 |
 | 2.1 | Intelligent Question Curation | AI generates pedagogically-sound comprehension questions with teacher selection | CONT-04-ENH, QUES-05-EARLY, CUR-01, CUR-02, CUR-03 | 5 |
 | 3 | Question Bank & Teacher Workflow | Teachers can review, edit, and approve extracted questions for use | CONT-06, CONT-07, CONT-08, QUES-01, QUES-02, QUES-03, QUES-04, QUES-06, QUES-07 | 5 |
+| 3.1 | Convert Prisma Status Enums | Database-level type safety for status fields | TECH-DEBT-01, TECH-DEBT-02, TECH-DEBT-03 | 5 |
+| 3.2 | Centralize QuestionType Definition | Single source of truth for question types | TECH-DEBT-04, TECH-DEBT-05, TECH-DEBT-06 | 6 |
 | 4 | Quiz Delivery & Student Experience | Students can take quizzes on any device with clear progress tracking | DELV-01, DELV-04, DELV-05, DELV-06, DELV-07 | 4 |
 | 5 | Anti-Cheating & Randomization | Each student receives a unique quiz experience to prevent answer sharing | DELV-02, DELV-03 | 3 |
 | 6 | Grading & Analytics | Teachers can review auto-graded results and gain insights into student performance | GRAD-01, GRAD-02, GRAD-03, GRAD-04, GRAD-05, GRAD-06, GRAD-07 | 5 |
@@ -167,6 +169,69 @@ Plans:
 **Dependencies:** Phase 2.1 (curation pipeline, curated question storage)
 
 **Research Notes:** Teacher-takes-quiz workflow builds trust and catches bad extractions. Question bank enables reuse across multiple quizzes and semesters.
+
+---
+
+## Phase 3.1: Convert Prisma Status Fields to Enums (INSERTED)
+
+**Goal:** Convert string-based status fields to proper Prisma enums for database-level constraints and TypeScript type safety.
+
+**Status:** COMPLETE
+
+**Plans:** 5 plans
+
+Plans:
+- [x] 01-PLAN.md - Define Prisma enums in schema (QuizStatus, ShowResultsOption, AttemptStatus)
+- [x] 02-PLAN.md - Create and fix migration SQL with USING clauses
+- [x] 03-PLAN.md - Update server actions to use Prisma enum values
+- [x] 04-PLAN.md - Update client components for enum compatibility
+- [x] 05-PLAN.md - Final verification and cleanup
+
+**Requirements:**
+- TECH-DEBT-01: Quiz.status field uses enum instead of string with comments
+- TECH-DEBT-02: Quiz.showResults field uses enum instead of string with comments
+- TECH-DEBT-03: QuizAttempt.status field uses enum instead of string with comments
+
+**Success Criteria:**
+1. Database rejects invalid status values at PostgreSQL level
+2. Prisma client exports typed enum values (QuizStatus, ShowResultsOption, AttemptStatus)
+3. All existing string comparisons migrated to enum comparisons
+4. Existing data migrated without data loss
+5. All tests pass after migration
+
+**Dependencies:** Phase 3 completion (uses Quiz and QuizAttempt models extensively)
+
+**Research Notes:** Prisma enum migration with existing data requires careful SQL migration planning. USING clause required for TEXT to ENUM conversion in PostgreSQL. Drop defaults before conversion, re-add after.
+
+---
+
+## Phase 3.2: Centralize QuestionType Definition (INSERTED)
+
+**Goal:** Create a single source of truth for QuestionType to eliminate duplicate definitions and improve type safety across the codebase.
+
+**Status:** COMPLETE
+
+**Plans:** 1 plan
+
+Plans:
+- [x] 03.2-01-PLAN.md - Add QUESTION_TYPES const, QuestionType type, and update consumers
+
+**Requirements:**
+- TECH-DEBT-04: QuestionType defined once in src/lib/questions/types.ts
+- TECH-DEBT-05: grading.ts uses QuestionType instead of string parameter
+- TECH-DEBT-06: question-renderer.tsx imports QuestionType instead of defining locally
+
+**Success Criteria:**
+1. Single QUESTION_TYPES const array as canonical source in types.ts
+2. QuestionType derived from const array (typeof QUESTION_TYPES[number])
+3. Type guard isValidQuestionType() validates strings from database/API
+4. grading.ts parameter changed from string to QuestionType
+5. question-renderer.tsx imports type instead of defining locally
+6. All existing tests pass (grading.test.ts, validation.test.ts)
+
+**Dependencies:** Phase 3 completion (question types fully implemented)
+
+**Research Notes:** Current state has QuestionType defined in question-renderer.tsx and grading.ts accepts any string. This creates maintenance burden and bypasses compile-time type checking. Consolidation follows existing type guard patterns in types.ts.
 
 ---
 
@@ -374,7 +439,13 @@ Phase 2 (Content & AI) - COMPLETE -----> Phase 8 (Dual-Tier AI)
 Phase 2.1 (Intelligent Curation) - COMPLETE
     |
     v
-Phase 3 (Question Bank) - PLANNED
+Phase 3 (Question Bank) - IN PROGRESS
+    |
+    v
+Phase 3.1 (Prisma Enums) - COMPLETE
+    |
+    v
+Phase 3.2 (QuestionType) - COMPLETE
     |
     v
 Phase 4 (Quiz Delivery)
@@ -386,7 +457,7 @@ Phase 5 (Anti-Cheating)
 Phase 6 (Grading) ---------> Phase 7 (Google Classroom)
 ```
 
-**Critical Path:** 1 -> 2 -> 2.1 -> 3 -> 4 -> 5 -> 6 -> 7
+**Critical Path:** 1 -> 2 -> 2.1 -> 3 -> 3.1 -> 3.2 -> 4 -> 5 -> 6 -> 7
 
 **Parallel Opportunity:** Phase 8 can begin after Phase 2 (AI pipeline exists)
 
@@ -397,4 +468,6 @@ Phase 6 (Grading) ---------> Phase 7 (Google Classroom)
 *Phase 2 completed: 2026-01-23*
 *Phase 2.1 completed: 2026-01-25*
 *Phase 3 planned: 2026-01-26*
-*Next step: /gsd:execute-phase 3*
+*Phase 3.1 completed: 2026-01-30*
+*Phase 3.2 completed: 2026-01-27*
+*Next step: /gsd:execute-phase 03 plan 09 OR /gsd:plan-phase 4*

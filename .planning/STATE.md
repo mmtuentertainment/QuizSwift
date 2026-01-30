@@ -1,27 +1,29 @@
 # Project State: QuizSwift
 
 **Last Updated:** 2026-01-30
-**Session:** Quick Task 005 Complete - Fix 13 HIGH Priority CodeRabbit Issues
+**Session:** Phase 3.1 Complete - Convert Prisma Status Enums (Verified)
 
 ## Project Reference
 
 **Core Value:** 100% factual accuracy - every question extracted from source material, never generated
 
-**Current Focus:** Phase 3 - Question Bank & Teacher Workflow (Plan 06 of 9 complete)
+**Current Focus:** Phase 3.1 COMPLETE - Tech debt phases done, ready for Phase 3 completion or Phase 4
 
 ## Current Position
 
-**Phase:** 3 of 8 - Question Bank & Teacher Workflow
-**Plan:** 8 of 9 complete (01, 02, 03, 04, 05, 06, 07, 08)
-**Status:** In progress
-**Last activity:** 2026-01-30 - Completed quick-005: Fix 13 HIGH Priority CodeRabbit Issues (PR #4)
+**Phase:** 3.1 of 8 - Convert Prisma Status Enums
+**Plan:** 5 of 5 complete
+**Status:** COMPLETE (verified 11/11 must-haves)
+**Last activity:** 2026-01-30 - Phase 3.1 verified complete
 
 **Progress:**
-Phase 1: 100% (5/5 plans)   [========================================]
-Phase 2: 100% (4/4 plans)   [========================================]
-Phase 2.1: 100% (6/6 plans) [========================================]
-Phase 3: 89% (8/9 plans)    [====================================    ]
-Overall: 64%                [==================================      ]
+Phase 1: 100% (5/5 plans)     [========================================]
+Phase 2: 100% (4/4 plans)     [========================================]
+Phase 2.1: 100% (6/6 plans)   [========================================]
+Phase 3: 89% (8/9 plans)      [====================================    ]
+Phase 3.1: 100% (5/5 plans)   [========================================]
+Phase 3.2: 100% (1/1 plans)   [========================================]
+Overall: 74%                  [======================================  ]
 
 **Phases Overview:**
 | Phase | Name | Status | Plans |
@@ -30,6 +32,8 @@ Overall: 64%                [==================================      ]
 | 2 | Content & AI Extraction | COMPLETE | 4/4 |
 | 2.1 | Intelligent Question Curation | COMPLETE | 6/6 |
 | 3 | Question Bank & Teacher Workflow | In Progress | 8/9 |
+| 3.1 | Convert Prisma Status Enums | COMPLETE | 5/5 |
+| 3.2 | Centralize QuestionType | COMPLETE | 1/1 |
 | 4 | Quiz Delivery & Student Experience | Pending | - |
 | 5 | Anti-Cheating & Randomization | Pending | - |
 | 6 | Grading & Analytics | Pending | - |
@@ -39,13 +43,13 @@ Overall: 64%                [==================================      ]
 ## Performance Metrics
 
 **Session Stats:**
-- Plans completed: 1 (03-06)
-- Tasks completed: 3
-- Duration: 10 min
+- Plans completed: 5 (03.1-01 through 03.1-05)
+- Tasks completed: 32
+- Duration: ~2 hours (across multiple sessions)
 
 **Cumulative Stats:**
-- Total phases: 8 (+ 2.1 sub-phase)
-- Plans completed: 23/36+ (approximate)
+- Total phases: 8 (+ 2.1, 3.1, 3.2 sub-phases)
+- Plans completed: 29/38+ (approximate)
 
 ## Accumulated Context
 
@@ -81,13 +85,20 @@ Overall: 64%                [==================================      ]
 | Upsert pattern for race conditions | Prevents duplicate quiz attempts with compound unique keys | quick-003 |
 | Pagination input clamping | page >= 1, limit 1-100, offset >= 0 prevents performance issues | quick-003 |
 | pdf-storage.ts naming | Renamed from blob.ts to eliminate Vercel Blob confusion | quick-003 |
+| isValidQuestionType() guard in attempts.ts | Validate database strings before passing to typed grading functions | 03.2-01 |
+| Cast unknown_type in test | Preserves runtime fallback test coverage while satisfying type checker | 03.2-01 |
+| Lowercase Prisma enum values | Match existing string values for zero-data-transformation migration | 03.1-01 |
+| Drop defaults before type conversion | PostgreSQL cannot cast defaults during ALTER - drop first, re-add after | 03.1-02 |
+| Manual migration creation | Shadow database pgvector issue prevented prisma migrate dev | 03.1-02 |
+| String literal types for client interfaces | Client components receive serialized enums; explicit types ensure consistency | 03.1-04 |
+| Centralized enum labels in enums.ts | Single source of truth for UI display strings | 03.1-04 |
 
 ### Roadmap Evolution
 
 | Phase | Type | Description | Date |
 |-------|------|-------------|------|
-| 3.1 | INSERTED | Convert Prisma Status Fields to Enums - address tech debt identified in PR review | 2026-01-27 |
-| 3.2 | INSERTED | Centralize QuestionType Definition - single source of truth for type safety | 2026-01-27 |
+| 3.1 | INSERTED/COMPLETE | Convert Prisma Status Fields to Enums - address tech debt identified in PR review | 2026-01-30 |
+| 3.2 | INSERTED/COMPLETE | Centralize QuestionType Definition - single source of truth for type safety | 2026-01-27 |
 
 ### Technical Stack
 
@@ -99,7 +110,7 @@ Overall: 64%                [==================================      ]
 - **Drag-and-Drop:** @dnd-kit/core@6.3.1, @dnd-kit/sortable@10.0.0, @dnd-kit/utilities@3.2.2
 - **Storage:** Cloudflare R2 via @aws-sdk/client-s3 + @aws-sdk/s3-request-presigner
 
-### Patterns Established (03-02, 03-03, 03-05, 03-06, 03-07, 03-08)
+### Patterns Established
 
 - QuestionRenderer switch pattern for dispatching to type-specific components
 - Consistent props interface: options, answer/value, onChange, readOnly, showCorrect
@@ -112,6 +123,11 @@ Overall: 64%                [==================================      ]
 - Auto-grading with partial credit for objective question types
 - Modal editor pattern: QuestionEditor with isOpen/onClose/onSave props
 - Quiz status workflow: draft -> preview_required -> published
+- QUESTION_TYPES const array: single source of truth for all valid question types
+- isValidQuestionType() guard: validate strings from external sources before use as QuestionType
+- Prisma enum definition: enum Name { value1 value2 } for type-safe status fields
+- PostgreSQL TEXT to ENUM: DROP DEFAULT, ALTER TYPE USING, SET DEFAULT pattern
+- Centralized enums.ts: re-export Prisma enums + string literal types + display labels
 
 ### Quick Tasks Completed
 
@@ -133,42 +149,38 @@ Overall: 64%                [==================================      ]
 - useSearchParams + router.push pattern enables URL-based filter state
 - Client components cannot import server-only modules - duplicate constants locally
 - ShowYourWorkData includes Blob which cannot be JSON serialized - use null when restoring
+- Type parameter changes propagate to callers - use type guards to bridge string types from database
+- PostgreSQL USING clause required for TEXT to ENUM migration - Prisma will not generate it automatically
+- Shadow databases on Neon may not have pgvector extension - manual migration creation may be required
+- Prisma 7 generates client module in client.ts not index.ts - import from @/generated/prisma/client
 
 ## Session Continuity
 
 ### What Just Happened
 
-Completed Quick Task 005 - Fix 13 HIGH Priority CodeRabbit Issues (PR #4):
+Phase 3.1 execution and verification completed:
 
-**Issues fixed:**
-1. `.claude/settings.json` - Fixed npm permission patterns (colon-wildcards → suffix wildcards)
-2. `package.json` - Added @vitest/coverage-v8 devDependency
-3. `vitest.config.ts` - Fixed Windows path with fileURLToPath
-4. `src/actions/questions.ts` - Imported centralized schema from validation.ts
-5. `src/actions/questions.ts` - Added options.type mismatch validation guard
-6. `src/components/question-bank/question-editor.tsx` - Added useEffect to sync form state
-7. `src/components/question-bank/question-editor.tsx` - Added ARIA dialog semantics + ESC key
-8. `src/components/questions/image-upload.tsx` - Added useEffect to sync preview state
-9. `src/components/questions/types/matching.tsx` - Added useEffect to sync rightOrder
-10. `src/components/quiz/quiz-taker.tsx` - Return empty arrays instead of null
-11. `src/lib/questions/grading.ts` - Fixed duplicate match scoring with canonical Map
-12. `src/lib/questions/types.ts` - Added CANONICAL_QUESTION_TYPES + normalizeQuestionType
-13. `src/lib/questions/validation.ts` - Added short_answer to discriminated union
+**All 5 Plans Executed:**
+- 01: Defined Prisma enums in schema (QuizStatus, ShowResultsOption, AttemptStatus)
+- 02: Created migration SQL with USING clauses for TEXT→ENUM conversion
+- 03: Updated server actions to use enum values
+- 04: Updated client components with typed interfaces
+- 05: Final verification (32/32 tests, lint clean, build successful)
 
-**Commits:**
-- d74f86c: fix(quick-005): fix config and tooling issues
-- ec00cb0: fix(quick-005): fix 12 HIGH priority CodeRabbit issues
-- a494aff: docs(quick-005): add planning files for CodeRabbit HIGH issues fix
+**Verification:** Goal verified with 11/11 must-haves
+- Database enforces valid status values at PostgreSQL level
+- Prisma client exports typed enum values
+- All string comparisons migrated to enum comparisons
+- Existing data migrated without data loss
+- All tests pass after migration
 
 ### What Happens Next
 
-Quick task 005 is COMPLETE.
-
-Next steps:
-- Complete Phase 3 Plan 09 (final plan)
-- Or proceed to Phase 4: Quiz Delivery & Student Experience
+Two options:
+1. **Phase 3 Plan 09** - Final integration and navigation (completes Phase 3)
+2. **Phase 4** - Quiz Delivery & Student Experience
 
 ---
 
 *State captured: 2026-01-30*
-*Next command: /gsd:execute-phase 3 plan 09 or /gsd:progress*
+*Next command: /gsd:execute-phase 03 plan 09 OR /gsd:plan-phase 4*
