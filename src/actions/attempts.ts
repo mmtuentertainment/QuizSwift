@@ -14,7 +14,7 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { gradeAnswer, isAutoGradable } from '@/lib/questions/grading';
-import type { AnswerData, QuestionOptions, QuestionType } from '@/lib/questions/types';
+import type { AnswerData, QuestionOptions } from '@/lib/questions/types';
 import { isValidQuestionType } from '@/lib/questions/types';
 import { handlePrismaError } from '@/lib/prisma-errors';
 import { AttemptStatus, QuizStatus } from '@/generated/prisma/client';
