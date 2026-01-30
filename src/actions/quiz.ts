@@ -34,15 +34,21 @@ export async function createQuiz(formData: FormData) {
     return { error: 'Unauthorized' };
   }
 
-  // Parse questionIds with error handling
-  let questionIds: string[] = [];
+  // Parse and validate questionIds from FormData
+  const rawQuestionIds = formData.get('questionIds');
+  let parsedIds: unknown;
   try {
-    const rawQuestionIds = formData.get('questionIds');
-    questionIds = rawQuestionIds ? JSON.parse(rawQuestionIds as string) : [];
-  } catch (error) {
-    console.error('[createQuiz] Failed to parse questionIds:', error);
-    return { error: 'Invalid question IDs format' };
+    parsedIds = rawQuestionIds ? JSON.parse(rawQuestionIds as string) : [];
+  } catch {
+    return { error: 'Invalid question IDs format: malformed JSON' };
   }
+
+  const questionIdsResult = z.array(z.string()).safeParse(parsedIds);
+  if (!questionIdsResult.success) {
+    console.error('[createQuiz] Invalid questionIds:', questionIdsResult.error.flatten());
+    return { error: 'Invalid question IDs format: expected array of strings' };
+  }
+  const questionIds = questionIdsResult.data;
 
   const parsed = CreateQuizSchema.safeParse({
     documentId: formData.get('documentId'),
