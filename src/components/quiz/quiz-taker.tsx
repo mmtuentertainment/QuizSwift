@@ -18,7 +18,6 @@ import { QuestionRenderer, type RendererAnswerData } from '@/components/question
 import { startAttempt, submitAnswer, completeAttempt, getAttemptWithAnswers } from '@/actions/attempts';
 import type { CuratedQuestion } from '@/generated/prisma/client';
 import type { QuestionOptions, AnswerData as LibAnswerData } from '@/lib/questions/types';
-import type { AttemptStatusValue } from '@/lib/enums';
 
 interface QuizTakerProps {
   quizId: string;
