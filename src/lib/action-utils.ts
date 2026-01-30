@@ -3,13 +3,12 @@
  *
  * Provides common functionality like:
  * - CUID validation for ID parameters
- * - Re-exports of result pattern helpers
+ *
+ * Note: For result pattern helpers (ok, err, ActionResult),
+ * import directly from './prisma-errors' to avoid circular dependencies.
  */
 
 import { z } from 'zod';
-
-// Re-export result helpers from prisma-errors
-export { type ActionResult, ok, err } from './prisma-errors';
 
 /**
  * CUID validation schema.

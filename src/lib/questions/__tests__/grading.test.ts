@@ -268,6 +268,140 @@ describe('isAutoGradable', () => {
   });
 });
 
+describe('gradeAnswer - empty array edge cases', () => {
+  describe('fill_in_blank with empty blanks array', () => {
+    it('returns 0 points when options.blanks is empty (edge case)', () => {
+      // Edge case: question has no blanks configured
+      // Returns 0 points (divides by zero avoidance) and isCorrect true (0/0 = all correct)
+      const emptyBlanksOptions: QuestionOptions = {
+        type: 'fill_in_blank',
+        blanks: [],
+      };
+      const answer: AnswerData = { type: 'fill_in_blank', blanks: ['answer'] };
+      const result = gradeAnswer('fill_in_blank', emptyBlanksOptions, answer);
+      expect(result.isCorrect).toBe(true); // 0/0 = all blanks correct
+      expect(result.pointsEarned).toBe(0); // 0 total blanks = 0 points (division guard)
+    });
+
+    it('handles student providing answers when no blanks expected', () => {
+      // Student provides answers but question has no blanks - still 0 points
+      const emptyBlanksOptions: QuestionOptions = {
+        type: 'fill_in_blank',
+        blanks: [],
+      };
+      const answer: AnswerData = { type: 'fill_in_blank', blanks: ['unexpected', 'answers'] };
+      const result = gradeAnswer('fill_in_blank', emptyBlanksOptions, answer);
+      expect(result.isCorrect).toBe(true);
+      expect(result.pointsEarned).toBe(0); // No blanks to grade = 0 points
+    });
+
+    it('handles student providing empty blanks when blanks expected', () => {
+      const fibOptions: QuestionOptions = {
+        type: 'fill_in_blank',
+        blanks: [
+          { index: 0, acceptedAnswers: ['Paris'], caseSensitive: false },
+          { index: 1, acceptedAnswers: ['France'], caseSensitive: false },
+        ],
+      };
+      const answer: AnswerData = { type: 'fill_in_blank', blanks: [] };
+      const result = gradeAnswer('fill_in_blank', fibOptions, answer);
+      expect(result.isCorrect).toBe(false);
+      expect(result.pointsEarned).toBe(0);
+      expect(result.feedback).toBe('0/2 blanks correct');
+    });
+  });
+
+  describe('matching with empty pairs array', () => {
+    it('returns 0 points when options.pairs is empty (edge case)', () => {
+      // Edge case: question has no pairs configured
+      // Returns 0 points (divides by zero avoidance) and isCorrect true (0/0 = all correct)
+      const emptyPairsOptions: QuestionOptions = {
+        type: 'matching',
+        pairs: [],
+      };
+      const answer: AnswerData = {
+        type: 'matching',
+        pairs: [{ leftId: '1', rightId: '1' }],
+      };
+      const result = gradeAnswer('matching', emptyPairsOptions, answer);
+      expect(result.isCorrect).toBe(true); // 0/0 = all pairs correct
+      expect(result.pointsEarned).toBe(0); // 0 total pairs = 0 points (division guard)
+    });
+
+    it('handles student providing matches when no pairs expected', () => {
+      // Student provides matches but question has no pairs - still 0 points
+      const emptyPairsOptions: QuestionOptions = {
+        type: 'matching',
+        pairs: [],
+      };
+      const answer: AnswerData = {
+        type: 'matching',
+        pairs: [{ leftId: '1', rightId: '2' }, { leftId: '2', rightId: '1' }],
+      };
+      const result = gradeAnswer('matching', emptyPairsOptions, answer);
+      expect(result.isCorrect).toBe(true);
+      expect(result.pointsEarned).toBe(0); // No pairs to grade = 0 points
+    });
+
+    it('handles student providing empty pairs when matches expected', () => {
+      const matchOptions: QuestionOptions = {
+        type: 'matching',
+        pairs: [
+          { id: '1', left: 'A', right: '1' },
+          { id: '2', left: 'B', right: '2' },
+        ],
+      };
+      const answer: AnswerData = {
+        type: 'matching',
+        pairs: [],
+      };
+      const result = gradeAnswer('matching', matchOptions, answer);
+      expect(result.isCorrect).toBe(false);
+      expect(result.pointsEarned).toBe(0);
+      expect(result.feedback).toBe('0/2 pairs correct');
+    });
+  });
+
+  describe('partial answers edge cases', () => {
+    it('handles fill_in_blank with fewer answers than blanks', () => {
+      const fibOptions: QuestionOptions = {
+        type: 'fill_in_blank',
+        blanks: [
+          { index: 0, acceptedAnswers: ['A'], caseSensitive: false },
+          { index: 1, acceptedAnswers: ['B'], caseSensitive: false },
+          { index: 2, acceptedAnswers: ['C'], caseSensitive: false },
+        ],
+      };
+      // Only provide 2 answers for 3 blanks
+      const answer: AnswerData = { type: 'fill_in_blank', blanks: ['A', 'B'] };
+      const result = gradeAnswer('fill_in_blank', fibOptions, answer);
+      expect(result.isCorrect).toBe(false);
+      expect(result.pointsEarned).toBeCloseTo(0.667, 2); // 2/3 correct
+      expect(result.feedback).toBe('2/3 blanks correct');
+    });
+
+    it('handles matching with fewer pairs than expected', () => {
+      const matchOptions: QuestionOptions = {
+        type: 'matching',
+        pairs: [
+          { id: '1', left: 'A', right: '1' },
+          { id: '2', left: 'B', right: '2' },
+          { id: '3', left: 'C', right: '3' },
+        ],
+      };
+      // Only provide 1 pair for 3 expected
+      const answer: AnswerData = {
+        type: 'matching',
+        pairs: [{ leftId: '1', rightId: '1' }],
+      };
+      const result = gradeAnswer('matching', matchOptions, answer);
+      expect(result.isCorrect).toBe(false);
+      expect(result.pointsEarned).toBeCloseTo(0.333, 2); // 1/3 correct
+      expect(result.feedback).toBe('1/3 pairs correct');
+    });
+  });
+});
+
 describe('calculateTotalScore', () => {
   it('calculates totals correctly', () => {
     const results = [
