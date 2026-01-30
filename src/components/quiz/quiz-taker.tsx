@@ -19,6 +19,7 @@ import { startAttempt, submitAnswer, completeAttempt, getAttemptWithAnswers } fr
 import type { CuratedQuestion } from '@/generated/prisma/client';
 import type { QuestionOptions, AnswerData as LibAnswerData } from '@/lib/questions/types';
 import { isValidCanvasState } from '@/lib/questions/types';
+import type { TLEditorSnapshot } from 'tldraw';
 
 interface QuizTakerProps {
   quizId: string;
@@ -107,8 +108,11 @@ function toRendererAnswerData(
       };
     case 'show_work': {
       // Validate canvas state from database JSON before using
+      // Type guard validates structure, then cast to TLEditorSnapshot via unknown
       const rawCanvasState = answerData.canvasState;
-      const validatedCanvasState = isValidCanvasState(rawCanvasState) ? rawCanvasState : null;
+      const validatedCanvasState = isValidCanvasState(rawCanvasState)
+        ? (rawCanvasState as unknown as TLEditorSnapshot)
+        : null;
 
       return {
         type: 'show_work',
@@ -295,8 +299,12 @@ export function QuizTaker({
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
-          <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent mx-auto" />
-          <p className="text-gray-600">Loading quiz...</p>
+          <div
+            className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent mx-auto"
+            role="status"
+            aria-label="Loading quiz"
+          />
+          <p className="text-gray-600" aria-live="polite">Loading quiz...</p>
         </div>
       </div>
     );
@@ -377,10 +385,18 @@ export function QuizTaker({
       </div>
 
       {/* Progress bar */}
-      <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+      <div
+        role="progressbar"
+        aria-valuenow={currentIndex + 1}
+        aria-valuemin={1}
+        aria-valuemax={questions.length}
+        aria-label={`Quiz progress: Question ${currentIndex + 1} of ${questions.length}`}
+        className="h-2 overflow-hidden rounded-full bg-gray-200"
+      >
         <div
           className="h-full bg-blue-500 transition-all duration-300"
           style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+          aria-hidden="true"
         />
       </div>
 
