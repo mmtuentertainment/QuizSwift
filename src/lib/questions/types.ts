@@ -50,6 +50,7 @@ export interface EssayOptions {
   minWords?: number;
   maxWords?: number;
   rubric?: string;  // Grading criteria
+  guidelines?: string;  // Student-facing guidelines/instructions
 }
 
 export interface ShowWorkOptions {

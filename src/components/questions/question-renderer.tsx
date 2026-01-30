@@ -239,6 +239,7 @@ export function QuestionRenderer({
             minWords: options.minWords,
             maxWords: options.maxWords,
             rubric: options.rubric,
+            guidelines: options.guidelines,
           };
         }
 

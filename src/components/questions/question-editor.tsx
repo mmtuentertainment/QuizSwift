@@ -328,10 +328,11 @@ export function QuestionEditor({
 
           {/* Question Text */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label htmlFor="question-text" className="block text-sm font-medium text-gray-700">
               Question Text
             </label>
             <textarea
+              id="question-text"
               value={questionText}
               onChange={(e) => setQuestionText(e.target.value)}
               rows={4}
@@ -350,10 +351,11 @@ export function QuestionEditor({
 
           {/* Explanation */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label htmlFor="explanation" className="block text-sm font-medium text-gray-700">
               Explanation
             </label>
             <textarea
+              id="explanation"
               value={explanation}
               onChange={(e) => setExplanation(e.target.value)}
               rows={3}
@@ -364,10 +366,11 @@ export function QuestionEditor({
 
           {/* Source Evidence */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label htmlFor="source-evidence" className="block text-sm font-medium text-gray-700">
               Source Evidence
             </label>
             <textarea
+              id="source-evidence"
               value={sourceEvidence}
               onChange={(e) => setSourceEvidence(e.target.value)}
               rows={2}
@@ -390,10 +393,11 @@ export function QuestionEditor({
           {/* Image Alt Text (only shown when image exists) */}
           {imageUrl && (
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
+              <label htmlFor="image-alt" className="block text-sm font-medium text-gray-700">
                 Image Description (Alt Text)
               </label>
               <input
+                id="image-alt"
                 type="text"
                 value={imageAltText || ''}
                 onChange={(e) => setImageAltText(e.target.value || null)}

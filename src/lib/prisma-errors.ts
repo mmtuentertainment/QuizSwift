@@ -13,6 +13,7 @@ import { Prisma } from '@/generated/prisma/client';
  */
 export function handlePrismaError(error: unknown): string {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    console.error('[Prisma Error]:', error);
     if (error.code === 'P2002') return 'A record with this information already exists.';
     if (error.code === 'P2003') return 'Cannot complete operation due to related records.';
     if (error.code === 'P2025') return 'Record not found.';

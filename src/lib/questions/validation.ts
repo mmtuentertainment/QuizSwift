@@ -57,6 +57,7 @@ export const essayOptionsSchema = z.object({
   minWords: z.number().int().min(0).optional(),
   maxWords: z.number().int().min(1).optional(),
   rubric: z.string().optional(),
+  guidelines: z.string().optional(),
 });
 
 export const showWorkOptionsSchema = z.object({
