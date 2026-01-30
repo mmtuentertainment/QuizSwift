@@ -14,7 +14,7 @@
  */
 
 import { useState, useEffect, useCallback, useOptimistic, startTransition } from 'react';
-import { QuestionRenderer, type AnswerData as RendererAnswerData } from '@/components/questions';
+import { QuestionRenderer, type RendererAnswerData } from '@/components/questions';
 import { startAttempt, submitAnswer, completeAttempt, getAttemptWithAnswers } from '@/actions/attempts';
 import type { CuratedQuestion } from '@/generated/prisma/client';
 import type { QuestionOptions, AnswerData as LibAnswerData } from '@/lib/questions/types';

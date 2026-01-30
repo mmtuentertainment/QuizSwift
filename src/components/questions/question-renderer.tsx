@@ -24,10 +24,12 @@ import {
 } from '@/lib/questions/types';
 
 /**
- * Union type for all answer data structures.
+ * Union type for all answer data structures used by the QuestionRenderer.
  * This is what gets stored when a student answers a question.
+ *
+ * Named RendererAnswerData to avoid collision with lib/questions/types.ts AnswerData.
  */
-export type AnswerData =
+export type RendererAnswerData =
   | { type: 'multiple_choice'; selectedId: string | null }
   | { type: 'true_false'; selectedAnswer: boolean | null }
   | { type: 'fill_in_blank'; answers: string[] }
@@ -58,9 +60,9 @@ interface QuestionRendererProps {
   /** Question-specific options (choices, blanks, rubric, etc.) */
   options: QuestionOptions | null;
   /** Current answer data */
-  answer: AnswerData | null;
+  answer: RendererAnswerData | null;
   /** Callback when answer changes */
-  onAnswer: (answer: AnswerData) => void;
+  onAnswer: (answer: RendererAnswerData) => void;
   /** Whether the component is read-only (for review mode) */
   readOnly?: boolean;
   /** Whether to show correct/incorrect indicators */
@@ -100,11 +102,11 @@ export function QuestionRenderer({
   /**
    * Helper to get typed answer data or return null.
    */
-  const getTypedAnswer = <T extends AnswerData['type']>(
+  const getTypedAnswer = <T extends RendererAnswerData['type']>(
     type: T
-  ): Extract<AnswerData, { type: T }> | null => {
+  ): Extract<RendererAnswerData, { type: T }> | null => {
     if (answer && answer.type === type) {
-      return answer as Extract<AnswerData, { type: T }>;
+      return answer as Extract<RendererAnswerData, { type: T }>;
     }
     return null;
   };

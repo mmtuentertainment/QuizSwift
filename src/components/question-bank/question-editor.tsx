@@ -115,8 +115,9 @@ export function QuestionEditor({ question, onClose }: QuestionEditorProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Question Text</label>
+            <label htmlFor="questionText" className="mb-1 block text-sm font-medium text-gray-700">Question Text</label>
             <textarea
+              id="questionText"
               value={formData.questionText}
               onChange={(e) => setFormData((prev) => ({ ...prev, questionText: e.target.value }))}
               rows={4}
@@ -126,8 +127,9 @@ export function QuestionEditor({ question, onClose }: QuestionEditorProps) {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Correct Answer</label>
+            <label htmlFor="correctAnswer" className="mb-1 block text-sm font-medium text-gray-700">Correct Answer</label>
             <textarea
+              id="correctAnswer"
               value={formData.correctAnswer}
               onChange={(e) => setFormData((prev) => ({ ...prev, correctAnswer: e.target.value }))}
               rows={2}
@@ -137,8 +139,9 @@ export function QuestionEditor({ question, onClose }: QuestionEditorProps) {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Explanation</label>
+            <label htmlFor="explanation" className="mb-1 block text-sm font-medium text-gray-700">Explanation</label>
             <textarea
+              id="explanation"
               value={formData.explanation}
               onChange={(e) => setFormData((prev) => ({ ...prev, explanation: e.target.value }))}
               rows={3}

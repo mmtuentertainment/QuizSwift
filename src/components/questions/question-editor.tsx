@@ -12,7 +12,7 @@
  * Uses the updateQuestion server action with Zod validation.
  */
 
-import { useState, useTransition, useCallback, useEffect } from 'react';
+import { useState, useTransition, useCallback, useEffect, useRef } from 'react';
 import { updateQuestion, type UpdateQuestionInput } from '@/actions/questions';
 import { MathText } from '@/components/quiz/math-display';
 import { ImageUpload } from './image-upload';
@@ -47,6 +47,14 @@ export function QuestionEditor({
 }: QuestionEditorProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Focus modal when opened for keyboard event handling
+  useEffect(() => {
+    if (isOpen && modalRef.current) {
+      modalRef.current.focus();
+    }
+  }, [isOpen]);
 
   // Local state for form fields
   const [questionText, setQuestionText] = useState(question.questionText);
@@ -57,10 +65,11 @@ export function QuestionEditor({
   const [imageUrl, setImageUrl] = useState<string | null>(question.imageUrl ?? null);
   const [imageAltText, setImageAltText] = useState<string | null>(question.imageAltText ?? null);
 
-  // Reset form state when modal opens or question changes
+  // Reset form state when modal opens or question identity changes
+  // Intentionally depending on question.id, not question object, to avoid
+  // resetting form when content changes but identity is the same
   useEffect(() => {
     if (isOpen) {
-      /* eslint-disable react-hooks/set-state-in-effect */
       setQuestionText(question.questionText);
       setCorrectAnswer(question.correctAnswer);
       setExplanation(question.explanation);
@@ -69,9 +78,9 @@ export function QuestionEditor({
       setImageUrl(question.imageUrl ?? null);
       setImageAltText(question.imageAltText ?? null);
       setError(null);
-      /* eslint-enable react-hooks/set-state-in-effect */
     }
-  }, [isOpen, question]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: reset only on question.id change, not content
+  }, [isOpen, question.id]);
 
   // Handle multiple choice option editing
   const updateMCOption = useCallback((index: number, field: 'text' | 'isCorrect', value: string | boolean) => {
@@ -266,6 +275,8 @@ export function QuestionEditor({
 
   return (
     <div
+      ref={modalRef}
+      tabIndex={-1}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       onClick={onClose}
       onKeyDown={handleKeyDown}

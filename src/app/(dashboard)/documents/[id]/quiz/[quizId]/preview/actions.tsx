@@ -60,7 +60,7 @@ export function TeacherPreviewWrapper({
         questions={questions}
         isPreview={true}
         onComplete={handleComplete}
-        timeLimit={timeLimit}
+        timeLimit={timeLimit ?? undefined}
       />
 
       {/* Preview error warning */}

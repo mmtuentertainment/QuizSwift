@@ -14,10 +14,11 @@ import { Prisma } from '@/generated/prisma/client';
 export function handlePrismaError(error: unknown): string {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === 'P2002') return 'A record with this information already exists.';
-    if (error.code === 'P2003') return 'Referenced record not found.';
+    if (error.code === 'P2003') return 'Cannot complete operation due to related records.';
     if (error.code === 'P2025') return 'Record not found.';
+  } else {
+    console.error('[Prisma Error]:', error);
   }
-  console.error('[Prisma Error]:', error);
   return 'Database operation failed. Please try again.';
 }
 

@@ -16,7 +16,7 @@ export { Matching } from './types/matching';
 export { ImageUpload } from './image-upload';
 
 // Dispatcher component
-export { QuestionRenderer, type AnswerData, type QuestionType } from './question-renderer';
+export { QuestionRenderer, type RendererAnswerData, type QuestionType } from './question-renderer';
 
 // Re-export types from lib for convenience
 export type {
