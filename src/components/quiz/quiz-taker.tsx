@@ -18,6 +18,7 @@ import { QuestionRenderer, type RendererAnswerData } from '@/components/question
 import { startAttempt, submitAnswer, completeAttempt, getAttemptWithAnswers } from '@/actions/attempts';
 import type { CuratedQuestion } from '@/generated/prisma/client';
 import type { QuestionOptions, AnswerData as LibAnswerData } from '@/lib/questions/types';
+import { isValidCanvasState } from '@/lib/questions/types';
 
 interface QuizTakerProps {
   quizId: string;
@@ -104,18 +105,21 @@ function toRendererAnswerData(
         type: questionType as 'essay' | 'short_answer',
         text: (answerData.text as string) || '',
       };
-    case 'show_work':
+    case 'show_work': {
+      // Validate canvas state from database JSON before using
+      const rawCanvasState = answerData.canvasState;
+      const validatedCanvasState = isValidCanvasState(rawCanvasState) ? rawCanvasState : null;
+
       return {
         type: 'show_work',
         data: {
           finalAnswer: (answerData.finalAnswer as string) || '',
-          // Restore canvas state - cast through any since JSON loses type info
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          canvasState: answerData.canvasState as any ?? null,
+          canvasState: validatedCanvasState,
           // canvasImage cannot be restored from JSON (Blob)
           canvasImage: null,
         },
       };
+    }
     default:
       return null;
   }

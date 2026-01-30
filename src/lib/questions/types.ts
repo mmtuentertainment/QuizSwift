@@ -217,6 +217,28 @@ export function isShowWorkAnswer(answer: AnswerData): answer is ShowWorkAnswer {
 }
 
 // =============================================================================
+// Canvas State Validation (for tldraw TLEditorSnapshot)
+// =============================================================================
+
+/**
+ * Minimal validation for tldraw canvas state.
+ * TLEditorSnapshot requires: { document, session } at minimum.
+ * We only validate structure exists - tldraw will handle malformed data gracefully.
+ */
+export function isValidCanvasState(value: unknown): value is Record<string, unknown> {
+  if (value === null || value === undefined) {
+    return false;
+  }
+  if (typeof value !== 'object') {
+    return false;
+  }
+  const obj = value as Record<string, unknown>;
+  // TLEditorSnapshot has 'document' and 'session' properties
+  // We check for 'document' as the minimum required field
+  return 'document' in obj && typeof obj.document === 'object' && obj.document !== null;
+}
+
+// =============================================================================
 // Question Type Constants and Type
 // =============================================================================
 
