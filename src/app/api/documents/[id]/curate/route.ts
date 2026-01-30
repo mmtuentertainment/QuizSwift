@@ -106,11 +106,31 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       );
     }
 
-    // Update selections
-    for (const { questionId, selected } of body.selections) {
-      await prisma.curatedQuestion.update({
-        where: { id: questionId },
-        data: { teacherSelected: selected },
+    // Batch update selections (2 queries instead of N)
+    const toSelect = body.selections
+      .filter((s) => s.selected)
+      .map((s) => s.questionId);
+    const toDeselect = body.selections
+      .filter((s) => !s.selected)
+      .map((s) => s.questionId);
+
+    if (toSelect.length > 0) {
+      await prisma.curatedQuestion.updateMany({
+        where: {
+          id: { in: toSelect },
+          documentId: id,
+        },
+        data: { teacherSelected: true },
+      });
+    }
+
+    if (toDeselect.length > 0) {
+      await prisma.curatedQuestion.updateMany({
+        where: {
+          id: { in: toDeselect },
+          documentId: id,
+        },
+        data: { teacherSelected: false },
       });
     }
 
