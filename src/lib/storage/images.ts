@@ -176,3 +176,28 @@ export function isValidImageExtension(fileName: string): boolean {
   const ext = fileName.toLowerCase().slice(fileName.lastIndexOf('.'));
   return validExtensions.includes(ext);
 }
+
+/**
+ * Resolve image URL from storage key or absolute URL.
+ * Returns null if imageUrl is a storage key but R2 public URL is not configured.
+ *
+ * Use this for client-side image rendering where you need to convert storage keys
+ * to full URLs. For server-side use, prefer getImageDownloadUrl() for presigned URLs.
+ *
+ * @example
+ * ```typescript
+ * const resolved = resolveImageUrl(question.imageUrl);
+ * if (resolved) {
+ *   <Image src={resolved} alt="..." />
+ * }
+ * ```
+ */
+export function resolveImageUrl(imageUrl: string | null | undefined): string | null {
+  if (!imageUrl) return null;
+  if (imageUrl.startsWith('http')) return imageUrl;
+
+  const r2BaseUrl = process.env.NEXT_PUBLIC_R2_URL;
+  if (!r2BaseUrl) return null;
+
+  return `${r2BaseUrl}/${imageUrl}`;
+}

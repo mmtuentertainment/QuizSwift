@@ -8,6 +8,7 @@ import { Essay } from './types/essay';
 import { Matching } from './types/matching';
 import { ShowYourWork, type ShowYourWorkData } from '@/components/quiz/show-your-work';
 import { MathText } from '@/components/quiz/math-display';
+import { resolveImageUrl } from '@/lib/storage/images';
 import type {
   QuestionOptions,
   MatchingAnswer,
@@ -319,15 +320,8 @@ export function QuestionRenderer({
     normalizedTypeForText !== 'fill_in_blank' &&
     normalizedTypeForText !== 'show_work';
 
-  // Build image URL - if it's a storage key, prepend the public URL
-  // Guard: if R2 URL not configured and imageUrl is a storage key, return null
-  const resolvedImageUrl = imageUrl
-    ? imageUrl.startsWith('http')
-      ? imageUrl
-      : process.env.NEXT_PUBLIC_R2_URL
-        ? `${process.env.NEXT_PUBLIC_R2_URL}/${imageUrl}`
-        : null
-    : null;
+  // Resolve image URL using shared helper (handles storage keys and full URLs)
+  const resolvedImageUrl = resolveImageUrl(imageUrl);
 
   return (
     <div className="space-y-4">

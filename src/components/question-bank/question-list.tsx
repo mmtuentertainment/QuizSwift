@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { QuestionEditor } from './question-editor';
+import { BasicQuestionEditor } from './question-editor';
 import type { CuratedQuestion, Document } from '@/generated/prisma/client';
 
 type QuestionWithDocument = CuratedQuestion & {
@@ -70,7 +70,7 @@ export function QuestionList({
                     {question.document.fileName}
                   </Link>
                   <span className="rounded bg-gray-100 px-2 py-0.5 text-xs capitalize">
-                    {question.questionType.replaceAll('_', ' ')}
+                    {question.questionType.replace(/_/g, ' ')}
                   </span>
                   <span className="rounded bg-purple-100 px-2 py-0.5 text-xs capitalize text-purple-700">
                     {question.bloomLevel}
@@ -135,7 +135,7 @@ export function QuestionList({
 
       {/* Edit modal */}
       {editingQuestion && (
-        <QuestionEditor
+        <BasicQuestionEditor
           question={editingQuestion}
           onClose={() => setEditingQuestion(null)}
         />

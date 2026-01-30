@@ -235,38 +235,22 @@ export async function updateQuestion(
     };
   }
 
-  // Build update data, only including fields that were provided
-  const updateData: {
-    questionText?: string;
-    correctAnswer?: string;
-    explanation?: string;
-    sourceEvidence?: string;
-    options?: object;
-    imageUrl?: string | null;
-    imageAltText?: string | null;
-  } = {};
+  // Build update data declaratively - only include fields that were provided
+  const updateFields = [
+    'questionText',
+    'correctAnswer',
+    'explanation',
+    'sourceEvidence',
+    'options',
+    'imageUrl',
+    'imageAltText',
+  ] as const;
 
-  if (parsed.data.questionText !== undefined) {
-    updateData.questionText = parsed.data.questionText;
-  }
-  if (parsed.data.correctAnswer !== undefined) {
-    updateData.correctAnswer = parsed.data.correctAnswer;
-  }
-  if (parsed.data.explanation !== undefined) {
-    updateData.explanation = parsed.data.explanation;
-  }
-  if (parsed.data.sourceEvidence !== undefined) {
-    updateData.sourceEvidence = parsed.data.sourceEvidence;
-  }
-  if (parsed.data.options !== undefined) {
-    updateData.options = parsed.data.options as object;
-  }
-  if (parsed.data.imageUrl !== undefined) {
-    updateData.imageUrl = parsed.data.imageUrl;
-  }
-  if (parsed.data.imageAltText !== undefined) {
-    updateData.imageAltText = parsed.data.imageAltText;
-  }
+  const updateData = Object.fromEntries(
+    updateFields
+      .filter((key) => parsed.data[key] !== undefined)
+      .map((key) => [key, parsed.data[key]])
+  );
 
   // Guard against empty updateData
   if (Object.keys(updateData).length === 0) {

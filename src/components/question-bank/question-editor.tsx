@@ -11,13 +11,16 @@ interface QuestionEditorProps {
 }
 
 /**
- * Modal editor for curated questions.
+ * Modal editor for curated questions in the question bank.
  * Allows teachers to edit question text, correct answer, and explanation.
+ *
+ * Named BasicQuestionEditor to disambiguate from the full-featured QuestionEditor
+ * in src/components/quiz/question-editor.tsx which handles all question types.
  *
  * For best UX, parent should provide key={question.id} to reset form state
  * when switching between questions.
  */
-export function QuestionEditor({ question, onClose }: QuestionEditorProps) {
+export function BasicQuestionEditor({ question, onClose }: QuestionEditorProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
