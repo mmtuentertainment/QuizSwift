@@ -71,7 +71,7 @@ Fixed N+1 queries, added Zod validation schemas, type guards for database JSON, 
 ## Files Changed
 
 | File | Changes |
-|------|---------|
+| ------ | --------- |
 | `src/actions/attempts.ts` | N+1 fix, type-safe grading with parseQuestionOptions |
 | `src/app/api/documents/[id]/curate/route.ts` | Batch updates with updateMany |
 | `src/lib/questions/schemas.ts` | NEW - Zod validation schemas |
@@ -120,7 +120,7 @@ None - plan executed exactly as written.
 ## Commits
 
 | Hash | Message |
-|------|---------|
+| ------ | --------- |
 | `89341c5` | perf(quick-012): fix N+1 query in submitAnswer() |
 | `95e4ef7` | perf(quick-012): batch question updates in curate route |
 | `84b9ba7` | feat(quick-012): add Zod schemas for question options validation |

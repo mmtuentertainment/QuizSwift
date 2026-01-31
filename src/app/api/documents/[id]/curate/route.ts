@@ -86,8 +86,21 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       );
     }
 
+    // Check for duplicate questionIds with conflicting selected values
+    const selectionMap = new Map<string, boolean>();
+    for (const selection of body.selections) {
+      const existing = selectionMap.get(selection.questionId);
+      if (existing !== undefined && existing !== selection.selected) {
+        return NextResponse.json(
+          { error: `Conflicting selection values for question ${selection.questionId}` },
+          { status: 400 }
+        );
+      }
+      selectionMap.set(selection.questionId, selection.selected);
+    }
+
     // Validate all questionIds belong to this document
-    const questionIds = body.selections.map((s) => s.questionId);
+    const questionIds = [...selectionMap.keys()];
     const validQuestions = await prisma.curatedQuestion.findMany({
       where: {
         id: { in: questionIds },
@@ -107,12 +120,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     // Batch update selections atomically (2 updates + 1 count in single transaction)
-    const toSelect = body.selections
-      .filter((s) => s.selected)
-      .map((s) => s.questionId);
-    const toDeselect = body.selections
-      .filter((s) => !s.selected)
-      .map((s) => s.questionId);
+    // Use deduped selectionMap to derive toSelect/toDeselect
+    const toSelect: string[] = [];
+    const toDeselect: string[] = [];
+    for (const [questionId, selected] of selectionMap) {
+      if (selected) {
+        toSelect.push(questionId);
+      } else {
+        toDeselect.push(questionId);
+      }
+    }
 
     const selectedCount = await prisma.$transaction(async (tx) => {
       if (toSelect.length > 0) {

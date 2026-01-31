@@ -85,7 +85,7 @@ export async function getImageUploadUrl(
   // Validate file extension matches allowed image types
   if (!isValidImageExtension(fileName)) {
     throw new Error(
-      'Invalid file extension. Allowed: .jpg, .jpeg, .png, .gif, .webp'
+      `Invalid file extension. Allowed: ${ALLOWED_IMAGE_EXTENSIONS.join(', ')}`
     );
   }
 
@@ -173,9 +173,8 @@ export function getImagePublicUrl(storageKey: string): string {
  * Check if a file extension is valid for images
  */
 export function isValidImageExtension(fileName: string): boolean {
-  const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
   const ext = fileName.toLowerCase().slice(fileName.lastIndexOf('.'));
-  return validExtensions.includes(ext);
+  return ALLOWED_IMAGE_EXTENSIONS.includes(ext as (typeof ALLOWED_IMAGE_EXTENSIONS)[number]);
 }
 
 /**

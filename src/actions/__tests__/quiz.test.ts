@@ -13,6 +13,14 @@ import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
 import { cuidSchema, validateCuid } from '../../lib/action-utils';
 
+// Duplicate ShowResultsOption enum definition to match production enum
+// Cannot import from @/generated/prisma/client due to server-only dependencies
+enum ShowResultsOption {
+  immediately = 'immediately',
+  after_due_date = 'after_due_date',
+  never = 'never',
+}
+
 // Note: We simulate UpdateQuizSettingsSchema here instead of importing from quiz.ts
 // because quiz.ts has server-only dependencies (@/lib/auth, @/lib/prisma, next/cache,
 // next/navigation) that cannot be easily mocked in Vitest without mocking the entire
@@ -77,6 +85,7 @@ describe('server action input validation patterns', () => {
       description: z.string().max(500).nullable().optional(),
       timeLimit: z.number().int().min(1).max(300).nullable().optional(),
       shuffleQuestions: z.boolean().optional(),
+      showResults: z.nativeEnum(ShowResultsOption).optional(),
     });
 
     // Valid input

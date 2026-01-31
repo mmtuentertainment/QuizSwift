@@ -40,11 +40,19 @@ const prisma = {
     findFirst: vi.fn(),
     findMany: vi.fn(),
   },
-  $transaction: vi.fn((callback) => callback({
-    quiz: { findUnique: vi.fn(), update: vi.fn() },
-    curatedQuestion: { updateMany: vi.fn(), count: vi.fn() },
-    quizAttempt: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
-  })),
+  // Support both callback and array forms of $transaction
+  $transaction: vi.fn(async (arg) => {
+    if (Array.isArray(arg)) {
+      // Array form: $transaction([promise1, promise2, ...])
+      return Promise.all(arg);
+    }
+    // Callback form: $transaction(async (tx) => {...})
+    return arg({
+      quiz: { findUnique: vi.fn(), update: vi.fn() },
+      curatedQuestion: { updateMany: vi.fn(), count: vi.fn() },
+      quizAttempt: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
+    });
+  }),
 }
 
 export default prisma

@@ -299,6 +299,10 @@ export async function publishQuiz(
     return { success: false, error: 'Quiz is already published' };
   }
 
+  if (quiz.status === QuizStatus.archived) {
+    return { success: false, error: 'Archived quizzes cannot be published' };
+  }
+
   // CONT-06: Enforce preview requirement
   if (!quiz.teacherPreviewedAt) {
     return {
