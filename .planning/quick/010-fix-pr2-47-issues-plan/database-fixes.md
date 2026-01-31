@@ -279,19 +279,12 @@ export async function startAttempt(quizId: string) {
       userId: session.user.id,
     },
     orderBy: { attemptNumber: 'desc' },
-    select: { attemptNumber: true, status: true },
+    select: { attemptNumber: true, status: true, id: true },
   });
 
-  // If there's an in-progress attempt, return it
+  // If there's an in-progress attempt, return it (reuse same record to avoid race condition)
   if (latestAttempt?.status === AttemptStatus.in_progress) {
-    const existingAttempt = await prisma.quizAttempt.findFirst({
-      where: {
-        quizId,
-        userId: session.user.id,
-        status: AttemptStatus.in_progress,
-      },
-    });
-    return { attemptId: existingAttempt!.id };
+    return { attemptId: latestAttempt.id };
   }
 
   // Otherwise, create new attempt with next number

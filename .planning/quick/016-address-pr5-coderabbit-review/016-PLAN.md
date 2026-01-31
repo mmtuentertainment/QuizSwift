@@ -8,9 +8,9 @@
 
 PR #5 (Phase 3.1 - Prisma Enums) has CodeRabbit review comments. After filtering:
 - **Addressed:** 10 issues already fixed in commits
-- **Open:** 8 issues remaining (all minor - markdown formatting in .planning/ files)
+- **Open:** 7 issues remaining (all minor - markdown formatting in .planning/ files)
 
-## Open Issues (8 Minor)
+## Open Issues (7 Minor)
 
 All remaining issues are **documentation-only markdown formatting** in `.planning/` files:
 
@@ -18,12 +18,13 @@ All remaining issues are **documentation-only markdown formatting** in `.plannin
 | --- | --- |
 | 03.2-RESEARCH.md | Table formatting (MD058/MD060) - blank lines, pipe spacing |
 | 03.2-VERIFICATION.md | Table pipe spacing/alignment (MD060) |
-| 006-PLAN.md | Replace emphasized lines with headings (MD036) |
 | 006-SUMMARY.md | Table spacing/alignment |
 | 009-SUMMARY.md | Tables/headings/code fences |
 | 010-database-fixes.md | Race condition note (documentation only) |
 | 010-error-handling-fixes.md | Table spacing (MD060) |
 | 010-simplification-fixes.md | Table alignment + code block languages |
+
+**Note:** Original plan listed 8 files including `006-PLAN.md`, but that file doesn't exist (only `006-SUMMARY.md` exists). Quick task 006 was executed directly without a separate plan file. Adjusted to 7 files.
 
 ## Decision Required
 
@@ -42,12 +43,13 @@ These are all **minor markdown linting issues** in planning documentation. Optio
 **Files:**
 - .planning/phases/03.2-centralize-question-type/03.2-RESEARCH.md
 - .planning/phases/03.2-centralize-question-type/03.2-VERIFICATION.md
-- .planning/quick/006-fix-pr-review-action-items/006-PLAN.md
 - .planning/quick/006-fix-pr-review-action-items/006-SUMMARY.md
 - .planning/quick/009-review-pr-2-comprehensive/009-SUMMARY.md
 - .planning/quick/010-fix-pr2-47-issues-plan/database-fixes.md
 - .planning/quick/010-fix-pr2-47-issues-plan/error-handling-fixes.md
 - .planning/quick/010-fix-pr2-47-issues-plan/simplification-fixes.md
+
+*Note: 006-PLAN.md does not exist - quick task 006 was executed directly.*
 
 **Action:**
 1. Add blank lines before/after all tables (MD058)
@@ -67,8 +69,8 @@ git diff --stat  # Only .planning/ files modified
 
 ## Summary
 
-**Already addressed:** 10/18 issues (major issues fixed)
-**Remaining:** 8/18 issues (all minor markdown linting in .planning/ docs)
+**Already addressed:** 10/17 issues (major issues fixed)
+**Remaining:** 7/17 issues (all minor markdown linting in .planning/ docs)
 **Recommendation:** Dismiss or defer - these are internal docs
 
 ## Verification
