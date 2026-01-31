@@ -147,8 +147,8 @@ Overall: 74%                  [======================================  ]
 | 012 | Waves 3-5 fixes (performance + type safety + a11y) | 2026-01-30 | 9fdc3b5 | [012-continue-pr2-fixes](./quick/012-continue-pr2-fixes/) |
 | 013 | Waves 6-7 fixes (error handling + React patterns) | 2026-01-30 | eb91103 | [013-pr2-waves-6-7-fixes](./quick/013-pr2-waves-6-7-fixes/) |
 | 014 | Waves 8-11 fixes (code quality + API + docs + tests) | 2026-01-30 | 68d7852 | [014-pr2-waves-8-11-fixes](./quick/014-pr2-waves-8-11-fixes/) |
-| 015 | - | - | - | - |
-| 016 | Address PR #5 CodeRabbit review (markdown formatting) | 2026-01-31 | 8f4e423 | [016-address-pr5-coderabbit-review](./quick/016-address-pr5-coderabbit-review/) |
+| 015 | Fix remaining PR #5 nitpicks | 2026-01-31 | 9641b87 | [015-fix-remaining-pr5-nitpicks](./quick/015-fix-remaining-pr5-nitpicks/) |
+| 016 | Address PR #5 CodeRabbit review (markdown formatting) | 2026-01-31 | 4c444c1 | [016-address-pr5-coderabbit-review](./quick/016-address-pr5-coderabbit-review/) |
 
 ### Pending TODOs
 
