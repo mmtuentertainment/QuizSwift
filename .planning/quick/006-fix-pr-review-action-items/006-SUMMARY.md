@@ -64,13 +64,13 @@ All three PRs verified:
 
 ## Files Modified
 
-| File | PR | Change |
-| ---- | -- | ------ |
-| src/lib/questions/grading.ts | #2 | Clarified matching grading comment |
-| src/components/questions/types/matching.tsx | #2 | Consolidated useEffects |
-| prisma/migrations/20260127_convert_status_to_enums/migration.sql | #5 | Added preflight validation |
-| src/components/quiz/quiz-taker.tsx | #5 | Removed unused import |
-| src/actions/attempts.ts | #4 | Removed unused QuestionType import |
+| File                                                               | PR | Change                             |
+| ------------------------------------------------------------------ | -- | ---------------------------------- |
+| src/lib/questions/grading.ts                                       | #2 | Clarified matching grading comment |
+| src/components/questions/types/matching.tsx                        | #2 | Consolidated useEffects            |
+| prisma/migrations/20260127_convert_status_to_enums/migration.sql   | #5 | Added preflight validation         |
+| src/components/quiz/quiz-taker.tsx                                 | #5 | Removed unused import              |
+| src/actions/attempts.ts                                            | #4 | Removed unused QuestionType import |
 
 ## Execution Notes
 

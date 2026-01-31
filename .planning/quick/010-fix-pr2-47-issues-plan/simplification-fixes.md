@@ -478,14 +478,14 @@ const renderOptionsEditor = () => {
 
 ## Files to Create/Modify
 
-| File | Action | Lines Changed (est.) |
-| ---- | ------ | -------------------- |
-| `src/lib/action-results.ts` | CREATE | ~30 lines |
-| `src/lib/auth.ts` | MODIFY | +15 lines |
-| `src/actions/questions.ts` | MODIFY | -25 lines |
-| `src/actions/quiz.ts` | MODIFY | -30 lines |
-| `src/actions/attempts.ts` | MODIFY | -20 lines |
-| `src/components/questions/question-renderer.tsx` | MODIFY | -5 lines |
-| `src/components/questions/question-editor.tsx` | MODIFY | -20 lines |
+| File                                              | Action | Lines Changed (est.) |
+| ------------------------------------------------- | ------ | -------------------- |
+| `src/lib/action-results.ts`                       | CREATE | ~30 lines            |
+| `src/lib/auth.ts`                                 | MODIFY | +15 lines            |
+| `src/actions/questions.ts`                        | MODIFY | -25 lines            |
+| `src/actions/quiz.ts`                             | MODIFY | -30 lines            |
+| `src/actions/attempts.ts`                         | MODIFY | -20 lines            |
+| `src/components/questions/question-renderer.tsx`  | MODIFY | -5 lines             |
+| `src/components/questions/question-editor.tsx`    | MODIFY | -20 lines            |
 
 **Net change:** ~70 lines removed, ~45 lines added = ~25 lines reduction with improved clarity

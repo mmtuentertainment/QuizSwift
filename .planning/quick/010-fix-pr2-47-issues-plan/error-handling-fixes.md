@@ -477,14 +477,14 @@ if (!result.success) {
 
 ## Summary of Changes
 
-| File | Line(s) | Change |
-| ---- | ------- | ------ |
-| `src/actions/quiz.ts` | 150-152, 172-175 | Add 'database_error' type, log errors properly |
-| `src/app/api/upload/image/route.ts` | N/A | Already fixed - no changes needed |
-| `src/app/(dashboard)/question-bank/page.tsx` | 46-52, 53+ | Add error tracking and display error banners |
-| `src/components/quiz/quiz-taker.tsx` | 149, 238-242, 425-432, 483+ | Track failed saves persistently, show visual indicators |
-| `src/lib/prisma-errors.ts` | 14-24 | Add context param, more error codes, better logging |
-| `src/actions/questions.ts` | 190, 196-200 | Return fieldErrors in Next.js best practice format |
+| File                                           | Line(s)                       | Change                                                  |
+| ---------------------------------------------- | ----------------------------- | ------------------------------------------------------- |
+| `src/actions/quiz.ts`                          | 150-152, 172-175              | Add 'database_error' type, log errors properly          |
+| `src/app/api/upload/image/route.ts`            | N/A                           | Already fixed - no changes needed                       |
+| `src/app/(dashboard)/question-bank/page.tsx`   | 46-52, 53+                    | Add error tracking and display error banners            |
+| `src/components/quiz/quiz-taker.tsx`           | 149, 238-242, 425-432, 483+   | Track failed saves persistently, show visual indicators |
+| `src/lib/prisma-errors.ts`                     | 14-24                         | Add context param, more error codes, better logging     |
+| `src/actions/questions.ts`                     | 190, 196-200                  | Return fieldErrors in Next.js best practice format      |
 
 ## Testing Checklist
 

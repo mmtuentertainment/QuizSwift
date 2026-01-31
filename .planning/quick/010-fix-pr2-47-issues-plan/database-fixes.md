@@ -23,6 +23,7 @@ From `src/actions/quiz.ts`, `publishedAt` is:
 - Could be used for sorting published quizzes by publish date
 
 Likely future queries:
+
 ```sql
 -- List published quizzes for students (by publish date)
 SELECT * FROM "Quiz" WHERE status = 'published' ORDER BY "publishedAt" DESC;
@@ -32,6 +33,7 @@ SELECT * FROM "Quiz" WHERE "publishedAt" > $1;
 ```
 
 ### Current Schema (lines 231-261)
+
 ```prisma
 model Quiz {
   id                  String        @id @default(cuid())
@@ -60,6 +62,7 @@ model Quiz {
 ```
 
 ### Fix: Add Index
+
 ```prisma
 model Quiz {
   // ... existing fields ...
@@ -72,6 +75,7 @@ model Quiz {
 ```
 
 ### Migration SQL
+
 ```sql
 -- CreateIndex
 CREATE INDEX "Quiz_publishedAt_idx" ON "Quiz"("publishedAt");
@@ -97,6 +101,7 @@ Current constraint `@@unique([quizId, userId])` limits users to ONE attempt per 
 - Teacher re-preview after quiz edits
 
 ### Current Schema (lines 279-303)
+
 ```prisma
 model QuizAttempt {
   id          String           @id @default(cuid())
@@ -121,6 +126,7 @@ model QuizAttempt {
 ```
 
 ### Current Code Usage (src/actions/attempts.ts)
+
 ```typescript
 // Line 52-65: startAttempt uses upsert with the unique constraint
 const attempt = await prisma.quizAttempt.upsert({
@@ -149,6 +155,7 @@ const attempt = await prisma.quizAttempt.findUnique({
 ### Fix Options
 
 #### Option A: Add attemptNumber for Sequential Retakes (RECOMMENDED)
+
 ```prisma
 model QuizAttempt {
   id            String           @id @default(cuid())
@@ -176,6 +183,7 @@ model QuizAttempt {
 - More complex upsert logic
 
 #### Option B: Remove Unique Constraint Entirely
+
 ```prisma
 model QuizAttempt {
   // ... fields unchanged ...
@@ -197,6 +205,7 @@ model QuizAttempt {
 - Code must manually enforce "one active attempt" rule
 
 #### Option C: Composite Unique with Status (NOT RECOMMENDED)
+
 ```prisma
 @@unique([quizId, userId, status])
 ```
@@ -208,6 +217,7 @@ model QuizAttempt {
 ### Recommended: Option A (attemptNumber)
 
 ### Updated Schema
+
 ```prisma
 model QuizAttempt {
   id            String           @id @default(cuid())
@@ -236,6 +246,7 @@ model QuizAttempt {
 ```
 
 ### Migration SQL
+
 ```sql
 -- Step 1: Add attemptNumber column with default
 ALTER TABLE "QuizAttempt" ADD COLUMN "attemptNumber" INTEGER NOT NULL DEFAULT 1;
@@ -256,6 +267,7 @@ CREATE INDEX "QuizAttempt_quizId_userId_idx" ON "QuizAttempt"("quizId", "userId"
 #### src/actions/attempts.ts
 
 **startAttempt (lines 25-71):**
+
 ```typescript
 export async function startAttempt(quizId: string) {
   // ... auth checks unchanged ...
@@ -303,6 +315,7 @@ export async function startAttempt(quizId: string) {
 ```
 
 **getAttemptWithAnswers (lines 265-308):**
+
 ```typescript
 export async function getAttemptWithAnswers(quizId: string, attemptNumber?: number) {
   // ... auth checks unchanged ...
@@ -378,10 +391,10 @@ export async function getAttemptWithAnswers(quizId: string, attemptNumber?: numb
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `prisma/schema.prisma` | Add index, add attemptNumber, change constraint |
-| `src/actions/attempts.ts` | Update startAttempt, getAttemptWithAnswers |
+| File                      | Change                                           |
+| ------------------------- | ------------------------------------------------ |
+| `prisma/schema.prisma`    | Add index, add attemptNumber, change constraint  |
+| `src/actions/attempts.ts` | Update startAttempt, getAttemptWithAnswers       |
 
 ---
 
