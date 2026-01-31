@@ -106,7 +106,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       );
     }
 
-    // Batch update selections (2 queries instead of N)
+    // Batch update selections atomically (2 updates + 1 count in single transaction)
     const toSelect = body.selections
       .filter((s) => s.selected)
       .map((s) => s.questionId);
@@ -114,29 +114,31 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       .filter((s) => !s.selected)
       .map((s) => s.questionId);
 
-    if (toSelect.length > 0) {
-      await prisma.curatedQuestion.updateMany({
-        where: {
-          id: { in: toSelect },
-          documentId: id,
-        },
-        data: { teacherSelected: true },
-      });
-    }
+    const selectedCount = await prisma.$transaction(async (tx) => {
+      if (toSelect.length > 0) {
+        await tx.curatedQuestion.updateMany({
+          where: {
+            id: { in: toSelect },
+            documentId: id,
+          },
+          data: { teacherSelected: true },
+        });
+      }
 
-    if (toDeselect.length > 0) {
-      await prisma.curatedQuestion.updateMany({
-        where: {
-          id: { in: toDeselect },
-          documentId: id,
-        },
-        data: { teacherSelected: false },
-      });
-    }
+      if (toDeselect.length > 0) {
+        await tx.curatedQuestion.updateMany({
+          where: {
+            id: { in: toDeselect },
+            documentId: id,
+          },
+          data: { teacherSelected: false },
+        });
+      }
 
-    // Return updated counts
-    const selectedCount = await prisma.curatedQuestion.count({
-      where: { documentId: id, teacherSelected: true },
+      // Return count within transaction for consistency
+      return tx.curatedQuestion.count({
+        where: { documentId: id, teacherSelected: true },
+      });
     });
 
     return NextResponse.json({

@@ -11,6 +11,7 @@ import {
   getImageUploadUrl,
   isValidImageExtension,
   ALLOWED_IMAGE_TYPES,
+  ALLOWED_IMAGE_EXTENSIONS,
   MAX_IMAGE_SIZE,
 } from '@/lib/storage/images';
 
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
     // Validate file extension
     if (!isValidImageExtension(fileName)) {
       return NextResponse.json(
-        { error: 'Invalid file extension. Allowed: .jpg, .jpeg, .png, .gif, .webp' },
+        { error: `Invalid file extension. Allowed: ${ALLOWED_IMAGE_EXTENSIONS.join(', ')}` },
         { status: 400 }
       );
     }

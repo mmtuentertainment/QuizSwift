@@ -4,15 +4,17 @@
  * Client components receive serialized enum values (strings), but these
  * type definitions ensure consistency with the Prisma schema.
  */
-export { QuizStatus, ShowResultsOption, AttemptStatus } from '@/generated/prisma/client';
+import { QuizStatus, ShowResultsOption, AttemptStatus } from '@/generated/prisma/client';
+
+export { QuizStatus, ShowResultsOption, AttemptStatus };
 
 /**
- * String literal types matching the Prisma enum values
+ * String literal types derived from Prisma enums (keeps in sync with schema)
  * Use these for client component interfaces that receive serialized data
  */
-export type QuizStatusValue = 'draft' | 'preview_required' | 'published' | 'archived';
-export type ShowResultsOptionValue = 'after_submit' | 'after_due' | 'manual';
-export type AttemptStatusValue = 'in_progress' | 'submitted' | 'graded';
+export type QuizStatusValue = (typeof QuizStatus)[keyof typeof QuizStatus];
+export type ShowResultsOptionValue = (typeof ShowResultsOption)[keyof typeof ShowResultsOption];
+export type AttemptStatusValue = (typeof AttemptStatus)[keyof typeof AttemptStatus];
 
 /**
  * Labels for displaying status values in UI

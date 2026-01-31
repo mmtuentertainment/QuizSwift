@@ -30,7 +30,7 @@ export const FillInBlankOptionsSchema = z.object({
   blanks: z.array(z.object({
     index: z.number(),
     acceptedAnswers: z.array(z.string()),
-    caseSensitive: z.boolean(),
+    caseSensitive: z.boolean().default(false),
   })),
 });
 
@@ -108,7 +108,13 @@ export const MatchingAnswerSchema = z.object({
 });
 
 export const EssayAnswerSchema = z.object({
-  type: z.union([z.literal('essay'), z.literal('short_answer')]),
+  type: z.literal('essay'),
+  text: z.string(),
+  wordCount: z.number(),
+});
+
+export const ShortAnswerSchema = z.object({
+  type: z.literal('short_answer'),
   text: z.string(),
   wordCount: z.number(),
 });
@@ -125,6 +131,7 @@ export const AnswerDataSchema = z.discriminatedUnion('type', [
   FillBlankAnswerSchema,
   MatchingAnswerSchema,
   EssayAnswerSchema,
+  ShortAnswerSchema,
   ShowWorkAnswerSchema,
 ]);
 

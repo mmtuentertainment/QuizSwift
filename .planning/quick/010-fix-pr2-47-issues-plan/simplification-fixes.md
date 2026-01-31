@@ -479,7 +479,7 @@ const renderOptionsEditor = () => {
 ## Files to Create/Modify
 
 | File | Action | Lines Changed (est.) |
-|------|--------|---------------------|
+| ---- | ------ | -------------------- |
 | `src/lib/action-results.ts` | CREATE | ~30 lines |
 | `src/lib/auth.ts` | MODIFY | +15 lines |
 | `src/actions/questions.ts` | MODIFY | -25 lines |

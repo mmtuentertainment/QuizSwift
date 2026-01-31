@@ -80,6 +80,6 @@ This will create the 3 new indexes in the database.
 - Wave 3: N+1 query fixes (2 tasks)
 - Wave 4: Type safety (3 tasks)
 - Wave 5: Accessibility (3 tasks)
-- Wave 6-11: Medium priority items
+- Wave 6-11: Medium-priority items
 
 Full plan: `.planning/quick/010-fix-pr2-47-issues-plan/PLAN.md`

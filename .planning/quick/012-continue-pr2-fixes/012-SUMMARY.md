@@ -85,7 +85,7 @@ Fixed N+1 queries, added Zod validation schemas, type guards for database JSON, 
 
 ## Verification
 
-```
+```bash
 npm run typecheck  -- PASS
 npm run lint       -- PASS
 npm run build      -- PASS

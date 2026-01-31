@@ -134,12 +134,17 @@ export function ImageUpload({
         setUploadProgress(100);
         onUpload(storageKey);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Upload failed');
-        // Revert preview on error
-        setPreview(currentImageUrl || null);
+        // Only update state if still mounted
+        if (isMountedRef.current) {
+          setError(err instanceof Error ? err.message : 'Upload failed');
+          // Revert preview on error
+          setPreview(currentImageUrl || null);
+        }
       } finally {
-        setUploading(false);
-        setUploadProgress(0);
+        if (isMountedRef.current) {
+          setUploading(false);
+          setUploadProgress(0);
+        }
       }
     },
     [currentImageUrl, onUpload]

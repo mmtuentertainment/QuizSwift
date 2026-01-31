@@ -17,6 +17,7 @@ export const ALLOWED_IMAGE_TYPES = [
   'image/gif',
   'image/webp',
 ] as const;
+export const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp'] as const;
 const UPLOAD_URL_EXPIRY = 60 * 5; // 5 minutes
 const DOWNLOAD_URL_EXPIRY = 60 * 60 * 24; // 24 hours
 
@@ -199,5 +200,7 @@ export function resolveImageUrl(imageUrl: string | null | undefined): string | n
   const r2BaseUrl = process.env.NEXT_PUBLIC_R2_URL;
   if (!r2BaseUrl) return null;
 
-  return `${r2BaseUrl}/${imageUrl}`;
+  // Normalize trailing slash to prevent double slashes
+  const normalizedBase = r2BaseUrl.replace(/\/$/, '');
+  return `${normalizedBase}/${imageUrl}`;
 }

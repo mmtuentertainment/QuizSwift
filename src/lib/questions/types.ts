@@ -388,7 +388,7 @@ export function isShowWorkAnswer(answer: AnswerData): answer is ShowWorkAnswer {
 /**
  * Minimal validation for tldraw canvas state.
  * TLEditorSnapshot requires: { document, session } at minimum.
- * We only validate structure exists - tldraw will handle malformed data gracefully.
+ * We validate both properties exist - tldraw will handle malformed data gracefully.
  */
 export function isValidCanvasState(value: unknown): value is Record<string, unknown> {
   if (value === null || value === undefined) {
@@ -399,8 +399,17 @@ export function isValidCanvasState(value: unknown): value is Record<string, unkn
   }
   const obj = value as Record<string, unknown>;
   // TLEditorSnapshot has 'document' and 'session' properties
-  // We check for 'document' as the minimum required field
-  return 'document' in obj && typeof obj.document === 'object' && obj.document !== null;
+  // Validate both exist for complete snapshot structure
+  const hasDocument = 'document' in obj && typeof obj.document === 'object' && obj.document !== null;
+  const hasSession = 'session' in obj && typeof obj.session === 'object' && obj.session !== null;
+
+  if (!hasDocument || !hasSession) {
+    return false;
+  }
+
+  // Validate session has version property (TLSessionStateSnapshot.version)
+  const session = obj.session as Record<string, unknown>;
+  return 'version' in session && (typeof session.version === 'number' || typeof session.version === 'string');
 }
 
 // =============================================================================
@@ -425,15 +434,15 @@ export function isValidCanvasState(value: unknown): value is Record<string, unkn
  * @see normalizeQuestionType - converts legacy aliases to canonical forms
  */
 export const QUESTION_TYPES = [
-  'multiple_choice',
-  'true_false',
-  'true_false_justify',
-  'fill_in_blank',
-  'fill_blank',
   'essay',
+  'fill_blank',
+  'fill_in_blank',
+  'matching',
+  'multiple_choice',
   'short_answer',
   'show_work',
-  'matching',
+  'true_false',
+  'true_false_justify',
 ] as const;
 
 /**

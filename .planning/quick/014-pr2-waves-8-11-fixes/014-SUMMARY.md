@@ -11,7 +11,7 @@ Final PR #2 fixes: code quality (Wave 8), API design (Wave 9), docs (Wave 10), t
 ## Commits
 
 | Wave | Commit | Description |
-|------|--------|-------------|
+| ---- | ------ | ----------- |
 | 8 | 7c17e4d | Code quality: BasicQuestionEditor rename, resolveImageUrl helper |
 | 9 | e4a1d09 | API design: CUID validation, answerDataSchema |
 | 10 | 05de9af | Documentation: type guards, dual type system |
