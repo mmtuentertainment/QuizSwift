@@ -14,7 +14,7 @@
 **Phase:** 3.1 of 8 - Convert Prisma Status Enums
 **Plan:** 5 of 5 complete
 **Status:** COMPLETE (verified 11/11 must-haves)
-**Last activity:** 2026-01-31 - Completed quick-016: Fix markdown formatting in .planning/ files (7 files, CodeRabbit review)
+**Last activity:** 2026-01-31 - Completed quick-017: Fix PR #5 CodeRabbit nitpicks (file count, query optimization)
 
 **Progress:**
 Phase 1: 100% (5/5 plans)     [========================================]
@@ -149,6 +149,7 @@ Overall: 74%                  [======================================  ]
 | 014 | Waves 8-11 fixes (code quality + API + docs + tests) | 2026-01-30 | 68d7852 | [014-pr2-waves-8-11-fixes](./quick/014-pr2-waves-8-11-fixes/) |
 | 015 | Fix remaining PR #5 nitpicks | 2026-01-31 | 9641b87 | [015-fix-remaining-pr5-nitpicks](./quick/015-fix-remaining-pr5-nitpicks/) |
 | 016 | Address PR #5 CodeRabbit review (markdown formatting) | 2026-01-31 | 4c444c1 | [016-address-pr5-coderabbit-review](./quick/016-address-pr5-coderabbit-review/) |
+| 017 | Fix PR #5 CodeRabbit nitpicks (file count, query optimization) | 2026-01-31 | 35dcc57 | [017-fix-pr5-coderabbit-nitpicks](./quick/017-fix-pr5-coderabbit-nitpicks/) |
 
 ### Pending TODOs
 
@@ -176,20 +177,19 @@ Overall: 74%                  [======================================  ]
 
 ### What Just Happened
 
-Quick-016 completed - Address PR #5 CodeRabbit Review:
+Quick-017 completed - Fix PR #5 CodeRabbit nitpicks:
 
 **Task Executed:**
-- Fixed markdown formatting issues in 7 .planning/ files flagged by CodeRabbit
-- Issues addressed: MD058 (blank lines around tables), MD060 (table pipe spacing)
-- All changes are documentation-only, no source code modified
+- Fixed file count mismatch in 016-PLAN.md (7 files, not 8 - 006-PLAN.md doesn't exist)
+- Optimized double query example in database-fixes.md (add id to select, remove redundant query)
+- Fixed table alignment (MD060) in 016-SUMMARY.md
 
 **Commit:**
-- 8f4e423: docs(quick-016): fix markdown formatting in .planning/ files
+- 35dcc57: docs(quick-017): fix PR #5 CodeRabbit nitpicks
 
 **Files Modified:**
-- 03.2-RESEARCH.md, 03.2-VERIFICATION.md
-- 006-SUMMARY.md, 009-SUMMARY.md
-- database-fixes.md, error-handling-fixes.md, simplification-fixes.md
+- 016-PLAN.md, 016-SUMMARY.md, database-fixes.md
+- Created 017-PLAN.md and 017-SUMMARY.md
 
 ### What Happens Next
 
@@ -201,4 +201,4 @@ PR #5 CodeRabbit review addressed. Options:
 ---
 
 *State captured: 2026-01-31*
-*Next command: Merge PR #5 OR /gsd:execute-phase 03 plan 09 OR /gsd:plan-phase 4*
+*Next command: Merge PR #5 (all nitpicks addressed) OR /gsd:execute-phase 03 plan 09 OR /gsd:plan-phase 4*

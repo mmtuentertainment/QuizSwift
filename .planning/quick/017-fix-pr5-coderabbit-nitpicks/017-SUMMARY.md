@@ -5,7 +5,7 @@ title: Fix PR #5 CodeRabbit Nitpicks
 completed: 2026-01-31
 duration: ~10 min
 commits:
-  - hash: (pending)
+  - hash: 35dcc57
     message: "docs(quick-017): fix PR #5 CodeRabbit nitpicks"
     branch: feat/phase-3.1-prisma-enums-clean
 ---
@@ -59,4 +59,4 @@ None - plan executed as written.
 
 | Hash | Message |
 | --- | --- |
-| (pending) | docs(quick-017): fix PR #5 CodeRabbit nitpicks |
+| 35dcc57 | docs(quick-017): fix PR #5 CodeRabbit nitpicks |
