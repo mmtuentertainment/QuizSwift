@@ -13,10 +13,10 @@ import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
 import { cuidSchema, validateCuid } from '../../lib/action-utils';
 
-// Note: Cannot import actual schemas from quiz.ts here because they have
-// server-only dependencies (@/lib/auth, prisma). Instead, we simulate the
-// schema structure to test validation patterns. If the schema changes in
-// quiz.ts, these tests should be updated to match.
+// Note: We simulate UpdateQuizSettingsSchema here instead of importing from quiz.ts
+// because quiz.ts has server-only dependencies (@/lib/auth, @/lib/prisma, next/cache,
+// next/navigation) that cannot be easily mocked in Vitest without mocking the entire
+// dependency chain. The simulated schema matches the actual implementation.
 
 describe('cuidSchema', () => {
   it('validates correct CUID format', () => {
@@ -67,10 +67,11 @@ describe('validateCuid', () => {
 
 describe('server action input validation patterns', () => {
   // These tests verify the validation patterns used in server actions
+  // Schemas are simulated here to avoid importing server-only dependencies
 
   it('validates quiz settings update input', () => {
     // Simulates UpdateQuizSettingsSchema from quiz.ts
-    // (Cannot import directly due to server-only dependencies)
+    // Server action file has server-only deps that require complex mocking
     const UpdateQuizSettingsSchema = z.object({
       title: z.string().min(1).max(200).optional(),
       description: z.string().max(500).nullable().optional(),

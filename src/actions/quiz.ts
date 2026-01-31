@@ -195,7 +195,7 @@ export async function getQuizWithQuestions(quizId: string): Promise<GetQuizWithQ
 // Quiz Settings Update
 // =============================================================================
 
-const UpdateQuizSettingsSchema = z.object({
+export const UpdateQuizSettingsSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(500).nullable().optional(),
   timeLimit: z.number().int().min(1).max(300).nullable().optional(),
