@@ -106,11 +106,19 @@ Extract all quiz-worthy questions and facts from this text. Respond with a JSON 
 /**
  * Extract questions from multiple chunks (batched)
  */
+export interface ChunkExtractionResult {
+  chunkIndex: number;
+  pageNumber: number;
+  result: ExtractionResult;
+  extractionFailed?: boolean;
+  errorMessage?: string;
+}
+
 export async function extractQuestionsFromChunks(
   chunks: Array<{ content: string; pageNumber: number; chunkIndex: number }>,
   onProgress?: (current: number, total: number) => void
-): Promise<Array<{ chunkIndex: number; pageNumber: number; result: ExtractionResult }>> {
-  const results: Array<{ chunkIndex: number; pageNumber: number; result: ExtractionResult }> = [];
+): Promise<ChunkExtractionResult[]> {
+  const results: ChunkExtractionResult[] = [];
 
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
@@ -127,12 +135,15 @@ export async function extractQuestionsFromChunks(
         pageNumber: chunk.pageNumber,
         result,
       });
-    } catch {
-      // Continue with other chunks on error
+    } catch (error) {
+      // Continue with other chunks on error, but track the failure
+      console.error(`Question extraction failed for page ${chunk.pageNumber}:`, error);
       results.push({
         chunkIndex: chunk.chunkIndex,
         pageNumber: chunk.pageNumber,
         result: { questions: [], noQuestionsFound: true },
+        extractionFailed: true,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }

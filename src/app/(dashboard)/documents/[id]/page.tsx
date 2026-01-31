@@ -11,7 +11,7 @@ interface PageProps {
 export default async function DocumentDetailPage({ params }: PageProps) {
   const session = await auth();
   if (!session?.user?.id) {
-    redirect('/api/auth/signin');
+    redirect('/login');
   }
 
   const { id } = await params;

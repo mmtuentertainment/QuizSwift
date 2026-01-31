@@ -10,18 +10,20 @@ datasource db {
 }
 
 model User {
-  id            String     @id @default(cuid())
+  id            String        @id @default(cuid())
   name          String?
-  email         String?    @unique
+  email         String?       @unique
   emailVerified DateTime?
   image         String?
-  role          String     @default("teacher")
+  role          String        @default("teacher")
   deletedAt     DateTime?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   accounts      Account[]
   documents     Document[]
   sessions      Session[]
+  quizzes       Quiz[]
+  quizAttempts  QuizAttempt[]
 }
 
 model Account {
@@ -93,6 +95,7 @@ model Document {
   questions    ExtractedQuestion[]
   chunks       SourceChunk[]
   curatedQuestions CuratedQuestion[]
+  quizzes      Quiz[]
 
   // Question curation settings
   requestedQuestionCount Int?                           // Teacher's desired count (e.g., 20)
@@ -159,6 +162,10 @@ model CuratedQuestion {
   bloomLevel             String   // understand, apply, analyze, evaluate
   difficulty             String   // easy, medium, hard
 
+  // Image support (QUES-07)
+  imageUrl               String?  // R2 storage key for question image
+  imageAltText           String?  // Accessibility alt text
+
   // Answer structure
   options                Json?    // For multiple choice
   correctAnswer          String
@@ -185,9 +192,116 @@ model CuratedQuestion {
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
   document               Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  quizQuestions          QuizQuestion[]
+  questionAnswers        QuestionAnswer[]
 
   @@index([documentId])
   @@index([inCurationPool])
   @@index([teacherSelected])
   @@index([bloomLevel])
+}
+
+// =============================================================================
+// Quiz Workflow Models
+// =============================================================================
+
+model Quiz {
+  id                  String        @id @default(cuid())
+  documentId          String
+  title               String
+  description         String?
+
+  // Workflow status
+  status              String        @default("draft") // draft, preview_required, published, archived
+  teacherPreviewedAt  DateTime?     // CONT-06: must be set before publish
+  publishedAt         DateTime?
+
+  // Quiz settings
+  timeLimit           Int?          // Minutes, null = unlimited
+  shuffleQuestions    Boolean       @default(false)
+  showResults         String        @default("after_submit") // after_submit, after_due, manual
+
+  // Audit fields
+  createdById         String
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  // Relations
+  document            Document      @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  createdBy           User          @relation(fields: [createdById], references: [id])
+  questions           QuizQuestion[]
+  attempts            QuizAttempt[]
+
+  @@index([documentId])
+  @@index([createdById])
+  @@index([status])
+}
+
+model QuizQuestion {
+  id         String          @id @default(cuid())
+  quizId     String
+  questionId String
+  position   Int             // Order in quiz
+  points     Float           @default(1.0)
+
+  // Relations
+  quiz       Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  question   CuratedQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([quizId, position])
+  @@index([quizId])
+  @@index([questionId])
+}
+
+model QuizAttempt {
+  id          String           @id @default(cuid())
+  quizId      String
+  userId      String
+
+  // Attempt status
+  status      String           @default("in_progress") // in_progress, submitted, graded
+  startedAt   DateTime         @default(now())
+  submittedAt DateTime?
+  gradedAt    DateTime?
+
+  // Scoring
+  score       Float?
+  maxScore    Float?
+
+  // Relations
+  quiz        Quiz             @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user        User             @relation(fields: [userId], references: [id])
+  answers     QuestionAnswer[]
+
+  @@unique([quizId, userId]) // One active attempt per user
+  @@index([quizId])
+  @@index([userId])
+  @@index([status])
+}
+
+model QuestionAnswer {
+  id              String          @id @default(cuid())
+  attemptId       String
+  questionId      String
+
+  // Answer data (typed per question type)
+  answerData      Json
+
+  // Grading
+  isCorrect       Boolean?
+  pointsEarned    Float?
+  feedback        String?         // For essay/short answer teacher feedback
+
+  // Show-your-work support
+  workImageKey    String?         // R2 key for show-your-work canvas
+  workCanvasState Json?           // tldraw snapshot
+
+  answeredAt      DateTime        @default(now())
+
+  // Relations
+  attempt         QuizAttempt     @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question        CuratedQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, questionId])
+  @@index([attemptId])
 }

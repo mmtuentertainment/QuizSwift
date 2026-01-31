@@ -1,7 +1,7 @@
 # Roadmap: QuizSwift
 
 **Created:** 2025-01-23
-**Phases:** 9 (including 2.1)
+**Phases:** 11 (including 2.1, 3.1, and 3.2)
 **Requirements:** 47 mapped + 5 new
 **Depth:** Comprehensive
 
@@ -13,6 +13,8 @@
 | 2 | Content & AI Extraction | Teachers can upload textbooks and receive accurately extracted questions | CONT-01, CONT-02, CONT-03, CONT-04, CONT-05 | 4 |
 | 2.1 | Intelligent Question Curation | AI generates pedagogically-sound comprehension questions with teacher selection | CONT-04-ENH, QUES-05-EARLY, CUR-01, CUR-02, CUR-03 | 5 |
 | 3 | Question Bank & Teacher Workflow | Teachers can review, edit, and approve extracted questions for use | CONT-06, CONT-07, CONT-08, QUES-01, QUES-02, QUES-03, QUES-04, QUES-06, QUES-07 | 5 |
+| 3.1 | Convert Prisma Status Enums | Database-level type safety for status fields | TECH-DEBT-01, TECH-DEBT-02, TECH-DEBT-03 | 5 |
+| 3.2 | Centralize QuestionType Definition | Single source of truth for question types | TECH-DEBT-04, TECH-DEBT-05, TECH-DEBT-06 | 6 |
 | 4 | Quiz Delivery & Student Experience | Students can take quizzes on any device with clear progress tracking | DELV-01, DELV-04, DELV-05, DELV-06, DELV-07 | 4 |
 | 5 | Anti-Cheating & Randomization | Each student receives a unique quiz experience to prevent answer sharing | DELV-02, DELV-03 | 3 |
 | 6 | Grading & Analytics | Teachers can review auto-graded results and gain insights into student performance | GRAD-01, GRAD-02, GRAD-03, GRAD-04, GRAD-05, GRAD-06, GRAD-07 | 5 |
@@ -92,17 +94,17 @@ Plans:
 
 **Goal:** Replace chunk-by-chunk extraction with a pedagogically-sound 5-pass reasoning pipeline that generates comprehension questions and allows teacher selection from a curated pool.
 
-**Status:** PLANNED
+**Status:** COMPLETE
 
 **Plans:** 6 plans
 
 Plans:
-- [ ] 02.1-01-PLAN.md - Schema updates and upload UI question count input
-- [ ] 02.1-02-PLAN.md - Zod schemas for 5-pass reasoning pipeline
-- [ ] 02.1-03-PLAN.md - 5-pass reasoning pipeline implementation
-- [ ] 02.1-04-PLAN.md - Inngest curation job replacing extraction
-- [ ] 02.1-05-PLAN.md - Show-your-work canvas with tldraw and KaTeX
-- [ ] 02.1-06-PLAN.md - Teacher curation UI for question selection
+- [x] 02.1-01-PLAN.md - Schema updates and upload UI question count input
+- [x] 02.1-02-PLAN.md - Zod schemas for 5-pass reasoning pipeline
+- [x] 02.1-03-PLAN.md - 5-pass reasoning pipeline implementation
+- [x] 02.1-04-PLAN.md - Inngest curation job replacing extraction
+- [x] 02.1-05-PLAN.md - Show-your-work canvas with tldraw and KaTeX
+- [x] 02.1-06-PLAN.md - Teacher curation UI for question selection
 
 **Requirements:**
 - CONT-04-ENH: AI generates comprehension questions (not just extraction) following Bloom's Taxonomy
@@ -132,6 +134,19 @@ Plans:
 
 **Goal:** Teachers can review, edit, and approve extracted questions across all question types before students see them.
 
+**Plans:** 9 plans
+
+Plans:
+- [ ] 03-01-PLAN.md - Database models (Quiz, QuizQuestion, QuizAttempt, QuestionAnswer) and TypeScript types
+- [ ] 03-02-PLAN.md - Question type components (MC, T/F, fill-blank, essay)
+- [ ] 03-03-PLAN.md - Matching questions with @dnd-kit drag-and-drop
+- [ ] 03-04-PLAN.md - Quiz creation workflow and Server Actions
+- [ ] 03-05-PLAN.md - Quiz-taking flow with auto-grading and teacher preview
+- [ ] 03-06-PLAN.md - Quiz detail page, question editing, and publish workflow
+- [ ] 03-07-PLAN.md - Question bank browse page with filters
+- [ ] 03-08-PLAN.md - Image upload support for questions
+- [ ] 03-09-PLAN.md - Integration, navigation, and human verification
+
 **Requirements:**
 - CONT-06: Teacher must take the quiz before approving it
 - CONT-07: Teacher can edit extracted questions before publishing
@@ -154,6 +169,69 @@ Plans:
 **Dependencies:** Phase 2.1 (curation pipeline, curated question storage)
 
 **Research Notes:** Teacher-takes-quiz workflow builds trust and catches bad extractions. Question bank enables reuse across multiple quizzes and semesters.
+
+---
+
+## Phase 3.1: Convert Prisma Status Fields to Enums (INSERTED)
+
+**Goal:** Convert string-based status fields to proper Prisma enums for database-level constraints and TypeScript type safety.
+
+**Status:** COMPLETE
+
+**Plans:** 5 plans
+
+Plans:
+- [x] 01-PLAN.md - Define Prisma enums in schema (QuizStatus, ShowResultsOption, AttemptStatus)
+- [x] 02-PLAN.md - Create and fix migration SQL with USING clauses
+- [x] 03-PLAN.md - Update server actions to use Prisma enum values
+- [x] 04-PLAN.md - Update client components for enum compatibility
+- [x] 05-PLAN.md - Final verification and cleanup
+
+**Requirements:**
+- TECH-DEBT-01: Quiz.status field uses enum instead of string with comments
+- TECH-DEBT-02: Quiz.showResults field uses enum instead of string with comments
+- TECH-DEBT-03: QuizAttempt.status field uses enum instead of string with comments
+
+**Success Criteria:**
+1. Database rejects invalid status values at PostgreSQL level
+2. Prisma client exports typed enum values (QuizStatus, ShowResultsOption, AttemptStatus)
+3. All existing string comparisons migrated to enum comparisons
+4. Existing data migrated without data loss
+5. All tests pass after migration
+
+**Dependencies:** Phase 3 completion (uses Quiz and QuizAttempt models extensively)
+
+**Research Notes:** Prisma enum migration with existing data requires careful SQL migration planning. USING clause required for TEXT to ENUM conversion in PostgreSQL. Drop defaults before conversion, re-add after.
+
+---
+
+## Phase 3.2: Centralize QuestionType Definition (INSERTED)
+
+**Goal:** Create a single source of truth for QuestionType to eliminate duplicate definitions and improve type safety across the codebase.
+
+**Status:** COMPLETE
+
+**Plans:** 1 plan
+
+Plans:
+- [x] 03.2-01-PLAN.md - Add QUESTION_TYPES const, QuestionType type, and update consumers
+
+**Requirements:**
+- TECH-DEBT-04: QuestionType defined once in src/lib/questions/types.ts
+- TECH-DEBT-05: grading.ts uses QuestionType instead of string parameter
+- TECH-DEBT-06: question-renderer.tsx imports QuestionType instead of defining locally
+
+**Success Criteria:**
+1. Single QUESTION_TYPES const array as canonical source in types.ts
+2. QuestionType derived from const array (typeof QUESTION_TYPES[number])
+3. Type guard isValidQuestionType() validates strings from database/API
+4. grading.ts parameter changed from string to QuestionType
+5. question-renderer.tsx imports type instead of defining locally
+6. All existing tests pass (grading.test.ts, validation.test.ts)
+
+**Dependencies:** Phase 3 completion (question types fully implemented)
+
+**Research Notes:** Current state has QuestionType defined in question-renderer.tsx and grading.ts accepts any string. This creates maintenance burden and bypasses compile-time type checking. Consolidation follows existing type guard patterns in types.ts.
 
 ---
 
@@ -285,19 +363,19 @@ Plans:
 | CONT-02 | Phase 2 | Complete |
 | CONT-03 | Phase 2 | Complete |
 | CONT-04 | Phase 2 | Complete |
-| CONT-04-ENH | Phase 2.1 | Pending |
+| CONT-04-ENH | Phase 2.1 | Complete |
 | CONT-05 | Phase 2 | Complete |
 | CONT-06 | Phase 3 | Pending |
 | CONT-07 | Phase 3 | Pending |
 | CONT-08 | Phase 3 | Pending |
-| CUR-01 | Phase 2.1 | Pending |
-| CUR-02 | Phase 2.1 | Pending |
-| CUR-03 | Phase 2.1 | Pending |
+| CUR-01 | Phase 2.1 | Complete |
+| CUR-02 | Phase 2.1 | Complete |
+| CUR-03 | Phase 2.1 | Complete |
 | QUES-01 | Phase 3 | Pending |
 | QUES-02 | Phase 3 | Pending |
 | QUES-03 | Phase 3 | Pending |
 | QUES-04 | Phase 3 | Pending |
-| QUES-05 | Phase 2.1 | Pending |
+| QUES-05 | Phase 2.1 | Complete |
 | QUES-06 | Phase 3 | Pending |
 | QUES-07 | Phase 3 | Pending |
 | DELV-01 | Phase 4 | Pending |
@@ -339,8 +417,8 @@ Plans:
 **Phase Distribution:**
 - Phase 1: 6 requirements (Foundation & Compliance) - COMPLETE
 - Phase 2: 5 requirements (Content & AI Extraction) - COMPLETE
-- Phase 2.1: 5 requirements (Intelligent Question Curation) - PLANNED
-- Phase 3: 9 requirements (Question Bank & Teacher Workflow)
+- Phase 2.1: 5 requirements (Intelligent Question Curation) - COMPLETE
+- Phase 3: 9 requirements (Question Bank & Teacher Workflow) - PLANNED
 - Phase 4: 5 requirements (Quiz Delivery & Student Experience)
 - Phase 5: 2 requirements (Anti-Cheating & Randomization)
 - Phase 6: 7 requirements (Grading & Analytics)
@@ -358,10 +436,16 @@ Phase 1 (Foundation) - COMPLETE
 Phase 2 (Content & AI) - COMPLETE -----> Phase 8 (Dual-Tier AI)
     |
     v
-Phase 2.1 (Intelligent Curation) - PLANNED
+Phase 2.1 (Intelligent Curation) - COMPLETE
     |
     v
-Phase 3 (Question Bank)
+Phase 3 (Question Bank) - IN PROGRESS
+    |
+    v
+Phase 3.1 (Prisma Enums) - COMPLETE
+    |
+    v
+Phase 3.2 (QuestionType) - COMPLETE
     |
     v
 Phase 4 (Quiz Delivery)
@@ -373,7 +457,7 @@ Phase 5 (Anti-Cheating)
 Phase 6 (Grading) ---------> Phase 7 (Google Classroom)
 ```
 
-**Critical Path:** 1 -> 2 -> 2.1 -> 3 -> 4 -> 5 -> 6 -> 7
+**Critical Path:** 1 -> 2 -> 2.1 -> 3 -> 3.1 -> 3.2 -> 4 -> 5 -> 6 -> 7
 
 **Parallel Opportunity:** Phase 8 can begin after Phase 2 (AI pipeline exists)
 
@@ -382,5 +466,8 @@ Phase 6 (Grading) ---------> Phase 7 (Google Classroom)
 *Roadmap created: 2025-01-23*
 *Phase 1 completed: 2026-01-23*
 *Phase 2 completed: 2026-01-23*
-*Phase 2.1 planned: 2026-01-24*
-*Next step: /gsd:execute-phase 2.1*
+*Phase 2.1 completed: 2026-01-25*
+*Phase 3 planned: 2026-01-26*
+*Phase 3.1 completed: 2026-01-30*
+*Phase 3.2 completed: 2026-01-27*
+*Next step: /gsd:execute-phase 03 plan 09 OR /gsd:plan-phase 4*

@@ -126,12 +126,17 @@ export function ShowYourWork({
       });
     } catch (error) {
       console.error('Failed to capture canvas:', error);
-      // Still submit with null image on error
-      onSubmit({
-        canvasState: editorRef.current?.getSnapshot() ?? null,
-        canvasImage: null,
-        finalAnswer,
-      });
+      // Ask user if they want to continue without the image
+      const proceed = window.confirm(
+        'Could not capture your drawing as an image. Your work is still saved and can be viewed. Continue with submission?'
+      );
+      if (proceed) {
+        onSubmit({
+          canvasState: editorRef.current?.getSnapshot() ?? null,
+          canvasImage: null,
+          finalAnswer,
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }

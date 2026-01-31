@@ -1,0 +1,57 @@
+# CodeRabbit Configuration
+# Temporarily simplified to diagnose review completion issues
+# Date: 2026-01-26
+
+# Language settings
+language: "en-US"
+
+# Review configuration
+reviews:
+  # Enable reviews
+  enabled: true
+
+  # Request changes workflow
+  request_changes_workflow: false
+
+  # High-level summary
+  high_level_summary: true
+
+  # Poem in review (disabled for professional context)
+  poem: false
+
+  # Review status (show in PR)
+  review_status: true
+
+  # Collapse walkthrough (keep reviews compact)
+  collapse_walkthrough: true
+
+  # Path instructions for context
+  path_instructions:
+    - path: "src/app/**"
+      instructions: "Next.js App Router pages and API routes"
+    - path: "src/components/**"
+      instructions: "React components - check for accessibility and TypeScript types"
+    - path: "src/lib/**"
+      instructions: "Utility functions and shared logic"
+    - path: "src/actions/**"
+      instructions: "Server actions - verify authentication checks"
+    - path: "src/inngest/**"
+      instructions: "Background job functions - check error handling"
+    - path: "prisma/**"
+      instructions: "Database schema - verify migrations are safe"
+
+  # TEMPORARILY DISABLED: Custom pre-merge checks
+  # These were potentially causing review timeouts/failures
+  # Re-enable incrementally once basic reviews work
+  #
+  # pre_merge_checks:
+  #   custom_checks:
+  #     - mode: "on"
+  #       name: "Constitutional Compliance (8 Principles)"
+  #       instructions: "Check for COPPA/FERPA compliance patterns"
+  #     - mode: "on"
+  #       name: "250-Line Modular Standard"
+  #       instructions: "Flag files exceeding 250 lines"
+
+# Early access features (disabled for stability)
+early_access: false

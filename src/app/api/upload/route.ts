@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { uploadPdf, deletePdf } from '@/lib/storage/blob';
+import { uploadPdf, deletePdf } from '@/lib/storage/pdf-storage';
 import { inngest } from '@/inngest/client';
 import { checkRateLimit, rateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upload to Vercel Blob
+    // Upload to Cloudflare R2
     const uploadResult = await uploadPdf(file, session.user.id);
 
     // Create Document record - cleanup blob on failure

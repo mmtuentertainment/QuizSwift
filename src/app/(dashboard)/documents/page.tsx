@@ -14,7 +14,7 @@ const STATUS_BADGES: Record<string, { color: string; label: string }> = {
 export default async function DocumentsPage() {
   const session = await auth();
   if (!session?.user?.id) {
-    redirect('/api/auth/signin');
+    redirect('/login');
   }
 
   const documents = await prisma.document.findMany({
