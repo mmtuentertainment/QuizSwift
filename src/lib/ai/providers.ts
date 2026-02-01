@@ -1,3 +1,4 @@
+import type { EmbeddingModel, LanguageModel } from 'ai';
 import { createOllama } from 'ai-sdk-ollama';
 import { Agent, setGlobalDispatcher } from 'undici';
 
@@ -26,20 +27,16 @@ const ollamaProvider = createOllama({
 });
 
 /**
- * Branded type for Ollama language model.
- * Actual type is LanguageModelV1 but incompatible across providers.
- * @see STATE.md decision: "Any type for AI models"
+ * Type alias for Ollama language model.
+ * Uses the LanguageModel type from the Vercel AI SDK for full type safety.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type OllamaLanguageModel = any;
+export type OllamaLanguageModel = LanguageModel;
 
 /**
- * Branded type for Ollama embedding model.
- * Actual type is EmbeddingModelV1 but incompatible across providers.
- * @see STATE.md decision: "Any type for AI models"
+ * Type alias for Ollama embedding model.
+ * Uses the EmbeddingModel type from the Vercel AI SDK for full type safety.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type OllamaEmbeddingModel = any;
+export type OllamaEmbeddingModel = EmbeddingModel;
 
 /**
  * AI Provider availability error with troubleshooting instructions
