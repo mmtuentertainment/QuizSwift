@@ -1,7 +1,7 @@
 # Project State: QuizSwift
 
-**Last Updated:** 2026-01-31
-**Session:** Quick-016 Complete - Address PR #5 CodeRabbit Review (Markdown Formatting)
+**Last Updated:** 2026-02-01
+**Session:** Quick-018 Complete - PR #6 CodeRabbit Fixes (QuestionType enum, ActionResult, constants)
 
 ## Project Reference
 
@@ -14,7 +14,7 @@
 **Phase:** 3.1 of 8 - Convert Prisma Status Enums
 **Plan:** 5 of 5 complete
 **Status:** COMPLETE (verified 11/11 must-haves)
-**Last activity:** 2026-01-31 - Completed quick-017: Fix PR #5 CodeRabbit nitpicks (file count, query optimization)
+**Last activity:** 2026-02-01 - Completed quick-018: PR #6 CodeRabbit fixes (QuestionType enum, validation constants, consolidate schemas)
 
 **Progress:**
 Phase 1: 100% (5/5 plans)     [========================================]
@@ -92,6 +92,10 @@ Overall: 74%                  [======================================  ]
 | Manual migration creation | Shadow database pgvector issue prevented prisma migrate dev | 03.1-02 |
 | String literal types for client interfaces | Client components receive serialized enums; explicit types ensure consistency | 03.1-04 |
 | Centralized enum labels in enums.ts | Single source of truth for UI display strings | 03.1-04 |
+| QuestionType as Prisma enum | Canonical types only, AI schemas updated to match | quick-018 |
+| ActionResult<T> discriminated union | Consistent success/error pattern for server actions | quick-018 |
+| Validation constants in validation.ts | QUIZ_TIME_LIMIT, QUIZ_TITLE_LENGTH eliminate magic numbers | quick-018 |
+| Consolidate schemas.ts into validation.ts | Single source for Zod schemas, removes duplication | quick-018 |
 
 ### Roadmap Evolution
 
@@ -150,6 +154,7 @@ Overall: 74%                  [======================================  ]
 | 015 | Fix remaining PR #5 nitpicks | 2026-01-31 | 9641b87 | [015-fix-remaining-pr5-nitpicks](./quick/015-fix-remaining-pr5-nitpicks/) |
 | 016 | Address PR #5 CodeRabbit review (markdown formatting) | 2026-01-31 | 4c444c1 | [016-address-pr5-coderabbit-review](./quick/016-address-pr5-coderabbit-review/) |
 | 017 | Fix PR #5 CodeRabbit nitpicks (file count, query optimization) | 2026-01-31 | 35dcc57 | [017-fix-pr5-coderabbit-nitpicks](./quick/017-fix-pr5-coderabbit-nitpicks/) |
+| 018 | PR #6 CodeRabbit fixes (QuestionType enum, validation constants) | 2026-02-01 | ade9f34 | [018-pr6-coderabbit-fixes](./quick/018-pr6-coderabbit-fixes/) |
 
 ### Pending TODOs
 
@@ -157,6 +162,7 @@ Overall: 74%                  [======================================  ]
 |-----|-------------|------|-------|
 | QUIZ-TIMER | Implement quiz timer with countdown and auto-submit | src/components/quiz/quiz-taker.tsx | quick-014 |
 | LEGACY-TYPES | Remove deprecated type aliases when no longer in use | src/lib/questions/types.ts | quick-014 |
+| ERROR-TRACKING | Consider Sentry integration for production error tracking | src/actions/quiz.ts | quick-018 |
 
 ### Lessons Learned
 
@@ -177,28 +183,35 @@ Overall: 74%                  [======================================  ]
 
 ### What Just Happened
 
-Quick-017 completed - Fix PR #5 CodeRabbit nitpicks:
+Quick-018 completed - PR #6 CodeRabbit fixes:
 
-**Task Executed:**
-- Fixed file count mismatch in 016-PLAN.md (7 files, not 8 - 006-PLAN.md doesn't exist)
-- Optimized double query example in database-fixes.md (add id to select, remove redundant query)
-- Fixed table alignment (MD060) in 016-SUMMARY.md
+**Tasks Executed:**
+1. Added `QuestionType` Prisma enum with 7 canonical types
+2. Added `ActionResult<T>` and `ActionResultVoid` types
+3. Added validation constants (`QUIZ_TIME_LIMIT`, etc.)
+4. Consolidated schemas.ts into validation.ts
+5. Removed unused timeLimit prop, added production-safe logging
 
-**Commit:**
-- 35dcc57: docs(quick-017): fix PR #5 CodeRabbit nitpicks
+**Commits:**
+- b2b8486: feat(quick-018): add QuestionType Prisma enum and ActionResult type
+- d8509e2: refactor(quick-018): add validation constants and consolidate schemas
+- ade9f34: fix(quick-018): cleanup - remove unused timeLimit prop, production-safe logging
 
 **Files Modified:**
-- 016-PLAN.md, 016-SUMMARY.md, database-fixes.md
-- Created 017-PLAN.md and 017-SUMMARY.md
+- prisma/schema.prisma, action-utils.ts, enums.ts, types.ts, validation.ts
+- quiz.ts, questions.ts, attempts.ts, quiz-builder.tsx, quiz-taker.tsx
+- quiz-settings-form.tsx, fill-in-blank.tsx, preview/actions.tsx, preview/page.tsx
+- AI schemas: extract-questions.ts, question-generation.ts
+- Deleted: src/lib/questions/schemas.ts
 
 ### What Happens Next
 
-PR #5 CodeRabbit review addressed. Options:
-1. **Merge PR #5** - All review comments addressed
+PR #6 CodeRabbit review items addressed. Options:
+1. **Address remaining PR #6 items** - If any more CodeRabbit comments
 2. **Phase 3 Plan 09** - Final integration and navigation (completes Phase 3)
 3. **Phase 4** - Quiz Delivery & Student Experience
 
 ---
 
-*State captured: 2026-01-31*
-*Next command: Merge PR #5 (all nitpicks addressed) OR /gsd:execute-phase 03 plan 09 OR /gsd:plan-phase 4*
+*State captured: 2026-02-01*
+*Next command: Address PR #6 comments OR /gsd:execute-phase 03 plan 09 OR /gsd:plan-phase 4*
