@@ -51,12 +51,14 @@ See `PLAN.md` for full execution order.
 
 ## Next Steps
 
-**Option A: Execute Critical Fixes Now**
+### Option A: Execute Critical Fixes Now
+
 ```bash
 /gsd:quick execute waves 1-2 from 010 plan
 ```
 
-**Option B: Full Execution Plan**
+### Option B: Full Execution Plan
+
 ```bash
 /gsd:execute-phase --plan .planning/quick/010-fix-pr2-47-issues-plan/PLAN.md
 ```

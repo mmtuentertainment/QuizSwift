@@ -40,7 +40,9 @@ completed: 2026-01-26
 
 # Phase 03 Plan 03: Matching Question Component Summary
 
-**Drag-and-drop Matching component with @dnd-kit for accessible term-definition pairing**
+## Summary
+
+Drag-and-drop Matching component with @dnd-kit for accessible term-definition pairing.
 
 ## Performance
 

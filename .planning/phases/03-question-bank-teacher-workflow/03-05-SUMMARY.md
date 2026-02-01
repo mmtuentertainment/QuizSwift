@@ -42,7 +42,9 @@ metrics:
 
 # Phase 3 Plan 05: Quiz Taking & Teacher Preview Summary
 
-**One-liner:** Quiz-taking flow with auto-grading for objective types and teacher preview mode for CONT-06 workflow
+## Summary
+
+Quiz-taking flow with auto-grading for objective types and teacher preview mode for CONT-06 workflow.
 
 ## What Was Built
 

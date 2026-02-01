@@ -68,7 +68,8 @@ metrics:
 ## Implementation Details
 
 ### Filter Architecture
-```
+
+```text
 URL searchParams --> Server Actions --> Database Query
      ^                                        |
      |                                        v
@@ -141,7 +142,7 @@ Filters maintain state in URL parameters, enabling:
 
 ## Files Created
 
-```
+```text
 src/actions/questions.ts                              # Server actions
 src/app/(dashboard)/question-bank/page.tsx           # Browse page
 src/components/question-bank/

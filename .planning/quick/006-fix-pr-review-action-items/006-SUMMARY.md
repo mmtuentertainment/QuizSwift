@@ -24,36 +24,40 @@ commits:
 
 ### Task 1: Fix PR #2 Issues (feat/phase-3-question-bank)
 
-**Issue 1: Matching grading logic comment clarification**
+#### Issue 1: Matching grading logic comment clarification
+
 - Added detailed comment explaining the matching data model (pair.id serves as identifier for both left and right sides)
 - File: `src/lib/questions/grading.ts` (lines 157-161)
 
-**Issue 2: Consolidate dual useEffects in matching.tsx**
+#### Issue 2: Consolidate dual useEffects in matching.tsx
+
 - Merged two separate useEffects for rightOrder sync into single consolidated effect
 - Removed redundant effect (lines 89-93) that duplicated logic
 - File: `src/components/questions/types/matching.tsx` (lines 88-109)
 
 ### Task 2: Fix PR #5 Issues (feat/phase-3.1-prisma-enums-clean)
 
-**Issue 3: Migration preflight validation**
+#### Issue 3: Migration preflight validation
+
 - Added DO $$ block at migration start to validate existing values before conversion
 - Validates Quiz.status, Quiz.showResults, QuizAttempt.status columns
 - Raises exception with count if invalid values found
 - File: `prisma/migrations/20260127_convert_status_to_enums/migration.sql`
 
-**Issue 4: Unused AttemptStatusValue import**
+#### Issue 4: Unused AttemptStatusValue import
+
 - Removed unused import from quiz-taker.tsx
 - File: `src/components/quiz/quiz-taker.tsx` (line 21 removed)
 
 ### Task 3: Fix PR #4 Issues (feat/phase-3.2-questiontype-clean)
 
-**Issue 5: QuestionType centralization** - Already fixed by rebase
-- question-renderer.tsx already imports QuestionType from centralized types.ts
-- Re-exports for consumers
+#### Issue 5: QuestionType centralization
 
-**Issue 6: isValidQuestionType type guard** - Already present
-- Type guard exists in types.ts at line 240
-- Fixed unused QuestionType import in attempts.ts (type guard handles narrowing)
+Already fixed by rebase. question-renderer.tsx already imports QuestionType from centralized types.ts and re-exports for consumers.
+
+#### Issue 6: isValidQuestionType type guard
+
+Already present. Type guard exists in types.ts at line 240. Fixed unused QuestionType import in attempts.ts (type guard handles narrowing).
 
 ### Task 4: Stack Verification
 
@@ -81,7 +85,7 @@ All three PRs verified:
 
 ## PR Stack After Fixes
 
-```
+```text
 main
   |
   +-- PR #2 (feat/phase-3-question-bank)

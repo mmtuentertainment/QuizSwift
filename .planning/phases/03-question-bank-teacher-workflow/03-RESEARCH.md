@@ -10,43 +10,49 @@ This research covers the data modeling, UI patterns, and architecture needed to 
 
 The standard approach for quiz systems follows the pattern established by Moodle and Canvas LMS: separate tables for Quiz definitions, QuizQuestion junction (called "slots" in Moodle), and QuizAttempt tracking with per-question answer storage. For the UI, inline editing works for simple text changes while modals are preferred for complex multi-field edits. Matching questions use dnd-kit for drag-and-drop pairing, and fill-in-blank questions parse [BLANK] markers to render inline input fields.
 
-**Primary recommendation:** Model Quiz/QuizQuestion/QuizAttempt as separate tables with a junction model for question ordering. Use @dnd-kit/sortable for matching questions. Store all question type data in the existing CuratedQuestion.options JSON field with typed structures per question type.
+### Primary Recommendation
+
+Model Quiz/QuizQuestion/QuizAttempt as separate tables with a junction model for question ordering. Use @dnd-kit/sortable for matching questions. Store all question type data in the existing CuratedQuestion.options JSON field with typed structures per question type.
 
 ## Standard Stack
 
 The established libraries/tools for this domain (all already in project):
 
 ### Core (Already Installed)
+
 | Library | Version | Purpose | Why Standard |
-|---------|---------|---------|--------------|
+| ------- | ------- | ------- | ------------ |
 | Next.js | 16.1.4 | Server Actions for mutations | Native form handling, automatic POST |
 | React | 19.2.3 | UI components | Native form actions support |
 | Prisma | 7.3.0 | Database models | Already modeling CuratedQuestion |
 | Zod | 3.25.76 | Server-side validation | Already in project |
 
 ### Supporting (To Add)
+
 | Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
+| ------- | ------- | ------- | ----------- |
 | @dnd-kit/core | 6.x | Drag-and-drop foundation | Matching questions UI |
-| @dnd-kit/sortable | 9.x | Sortable drag-and-drop | Matching pairs, question reordering |
+| @dnd-kit/sortable | 10.0.0 | Sortable drag-and-drop | Matching pairs, question reordering |
 | @dnd-kit/utilities | 3.x | CSS transform helpers | Style transforms during drag |
 
 ### Already Available (Reuse)
+
 | Library | Version | Purpose | How to Reuse |
-|---------|---------|---------|--------------|
+| ------- | ------- | ------- | ------------ |
 | @aws-sdk/client-s3 | 3.975.0 | R2/S3 uploads | Already in blob.ts for PDFs - extend for images |
 | @aws-sdk/s3-request-presigner | 3.975.0 | Presigned URLs | Already configured for R2 |
 | tldraw | 4.3.0 | Canvas drawing | Already integrated for show-your-work |
 | KaTeX | 0.16.27 | Math rendering | Already in MathText component |
 
 ### Alternatives Considered
+
 | Instead of | Could Use | Tradeoff |
-|------------|-----------|----------|
+| ---------- | --------- | -------- |
 | @dnd-kit/sortable | react-beautiful-dnd | dnd-kit is more actively maintained, hello-pangea/dnd is the fork |
 | @dnd-kit/sortable | FormKit drag-and-drop | FormKit is newer/lighter but less documented |
 | JSON options field | Separate MatchingPair table | JSON is simpler, already used for MC options |
 
-**Installation:**
+### Installation
 ```bash
 npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
 ```
@@ -637,52 +643,60 @@ export function QuestionEditor({ question, onSave, onCancel }: QuestionEditorPro
 Problems that look simple but have existing solutions:
 
 | Problem | Don't Build | Use Instead | Why |
-|---------|-------------|-------------|-----|
+| ------- | ----------- | ----------- | --- |
 | Drag-and-drop matching | Custom mouse event handlers | @dnd-kit/sortable | Keyboard/touch/accessibility, animation |
 | Image uploads | Direct file handling | R2 presigned URLs | Already configured in blob.ts |
 | Form validation | Manual checks | Zod schemas | Type inference, composable |
 | Math rendering | Custom LaTeX parser | KaTeX (already integrated) | Edge cases, security |
 | Canvas drawing | HTML5 canvas | tldraw (already integrated) | Full drawing tools, export |
 
-**Key insight:** The project already has image upload (R2), drawing (tldraw), and math (KaTeX) infrastructure. Phase 3 extends these, not replaces them.
+### Key Insight
+
+The project already has image upload (R2), drawing (tldraw), and math (KaTeX) infrastructure. Phase 3 extends these, not replaces them.
 
 ## Common Pitfalls
 
 ### Pitfall 1: Quiz Status Race Conditions
-**What goes wrong:** Teacher publishes quiz while student is mid-preview, or multiple status updates conflict.
-**Why it happens:** Status modeled as single string field.
-**How to avoid:** Use timestamp fields for each state transition. A quiz is "published" if publishedAt is set, "previewed" if teacherPreviewedAt is set.
-**Warning signs:** "status" field with complex string enum.
+
+- **What goes wrong:** Teacher publishes quiz while student is mid-preview, or multiple status updates conflict.
+- **Why it happens:** Status modeled as single string field.
+- **How to avoid:** Use timestamp fields for each state transition. A quiz is "published" if publishedAt is set, "previewed" if teacherPreviewedAt is set.
+- **Warning signs:** "status" field with complex string enum.
 
 ### Pitfall 2: Question Bank Performance
-**What goes wrong:** Slow question bank queries as question count grows.
-**Why it happens:** Missing indexes on filter fields, loading all questions at once.
-**How to avoid:** Index documentId, questionType, bloomLevel, teacherSelected. Use pagination. Consider full-text search for question text.
-**Warning signs:** Prisma queries without take/skip, missing @@index annotations.
+
+- **What goes wrong:** Slow question bank queries as question count grows.
+- **Why it happens:** Missing indexes on filter fields, loading all questions at once.
+- **How to avoid:** Index documentId, questionType, bloomLevel, teacherSelected. Use pagination. Consider full-text search for question text.
+- **Warning signs:** Prisma queries without take/skip, missing @@index annotations.
 
 ### Pitfall 3: Fill-in-Blank Answer Matching
-**What goes wrong:** "42" marked wrong when "42.0" is correct, or "The Answer" vs "the answer".
-**Why it happens:** Exact string comparison.
-**How to avoid:** Store caseSensitive flag and acceptedAnswers array. Trim whitespace. For numeric blanks, parse and compare as numbers.
-**Warning signs:** Single correctAnswer string for fill-in-blank.
+
+- **What goes wrong:** "42" marked wrong when "42.0" is correct, or "The Answer" vs "the answer".
+- **Why it happens:** Exact string comparison.
+- **How to avoid:** Store caseSensitive flag and acceptedAnswers array. Trim whitespace. For numeric blanks, parse and compare as numbers.
+- **Warning signs:** Single correctAnswer string for fill-in-blank.
 
 ### Pitfall 4: Matching Question Shuffling
-**What goes wrong:** Answer key visible because right-side order matches left-side.
-**Why it happens:** Pairs rendered in definition order.
-**How to avoid:** Shuffle right-side on component mount. Store shuffled order in component state, not prop.
-**Warning signs:** Matching pairs rendered with same array index.
+
+- **What goes wrong:** Answer key visible because right-side order matches left-side.
+- **Why it happens:** Pairs rendered in definition order.
+- **How to avoid:** Shuffle right-side on component mount. Store shuffled order in component state, not prop.
+- **Warning signs:** Matching pairs rendered with same array index.
 
 ### Pitfall 5: Teacher Preview Not Enforced
-**What goes wrong:** Quiz published without teacher taking it (CONT-06 violated).
-**Why it happens:** Publish button not checking preview status.
-**How to avoid:** Check teacherPreviewedAt before allowing publish. Show clear UI state: "Preview Required" vs "Ready to Publish".
-**Warning signs:** Direct status update without conditional checks.
+
+- **What goes wrong:** Quiz published without teacher taking it (CONT-06 violated).
+- **Why it happens:** Publish button not checking preview status.
+- **How to avoid:** Check teacherPreviewedAt before allowing publish. Show clear UI state: "Preview Required" vs "Ready to Publish".
+- **Warning signs:** Direct status update without conditional checks.
 
 ### Pitfall 6: Image Upload Without Size/Type Validation
-**What goes wrong:** Oversized images slow page load, wrong file types uploaded.
-**Why it happens:** Client-side upload without validation.
-**How to avoid:** Validate file size (<5MB) and type (image/*) before presigned URL. Use existing blob.ts patterns.
-**Warning signs:** Direct file upload without checks.
+
+- **What goes wrong:** Oversized images slow page load, wrong file types uploaded.
+- **Why it happens:** Client-side upload without validation.
+- **How to avoid:** Validate file size (<5MB) and type (image/*) before presigned URL. Use existing blob.ts patterns.
+- **Warning signs:** Direct file upload without checks.
 
 ## Code Examples
 
@@ -895,13 +909,14 @@ export default async function TeacherPreviewPage({
 ## State of the Art
 
 | Old Approach | Current Approach | When Changed | Impact |
-|--------------|------------------|--------------|--------|
+| ------------ | ---------------- | ------------ | ------ |
 | API routes for mutations | Server Actions | Next.js 14+ (stable 15+) | Simpler forms, type safety |
 | react-beautiful-dnd | @dnd-kit | 2022 (react-beautiful-dnd unmaintained) | Active maintenance, better a11y |
 | Complex status strings | Timestamp fields | Industry best practice | Clearer state, no race conditions |
 | Custom drag handlers | dnd-kit sensors | 2024+ | Touch, keyboard, accessibility |
 
-**Deprecated/outdated:**
+### Deprecated/Outdated
+
 - react-beautiful-dnd: Unmaintained, use @dnd-kit or hello-pangea/dnd (fork)
 - API routes for simple mutations: Server Actions preferred in App Router
 - useFormState: Renamed to useActionState in React 19
@@ -944,10 +959,16 @@ Things that couldn't be fully resolved:
 
 ## Metadata
 
-**Confidence breakdown:**
+### Confidence Breakdown
+
 - Standard stack: HIGH - All libraries verified via official docs, most already in project
 - Architecture: HIGH - Schema patterns from Moodle/Canvas, verified Prisma patterns
 - Pitfalls: MEDIUM - Based on industry patterns, some specific to this stack
 
-**Research date:** 2026-01-26
-**Valid until:** 2026-02-26 (30 days - stable patterns)
+### Research Date
+
+2026-01-26
+
+### Valid Until
+
+2026-02-26 (30 days - stable patterns)

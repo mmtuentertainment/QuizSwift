@@ -12,13 +12,13 @@ commits:
 
 # Quick Task 016: Address PR #5 CodeRabbit Review - Summary
 
-**One-liner:** Fixed markdown formatting issues in 7 .planning/ docs (table spacing, blank lines, alignment)
+**One-liner:** Fixed Markdown formatting issues in 7 .planning/ docs (table spacing, blank lines, alignment)
 
 ## What Was Done
 
-### Task 1: Fix .planning/ markdown formatting
+### Task 1: Fix .planning/ Markdown formatting
 
-Fixed markdown linting issues flagged by CodeRabbit in PR #5:
+Fixed Markdown linting issues flagged by CodeRabbit in PR #5:
 
 | Issue  | Description                                     | Files Affected |
 | ------ | ----------------------------------------------- | -------------- |
@@ -56,4 +56,4 @@ None - plan executed as written for the 7 existing files.
 
 | Hash | Message |
 | --- | --- |
-| 8f4e423 | docs(quick-016): fix markdown formatting in .planning/ files |
+| 8f4e423 | docs(quick-016): fix Markdown formatting in .planning/ files |

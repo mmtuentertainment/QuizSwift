@@ -67,10 +67,10 @@
 
 When deploying, run:
 ```bash
-npx prisma migrate dev --name add_pr2_critical_fixes
+npx prisma migrate deploy
 ```
 
-This will create the 3 new indexes in the database.
+This will apply the existing migration and create the 3 new indexes in the database.
 
 ---
 

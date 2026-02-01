@@ -11,7 +11,7 @@ Fixed all 13 HIGH priority (Major severity) CodeRabbit issues identified in PR #
 ## Issues Fixed
 
 | # | Issue | File | Fix Applied |
-|---|-------|------|-------------|
+| --- | ------- | ------ | ------------- |
 | 1 | npm permission patterns | .claude/settings.json | Changed `npm run build:*` to `npm run build*` pattern |
 | 2 | Missing coverage provider | package.json | Added @vitest/coverage-v8 devDependency |
 | 3 | Windows path compatibility | vitest.config.ts | Use fileURLToPath instead of URL.pathname |
