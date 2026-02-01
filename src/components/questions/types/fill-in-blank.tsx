@@ -94,9 +94,11 @@ export function FillInBlank({
 
   // Guard against [BLANK] marker / options.blanks mismatch
   if (blankCount !== options.blanks.length && blankCount > 0) {
-    console.warn(
-      `FillInBlank: Mismatch between [BLANK] markers (${blankCount}) and options.blanks (${options.blanks.length})`
-    );
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(
+        `FillInBlank: Mismatch between [BLANK] markers (${blankCount}) and options.blanks (${options.blanks.length})`
+      );
+    }
   }
 
   // Ensure answers array has correct length

@@ -42,7 +42,9 @@ completed: 2026-01-27
 
 # Quick 004: Fix PR #2 Silent Failure Issues
 
-**Fixed 5 blocking silent failure issues - unhandled Prisma queries in server actions**
+## Summary
+
+Fixed 5 blocking silent failure issues - unhandled Prisma queries in server actions.
 
 ## Performance
 
@@ -72,11 +74,13 @@ completed: 2026-01-27
 
 ## Decisions Made
 
-**1. Use handlePrismaError consistently**
+### 1. Use handlePrismaError consistently
+
 - **Rationale:** Already established pattern in other server actions (startAttempt, submitAnswer, etc.)
 - **Benefit:** Consistent error messages and logging across all database operations
 
-**2. Return 'not_found' for getQuizWithQuestions database errors**
+### 2. Return 'not_found' for getQuizWithQuestions database errors
+
 - **Rationale:** The function has a typed union return type that only allows specific error strings
 - **Benefit:** Avoids leaking internal error details while maintaining type safety
 

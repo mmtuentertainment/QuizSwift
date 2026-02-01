@@ -13,13 +13,23 @@ export const BloomLevel = z.enum([
   'create', // Produce new work (rare for quiz questions)
 ]);
 
+/**
+ * Canonical question types for AI generation (7 types).
+ *
+ * Note: This differs from QUESTION_TYPES in src/lib/questions/types.ts which
+ * includes 9 types (7 canonical + 2 legacy aliases: fill_blank, true_false_justify).
+ * AI should only generate canonical types; legacy aliases exist for backward compatibility.
+ *
+ * @see src/lib/questions/types.ts - QUESTION_TYPES and CANONICAL_QUESTION_TYPES
+ */
 export const QuestionType = z.enum([
   'multiple_choice',
   'short_answer',
-  'true_false_justify',
+  'true_false',
   'show_work',
   'matching',
-  'fill_blank',
+  'fill_in_blank',
+  'essay',
 ]);
 
 export const CuratedQuestionSchema = z.object({
@@ -76,10 +86,11 @@ export const QuestionGenerationSchema = z.object({
     .object({
       multiple_choice: z.number(),
       short_answer: z.number(),
-      true_false_justify: z.number(),
+      true_false: z.number(),
       show_work: z.number(),
       matching: z.number(),
-      fill_blank: z.number(),
+      fill_in_blank: z.number(),
+      essay: z.number(),
     })
     .describe('Distribution by question type'),
 });

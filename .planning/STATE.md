@@ -1,7 +1,7 @@
 # Project State: QuizSwift
 
-**Last Updated:** 2026-01-30
-**Session:** Phase 3.1 Complete - Convert Prisma Status Enums (Verified)
+**Last Updated:** 2026-02-01
+**Session:** Quick-022 Complete - PR #6 Security & Tech Debt Fixes
 
 ## Project Reference
 
@@ -14,7 +14,7 @@
 **Phase:** 3.1 of 8 - Convert Prisma Status Enums
 **Plan:** 5 of 5 complete
 **Status:** COMPLETE (verified 11/11 must-haves)
-**Last activity:** 2026-01-30 - Completed quick-008: Fix accessibility labels + essay guidelines + prisma logging
+**Last activity:** 2026-02-01 - Completed quick-022: PR #6 security & tech debt fixes (rate limiting, error sanitization, type docs)
 
 **Progress:**
 Phase 1: 100% (5/5 plans)     [========================================]
@@ -92,6 +92,13 @@ Overall: 74%                  [======================================  ]
 | Manual migration creation | Shadow database pgvector issue prevented prisma migrate dev | 03.1-02 |
 | String literal types for client interfaces | Client components receive serialized enums; explicit types ensure consistency | 03.1-04 |
 | Centralized enum labels in enums.ts | Single source of truth for UI display strings | 03.1-04 |
+| QuestionType as Prisma enum | Canonical types only, AI schemas updated to match | quick-018 |
+| ActionResult<T> discriminated union | Consistent success/error pattern for server actions | quick-018 |
+| Validation constants in validation.ts | QUIZ_TIME_LIMIT, QUIZ_TITLE_LENGTH eliminate magic numbers | quick-018 |
+| Consolidate schemas.ts into validation.ts | Single source for Zod schemas, removes duplication | quick-018 |
+| Shared upload rate limit key | Both PDF and image uploads count toward same 10/hour limit | quick-022 |
+| Error message sanitization pattern | Map known patterns to safe messages, generic fallback for unknowns | quick-022 |
+| Branded any types for AI models | Document intent with OllamaLanguageModel/OllamaEmbeddingModel aliases | quick-022 |
 
 ### Roadmap Evolution
 
@@ -141,6 +148,28 @@ Overall: 74%                  [======================================  ]
 | 006 | Fix 6 PR review action items (stacked PRs #2, #5, #4) | 2026-01-30 | 4f38670 | [006-fix-pr-review-action-items](./quick/006-fix-pr-review-action-items/) |
 | 007 | Fix remaining PR issues + cascading rebases | 2026-01-30 | 65e187e | [007-fix-remaining-pr-issues](./quick/007-fix-remaining-pr-issues/) |
 | 008 | Fix accessibility labels + essay guidelines + prisma logging | 2026-01-30 | 8a7f36f | [008-fix-accessibility-labels-essay-guidelines](./quick/008-fix-accessibility-labels-essay-guidelines/) |
+| 009 | Comprehensive PR #2 review (12 agents) | 2026-01-30 | - | [009-review-pr-2-comprehensive](./quick/009-review-pr-2-comprehensive/) |
+| 010 | Consolidated fix plan for 47 PR #2 issues | 2026-01-30 | - | [010-fix-pr2-47-issues-plan](./quick/010-fix-pr2-47-issues-plan/) |
+| 011 | Waves 1-2 critical fixes (security + indexes) | 2026-01-30 | b97da6c | [011-execute-waves-1-2](./quick/011-execute-waves-1-2/) |
+| 012 | Waves 3-5 fixes (performance + type safety + a11y) | 2026-01-30 | 9fdc3b5 | [012-continue-pr2-fixes](./quick/012-continue-pr2-fixes/) |
+| 013 | Waves 6-7 fixes (error handling + React patterns) | 2026-01-30 | eb91103 | [013-pr2-waves-6-7-fixes](./quick/013-pr2-waves-6-7-fixes/) |
+| 014 | Waves 8-11 fixes (code quality + API + docs + tests) | 2026-01-30 | 68d7852 | [014-pr2-waves-8-11-fixes](./quick/014-pr2-waves-8-11-fixes/) |
+| 015 | Fix remaining PR #5 nitpicks | 2026-01-31 | 9641b87 | [015-fix-remaining-pr5-nitpicks](./quick/015-fix-remaining-pr5-nitpicks/) |
+| 016 | Address PR #5 CodeRabbit review (markdown formatting) | 2026-01-31 | 4c444c1 | [016-address-pr5-coderabbit-review](./quick/016-address-pr5-coderabbit-review/) |
+| 017 | Fix PR #5 CodeRabbit nitpicks (file count, query optimization) | 2026-01-31 | 35dcc57 | [017-fix-pr5-coderabbit-nitpicks](./quick/017-fix-pr5-coderabbit-nitpicks/) |
+| 018 | PR #6 CodeRabbit fixes (QuestionType enum, validation constants) | 2026-02-01 | ade9f34 | [018-pr6-coderabbit-fixes](./quick/018-pr6-coderabbit-fixes/) |
+| 019 | PR #6 migration for QuestionType + redirect() fix | 2026-02-01 | bc3fd2e | [019-pr6-migration-redirect-fixes](./quick/019-pr6-migration-redirect-fixes/) |
+| 020 | PR #6 review findings (failure tracking, tests, comments, dedup) | 2026-02-01 | 606ba7c | [020-fix-pr6-review-findings](./quick/020-fix-pr6-review-findings/) |
+| 021 | Final PR #6 security, tech debt & PR review (3 agents) | 2026-02-01 | - | [021-final-pr6-security-debt-review](./quick/021-final-pr6-security-debt-review/) |
+| 022 | PR #6 security & tech debt fixes (rate limiting, error sanitization, type docs) | 2026-02-01 | c564cd3 | [022-pr6-security-tech-debt-fixes](./quick/022-pr6-security-tech-debt-fixes/) |
+
+### Pending TODOs
+
+| Tag | Description | File | Added |
+| ----- | ------------- | ------ | ------- |
+| QUIZ-TIMER | Implement quiz timer with countdown and auto-submit | src/components/quiz/quiz-taker.tsx | quick-014 |
+| LEGACY-TYPES | Remove deprecated type aliases when no longer in use | src/lib/questions/types.ts | quick-014 |
+| ERROR-TRACKING | Consider Sentry integration for production error tracking | src/actions/quiz.ts | quick-018 |
 
 ### Lessons Learned
 
@@ -156,34 +185,39 @@ Overall: 74%                  [======================================  ]
 - PostgreSQL USING clause required for TEXT to ENUM migration - Prisma will not generate it automatically
 - Shadow databases on Neon may not have pgvector extension - manual migration creation may be required
 - Prisma 7 generates client module in client.ts not index.ts - import from @/generated/prisma/client
+- Next.js redirect() throws NEXT_REDIRECT error - must be called outside try/catch blocks
 
 ## Session Continuity
 
 ### What Just Happened
 
-Phase 3.1 execution and verification completed:
+Quick-022 completed - PR #6 security & tech debt fixes:
 
-**All 5 Plans Executed:**
-- 01: Defined Prisma enums in schema (QuizStatus, ShowResultsOption, AttemptStatus)
-- 02: Created migration SQL with USING clauses for TEXT→ENUM conversion
-- 03: Updated server actions to use enum values
-- 04: Updated client components with typed interfaces
-- 05: Final verification (32/32 tests, lint clean, build successful)
+**Tasks Executed:**
+1. Added rate limiting to image upload endpoint (matching PDF upload pattern)
+2. Sanitized error messages in PDF upload endpoint (prevents path leakage)
+3. Added documented branded types for AI model functions (OllamaLanguageModel/OllamaEmbeddingModel)
 
-**Verification:** Goal verified with 11/11 must-haves
-- Database enforces valid status values at PostgreSQL level
-- Prisma client exports typed enum values
-- All string comparisons migrated to enum comparisons
-- Existing data migrated without data loss
-- All tests pass after migration
+**Files Modified:**
+- `src/app/api/upload/image/route.ts` - Rate limiting after auth, before JSON parsing
+- `src/app/api/upload/route.ts` - Safe error message mapping with generic fallback
+- `src/lib/ai/providers.ts` - Branded type aliases with JSDoc references
+
+**Verification:**
+- 0 TypeScript errors
+- Linting passes
+- All 74 tests pass
 
 ### What Happens Next
 
-Two options:
-1. **Phase 3 Plan 09** - Final integration and navigation (completes Phase 3)
-2. **Phase 4** - Quiz Delivery & Student Experience
+**PR #6 Security Hardening Complete.** All HIGH priority issues from quick-021 audit addressed.
+
+Options:
+1. **Merge PR #6** - Security hardened, tech debt addressed, ready for production
+2. **Phase 3 Plan 09** - Final integration and navigation (completes Phase 3)
+3. **Phase 4** - Quiz Delivery & Student Experience
 
 ---
 
-*State captured: 2026-01-30*
-*Next command: /gsd:execute-phase 03 plan 09 OR /gsd:plan-phase 4*
+*State captured: 2026-02-01*
+*Next command: Merge PR #6 OR /gsd:execute-phase 03 plan 09 OR /gsd:plan-phase 4*

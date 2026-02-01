@@ -8,12 +8,14 @@ import { Essay } from './types/essay';
 import { Matching } from './types/matching';
 import { ShowYourWork, type ShowYourWorkData } from '@/components/quiz/show-your-work';
 import { MathText } from '@/components/quiz/math-display';
+import { resolveImageUrl } from '@/lib/storage/images';
 import type {
   QuestionOptions,
   MatchingAnswer,
+  QuestionType,
 } from '@/lib/questions/types';
 
-// Import type guards
+// Import type guards and normalization
 import {
   isMultipleChoiceOptions as isMC,
   isTrueFalseOptions as isTF,
@@ -21,13 +23,31 @@ import {
   isMatchingOptions as isMatch,
   isEssayOptions as isEss,
   isShowWorkOptions as isSW,
+  normalizeQuestionType,
 } from '@/lib/questions/types';
 
 /**
- * Union type for all answer data structures used by the QuestionRenderer.
- * This is what gets stored when a student answers a question.
+ * Union type for answer data in the UI layer.
  *
- * Named RendererAnswerData to avoid collision with lib/questions/types.ts AnswerData.
+ * DUAL TYPE SYSTEM:
+ * The application uses two answer data formats:
+ *
+ * 1. RendererAnswerData (this type) - UI Layer
+ *    - Used by QuestionRenderer and type-specific components
+ *    - Optimized for React state (null for unselected, simple arrays)
+ *    - Lives in components/questions/
+ *
+ * 2. AnswerData (LibAnswerData) - Storage/Grading Layer
+ *    - Used by server actions, grading, and database
+ *    - Optimized for persistence and grading logic
+ *    - Lives in lib/questions/types.ts
+ *
+ * Conversion functions in quiz-taker.tsx:
+ * - toLibAnswerData(): RendererAnswerData -> LibAnswerData (for submission)
+ * - toRendererAnswerData(): LibAnswerData -> RendererAnswerData (for display)
+ *
+ * This separation allows UI components to work with convenient formats
+ * while maintaining a consistent storage/grading schema.
  */
 export type RendererAnswerData =
   | { type: 'multiple_choice'; selectedId: string | null }
@@ -37,20 +57,8 @@ export type RendererAnswerData =
   | { type: 'show_work'; data: ShowYourWorkData }
   | { type: 'matching'; pairs: MatchingAnswer['pairs'] };
 
-/**
- * Supported question types.
- * Maps to CuratedQuestion.questionType field.
- */
-export type QuestionType =
-  | 'multiple_choice'
-  | 'true_false'
-  | 'true_false_justify'
-  | 'fill_in_blank'
-  | 'fill_blank'
-  | 'essay'
-  | 'short_answer'
-  | 'show_work'
-  | 'matching';
+// Re-export QuestionType for consumers that import from this module
+export type { QuestionType } from '@/lib/questions/types';
 
 interface QuestionRendererProps {
   /** Question text (may contain LaTeX) */
@@ -115,7 +123,10 @@ export function QuestionRenderer({
    * Render the question input based on type.
    */
   const renderQuestionInput = () => {
-    switch (questionType) {
+    // Normalize legacy type aliases to canonical types
+    const normalizedType = normalizeQuestionType(questionType);
+
+    switch (normalizedType) {
       case 'multiple_choice': {
         // Check if options match MultipleChoiceOptions structure
         if (!options || !isMC(options)) {
@@ -147,8 +158,8 @@ export function QuestionRenderer({
         );
       }
 
-      case 'true_false':
-      case 'true_false_justify': {
+      case 'true_false': {
+        // Note: 'true_false_justify' is normalized to 'true_false' above
         const tfAnswer = getTypedAnswer('true_false');
 
         // Try to get options, or derive from correctAnswer
@@ -180,8 +191,8 @@ export function QuestionRenderer({
         );
       }
 
-      case 'fill_in_blank':
-      case 'fill_blank': {
+      case 'fill_in_blank': {
+        // Note: 'fill_blank' is normalized to 'fill_in_blank' above
         const fibAnswer = getTypedAnswer('fill_in_blank');
 
         // Convert FillInBlankOptions to component format
@@ -248,15 +259,15 @@ export function QuestionRenderer({
             options={essayConfig}
             text={answerText}
             onTextChange={(text) =>
-              onAnswer({ type: questionType as 'essay' | 'short_answer', text })
+              onAnswer({ type: normalizedType as 'essay' | 'short_answer', text })
             }
             readOnly={readOnly}
             placeholder={
-              questionType === 'short_answer'
+              normalizedType === 'short_answer'
                 ? 'Enter your short answer...'
                 : 'Enter your essay response...'
             }
-            minRows={questionType === 'short_answer' ? 3 : 6}
+            minRows={normalizedType === 'short_answer' ? 3 : 6}
           />
         );
       }
@@ -320,20 +331,14 @@ export function QuestionRenderer({
   };
 
   // For fill-in-blank and show_work, the question text is rendered within the component
+  // Normalize here as well for consistency with legacy type aliases
+  const normalizedTypeForText = normalizeQuestionType(questionType);
   const shouldRenderQuestionText =
-    questionType !== 'fill_in_blank' &&
-    questionType !== 'fill_blank' &&
-    questionType !== 'show_work';
+    normalizedTypeForText !== 'fill_in_blank' &&
+    normalizedTypeForText !== 'show_work';
 
-  // Build image URL - if it's a storage key, prepend the public URL
-  // Guard: if R2 URL not configured and imageUrl is a storage key, return null
-  const resolvedImageUrl = imageUrl
-    ? imageUrl.startsWith('http')
-      ? imageUrl
-      : process.env.NEXT_PUBLIC_R2_URL
-        ? `${process.env.NEXT_PUBLIC_R2_URL}/${imageUrl}`
-        : null
-    : null;
+  // Resolve image URL using shared helper (handles storage keys and full URLs)
+  const resolvedImageUrl = resolveImageUrl(imageUrl);
 
   return (
     <div className="space-y-4">

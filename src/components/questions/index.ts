@@ -16,7 +16,7 @@ export { Matching } from './types/matching';
 export { ImageUpload } from './image-upload';
 
 // Dispatcher component
-export { QuestionRenderer, type RendererAnswerData, type QuestionType } from './question-renderer';
+export { QuestionRenderer, type RendererAnswerData } from './question-renderer';
 
 // Re-export types from lib for convenience
 export type {
@@ -36,9 +36,11 @@ export type {
   EssayAnswer,
   ShowWorkAnswer,
   AnswerData as LibAnswerData,
+  // Question type
+  QuestionType,
 } from '@/lib/questions/types';
 
-// Re-export type guards
+// Re-export type guards and constants
 export {
   isMatchingOptions,
   isMultipleChoiceOptions,
@@ -46,4 +48,6 @@ export {
   isFillInBlankOptions,
   isEssayOptions,
   isShowWorkOptions,
+  isValidQuestionType,
+  QUESTION_TYPES,
 } from '@/lib/questions/types';

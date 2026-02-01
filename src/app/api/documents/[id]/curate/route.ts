@@ -86,8 +86,21 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       );
     }
 
+    // Check for duplicate questionIds with conflicting selected values
+    const selectionMap = new Map<string, boolean>();
+    for (const selection of body.selections) {
+      const existing = selectionMap.get(selection.questionId);
+      if (existing !== undefined && existing !== selection.selected) {
+        return NextResponse.json(
+          { error: `Conflicting selection values for question ${selection.questionId}` },
+          { status: 400 }
+        );
+      }
+      selectionMap.set(selection.questionId, selection.selected);
+    }
+
     // Validate all questionIds belong to this document
-    const questionIds = body.selections.map((s) => s.questionId);
+    const questionIds = [...selectionMap.keys()];
     const validQuestions = await prisma.curatedQuestion.findMany({
       where: {
         id: { in: questionIds },
@@ -106,17 +119,43 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       );
     }
 
-    // Update selections
-    for (const { questionId, selected } of body.selections) {
-      await prisma.curatedQuestion.update({
-        where: { id: questionId },
-        data: { teacherSelected: selected },
-      });
+    // Batch update selections atomically (2 updates + 1 count in single transaction)
+    // Use deduped selectionMap to derive toSelect/toDeselect
+    const toSelect: string[] = [];
+    const toDeselect: string[] = [];
+    for (const [questionId, selected] of selectionMap) {
+      if (selected) {
+        toSelect.push(questionId);
+      } else {
+        toDeselect.push(questionId);
+      }
     }
 
-    // Return updated counts
-    const selectedCount = await prisma.curatedQuestion.count({
-      where: { documentId: id, teacherSelected: true },
+    const selectedCount = await prisma.$transaction(async (tx) => {
+      if (toSelect.length > 0) {
+        await tx.curatedQuestion.updateMany({
+          where: {
+            id: { in: toSelect },
+            documentId: id,
+          },
+          data: { teacherSelected: true },
+        });
+      }
+
+      if (toDeselect.length > 0) {
+        await tx.curatedQuestion.updateMany({
+          where: {
+            id: { in: toDeselect },
+            documentId: id,
+          },
+          data: { teacherSelected: false },
+        });
+      }
+
+      // Return count within transaction for consistency
+      return tx.curatedQuestion.count({
+        where: { documentId: id, teacherSelected: true },
+      });
     });
 
     return NextResponse.json({

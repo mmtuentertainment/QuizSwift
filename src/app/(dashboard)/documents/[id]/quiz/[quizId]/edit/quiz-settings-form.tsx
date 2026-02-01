@@ -9,6 +9,8 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateQuizSettings } from '@/actions/quiz';
+import type { ShowResultsOptionValue } from '@/lib/enums';
+import { QUIZ_TIME_LIMIT } from '@/lib/questions/validation';
 
 interface QuizSettingsFormProps {
   quiz: {
@@ -17,7 +19,7 @@ interface QuizSettingsFormProps {
     description: string | null;
     timeLimit: number | null;
     shuffleQuestions: boolean;
-    showResults: string;
+    showResults: ShowResultsOptionValue;
   };
   documentId: string;
 }
@@ -34,7 +36,7 @@ export function QuizSettingsForm({ quiz, documentId }: QuizSettingsFormProps) {
     quiz.timeLimit ? String(quiz.timeLimit) : ''
   );
   const [shuffleQuestions, setShuffleQuestions] = useState(quiz.shuffleQuestions);
-  const [showResults, setShowResults] = useState(quiz.showResults);
+  const [showResults, setShowResults] = useState<ShowResultsOptionValue>(quiz.showResults);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,8 +49,8 @@ export function QuizSettingsForm({ quiz, documentId }: QuizSettingsFormProps) {
     }
 
     const parsedTimeLimit = timeLimit ? parseInt(timeLimit, 10) : null;
-    if (timeLimit && (isNaN(parsedTimeLimit!) || parsedTimeLimit! < 1 || parsedTimeLimit! > 300)) {
-      setError('Time limit must be between 1 and 300 minutes');
+    if (timeLimit && (isNaN(parsedTimeLimit!) || parsedTimeLimit! < QUIZ_TIME_LIMIT.MIN || parsedTimeLimit! > QUIZ_TIME_LIMIT.MAX)) {
+      setError(`Time limit must be between ${QUIZ_TIME_LIMIT.MIN} and ${QUIZ_TIME_LIMIT.MAX} minutes`);
       return;
     }
 
@@ -58,7 +60,7 @@ export function QuizSettingsForm({ quiz, documentId }: QuizSettingsFormProps) {
         description: description.trim() || null,
         timeLimit: parsedTimeLimit,
         shuffleQuestions,
-        showResults: showResults as 'after_submit' | 'after_due' | 'manual',
+        showResults,
       });
 
       if (!result.success) {
@@ -125,8 +127,8 @@ export function QuizSettingsForm({ quiz, documentId }: QuizSettingsFormProps) {
             id="timeLimit"
             value={timeLimit}
             onChange={(e) => setTimeLimit(e.target.value)}
-            min={1}
-            max={300}
+            min={QUIZ_TIME_LIMIT.MIN}
+            max={QUIZ_TIME_LIMIT.MAX}
             className="w-32 rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             placeholder="None"
           />
@@ -162,7 +164,7 @@ export function QuizSettingsForm({ quiz, documentId }: QuizSettingsFormProps) {
               name="showResults"
               value="after_submit"
               checked={showResults === 'after_submit'}
-              onChange={(e) => setShowResults(e.target.value)}
+              onChange={(e) => setShowResults(e.target.value as ShowResultsOptionValue)}
               className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <span className="text-sm text-gray-700">
@@ -175,7 +177,7 @@ export function QuizSettingsForm({ quiz, documentId }: QuizSettingsFormProps) {
               name="showResults"
               value="after_due"
               checked={showResults === 'after_due'}
-              onChange={(e) => setShowResults(e.target.value)}
+              onChange={(e) => setShowResults(e.target.value as ShowResultsOptionValue)}
               className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <span className="text-sm text-gray-700">
@@ -188,7 +190,7 @@ export function QuizSettingsForm({ quiz, documentId }: QuizSettingsFormProps) {
               name="showResults"
               value="manual"
               checked={showResults === 'manual'}
-              onChange={(e) => setShowResults(e.target.value)}
+              onChange={(e) => setShowResults(e.target.value as ShowResultsOptionValue)}
               className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <span className="text-sm text-gray-700">

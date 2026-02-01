@@ -7,8 +7,9 @@ language: "en-US"
 
 # Review configuration
 reviews:
-  # Enable reviews
-  enabled: true
+  # Enable auto-review (correct schema path)
+  auto_review:
+    enabled: true
 
   # Request changes workflow
   request_changes_workflow: false

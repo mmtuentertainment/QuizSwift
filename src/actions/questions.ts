@@ -14,7 +14,9 @@ import prisma from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { z } from 'zod';
 import { handlePrismaError } from '@/lib/prisma-errors';
+import { cuidSchema } from '@/lib/action-utils';
 import { questionOptionsSchema } from '@/lib/questions/validation';
+import { QuestionType } from '@/generated/prisma/client';
 
 export interface QuestionFilters {
   documentId?: string;
@@ -71,7 +73,7 @@ export async function getQuestions(filters: QuestionFilters = {}): Promise<Quest
     document: { uploadedById: string };
     teacherSelected: boolean;
     documentId?: string;
-    questionType?: string;
+    questionType?: QuestionType;
     bloomLevel?: string;
     questionText?: { contains: string; mode: 'insensitive' };
   } = {
@@ -85,8 +87,8 @@ export async function getQuestions(filters: QuestionFilters = {}): Promise<Quest
     where.documentId = documentId;
   }
 
-  if (questionType) {
-    where.questionType = questionType;
+  if (questionType && Object.values(QuestionType).includes(questionType as QuestionType)) {
+    where.questionType = questionType as QuestionType;
   }
 
   if (bloomLevel) {
@@ -187,7 +189,15 @@ export type UpdateQuestionInput = z.infer<typeof UpdateQuestionSchema>;
 export async function updateQuestion(
   questionId: string,
   data: UpdateQuestionInput
-): Promise<{ success: boolean; error?: string; details?: ReturnType<z.ZodError['flatten']> }> {
+): Promise<{
+  success: boolean;
+  error?: string;
+  fieldErrors?: Record<string, string[] | undefined>;
+}> {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(questionId);
+  if (!idCheck.success) return { success: false, error: 'Invalid question ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'Not authenticated' };
@@ -196,7 +206,17 @@ export async function updateQuestion(
   // Validate input with Zod
   const parsed = UpdateQuestionSchema.safeParse(data);
   if (!parsed.success) {
-    return { success: false, error: 'Invalid input', details: parsed.error.flatten() };
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    // Build a summary error message from first field error
+    const firstError = Object.entries(fieldErrors).find(([, errs]) => errs && errs.length > 0);
+    const errorSummary = firstError
+      ? `${firstError[0]}: ${firstError[1]?.[0]}`
+      : 'Validation failed';
+    return {
+      success: false,
+      error: errorSummary,
+      fieldErrors,
+    };
   }
 
   // Verify ownership - user must own the document the question belongs to
@@ -221,38 +241,22 @@ export async function updateQuestion(
     };
   }
 
-  // Build update data, only including fields that were provided
-  const updateData: {
-    questionText?: string;
-    correctAnswer?: string;
-    explanation?: string;
-    sourceEvidence?: string;
-    options?: object;
-    imageUrl?: string | null;
-    imageAltText?: string | null;
-  } = {};
+  // Build update data declaratively - only include fields that were provided
+  const updateFields = [
+    'questionText',
+    'correctAnswer',
+    'explanation',
+    'sourceEvidence',
+    'options',
+    'imageUrl',
+    'imageAltText',
+  ] as const;
 
-  if (parsed.data.questionText !== undefined) {
-    updateData.questionText = parsed.data.questionText;
-  }
-  if (parsed.data.correctAnswer !== undefined) {
-    updateData.correctAnswer = parsed.data.correctAnswer;
-  }
-  if (parsed.data.explanation !== undefined) {
-    updateData.explanation = parsed.data.explanation;
-  }
-  if (parsed.data.sourceEvidence !== undefined) {
-    updateData.sourceEvidence = parsed.data.sourceEvidence;
-  }
-  if (parsed.data.options !== undefined) {
-    updateData.options = parsed.data.options as object;
-  }
-  if (parsed.data.imageUrl !== undefined) {
-    updateData.imageUrl = parsed.data.imageUrl;
-  }
-  if (parsed.data.imageAltText !== undefined) {
-    updateData.imageAltText = parsed.data.imageAltText;
-  }
+  const updateData = Object.fromEntries(
+    updateFields
+      .filter((key) => parsed.data[key] !== undefined)
+      .map((key) => [key, parsed.data[key]])
+  );
 
   // Guard against empty updateData
   if (Object.keys(updateData).length === 0) {
@@ -298,6 +302,10 @@ export type GetQuestionForEditResult =
  * Returns error result if unauthenticated or question not found/accessible.
  */
 export async function getQuestionForEdit(questionId: string): Promise<GetQuestionForEditResult> {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(questionId);
+  if (!idCheck.success) return { success: false, error: 'Invalid question ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'Authentication required' };
