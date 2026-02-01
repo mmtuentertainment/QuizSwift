@@ -18,18 +18,37 @@ import { QuestionRenderer, type RendererAnswerData } from '@/components/question
 import { startAttempt, submitAnswer, completeAttempt, getAttemptWithAnswers } from '@/actions/attempts';
 import type { CuratedQuestion } from '@/generated/prisma/client';
 import type { QuestionOptions, AnswerData as LibAnswerData } from '@/lib/questions/types';
+import { isValidCanvasState } from '@/lib/questions/types';
+import type { TLEditorSnapshot } from 'tldraw';
 
 interface QuizTakerProps {
   quizId: string;
   questions: CuratedQuestion[];
   isPreview?: boolean;
   onComplete?: (score: number, maxScore: number) => void;
-  // Note: timeLimit will be implemented in Phase 4
+  // TODO(QUIZ-TIMER): Implement quiz timer with countdown and auto-submit
+  // Tracked in: .planning/STATE.md pending_todos
   timeLimit?: number | null;
 }
 
 /**
- * Convert renderer answer format to library format for grading
+ * Convert renderer answer format to library answer format for server submission.
+ *
+ * DUAL TYPE SYSTEM ARCHITECTURE:
+ * - RendererAnswerData: UI layer format, used by QuestionRenderer components
+ *   - Optimized for React state management (null for unselected, arrays, etc.)
+ *   - Defined in @/components/questions/question-renderer.tsx
+ *
+ * - LibAnswerData (AnswerData): Storage/grading layer format
+ *   - Optimized for database persistence and grading logic
+ *   - Defined in @/lib/questions/types.ts
+ *
+ * This function bridges the gap:
+ * - UI collects answers in RendererAnswerData format
+ * - Before submitting to server, convert to LibAnswerData
+ * - Server stores LibAnswerData in database, uses for grading
+ *
+ * The reverse (toRendererAnswerData) loads saved answers for display.
  */
 function toLibAnswerData(answer: RendererAnswerData): LibAnswerData | null {
   switch (answer.type) {
@@ -69,7 +88,10 @@ function toLibAnswerData(answer: RendererAnswerData): LibAnswerData | null {
 }
 
 /**
- * Convert library answer format back to renderer format for display
+ * Convert library answer format back to renderer format for display.
+ *
+ * Used when loading saved answers from the database to populate UI.
+ * This is the reverse of toLibAnswerData - see that function for architecture docs.
  */
 function toRendererAnswerData(
   questionType: string,
@@ -104,18 +126,24 @@ function toRendererAnswerData(
         type: questionType as 'essay' | 'short_answer',
         text: (answerData.text as string) || '',
       };
-    case 'show_work':
+    case 'show_work': {
+      // Validate canvas state from database JSON before using
+      // Type guard validates structure, then cast to TLEditorSnapshot via unknown
+      const rawCanvasState = answerData.canvasState;
+      const validatedCanvasState = isValidCanvasState(rawCanvasState)
+        ? (rawCanvasState as unknown as TLEditorSnapshot)
+        : null;
+
       return {
         type: 'show_work',
         data: {
           finalAnswer: (answerData.finalAnswer as string) || '',
-          // Restore canvas state - cast through any since JSON loses type info
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          canvasState: answerData.canvasState as any ?? null,
+          canvasState: validatedCanvasState,
           // canvasImage cannot be restored from JSON (Blob)
           canvasImage: null,
         },
       };
+    }
     default:
       return null;
   }
@@ -143,6 +171,7 @@ export function QuizTaker({
     }
   );
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [failedSaveQuestionIds, setFailedSaveQuestionIds] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [score, setScore] = useState<{ earned: number; max: number } | null>(null);
@@ -209,14 +238,17 @@ export function QuizTaker({
   const currentQuestion = questions[currentIndex];
   const currentAnswer = currentQuestion ? optimisticAnswers.get(currentQuestion.id) ?? null : null;
 
+  // Extract primitive for stable useCallback dependency (object reference changes each render)
+  const currentQuestionId = currentQuestion?.id;
+
   const handleAnswer = useCallback(async (answerData: RendererAnswerData) => {
-    if (!attemptId || !currentQuestion) return;
+    if (!attemptId || !currentQuestionId) return;
 
     // Clear any previous save error
     setSaveError(null);
 
     // Show optimistic update immediately
-    addOptimisticAnswer({ questionId: currentQuestion.id, answer: answerData });
+    addOptimisticAnswer({ questionId: currentQuestionId, answer: answerData });
 
     // Convert to library format and submit to server
     const libAnswer = toLibAnswerData(answerData);
@@ -226,26 +258,32 @@ export function QuizTaker({
       // On failure: transition ends without updating savedAnswers (auto-reverts)
       startTransition(async () => {
         try {
-          const result = await submitAnswer(attemptId, currentQuestion.id, libAnswer);
+          const result = await submitAnswer(attemptId, currentQuestionId, libAnswer);
           if (result.error) {
             console.error('Failed to save answer:', result.error);
             setSaveError(`Failed to save answer: ${result.error}`);
-            // Don't update savedAnswers - optimistic will revert
+            setFailedSaveQuestionIds(prev => new Set(prev).add(currentQuestionId));
           } else {
             // Success: update saved answers so optimistic becomes permanent
-            setSavedAnswers((prev) => new Map(prev).set(currentQuestion.id, answerData));
+            setSavedAnswers((prev) => new Map(prev).set(currentQuestionId, answerData));
+            // Clear from failed set if it was there (retry succeeded)
+            setFailedSaveQuestionIds(prev => {
+              const next = new Set(prev);
+              next.delete(currentQuestionId);
+              return next;
+            });
           }
         } catch (err) {
           console.error('Failed to save answer:', err);
           setSaveError('Failed to save your answer. Please check your connection and try again.');
-          // Don't update savedAnswers - optimistic will revert
+          setFailedSaveQuestionIds(prev => new Set(prev).add(currentQuestionId));
         }
       });
     } else {
       // For answers that don't need server save (empty), just update saved state
-      setSavedAnswers((prev) => new Map(prev).set(currentQuestion.id, answerData));
+      setSavedAnswers((prev) => new Map(prev).set(currentQuestionId, answerData));
     }
-  }, [attemptId, currentQuestion, addOptimisticAnswer]);
+  }, [attemptId, currentQuestionId, addOptimisticAnswer]);
 
   const handleNext = useCallback(() => {
     if (currentIndex < questions.length - 1) {
@@ -291,8 +329,12 @@ export function QuizTaker({
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
-          <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent mx-auto" />
-          <p className="text-gray-600">Loading quiz...</p>
+          <div
+            className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent mx-auto"
+            role="status"
+            aria-label="Loading quiz"
+          />
+          <p className="text-gray-600" aria-live="polite">Loading quiz...</p>
         </div>
       </div>
     );
@@ -373,10 +415,18 @@ export function QuizTaker({
       </div>
 
       {/* Progress bar */}
-      <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+      <div
+        role="progressbar"
+        aria-valuenow={currentIndex + 1}
+        aria-valuemin={1}
+        aria-valuemax={questions.length}
+        aria-label={`Quiz progress: Question ${currentIndex + 1} of ${questions.length}`}
+        className="h-2 overflow-hidden rounded-full bg-gray-200"
+      >
         <div
           className="h-full bg-blue-500 transition-all duration-300"
           style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+          aria-hidden="true"
         />
       </div>
 
@@ -425,12 +475,26 @@ export function QuizTaker({
               className={`h-3 w-3 rounded-full transition-all ${
                 idx === currentIndex
                   ? 'scale-125 bg-blue-600 ring-2 ring-blue-300'
-                  : optimisticAnswers.has(q.id)
-                    ? 'bg-green-500 hover:bg-green-400'
-                    : 'bg-gray-300 hover:bg-gray-400'
+                  : failedSaveQuestionIds.has(q.id)
+                    ? 'bg-red-500 ring-2 ring-red-300 hover:bg-red-400'
+                    : optimisticAnswers.has(q.id)
+                      ? 'bg-green-500 hover:bg-green-400'
+                      : 'bg-gray-300 hover:bg-gray-400'
               }`}
-              aria-label={`Go to question ${idx + 1}${optimisticAnswers.has(q.id) ? ' (answered)' : ''}`}
-              title={`Question ${idx + 1}${optimisticAnswers.has(q.id) ? ' (answered)' : ''}`}
+              aria-label={`Go to question ${idx + 1}${
+                failedSaveQuestionIds.has(q.id)
+                  ? ' (save failed)'
+                  : optimisticAnswers.has(q.id)
+                    ? ' (answered)'
+                    : ''
+              }`}
+              title={`Question ${idx + 1}${
+                failedSaveQuestionIds.has(q.id)
+                  ? ' (save failed)'
+                  : optimisticAnswers.has(q.id)
+                    ? ' (answered)'
+                    : ''
+              }`}
             />
           ))}
         </div>
@@ -476,6 +540,17 @@ export function QuizTaker({
               Dismiss
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Failed saves warning on last question */}
+      {currentIndex === questions.length - 1 && failedSaveQuestionIds.size > 0 && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <p className="text-sm text-red-800">
+            <strong>Warning:</strong> {failedSaveQuestionIds.size} answer
+            {failedSaveQuestionIds.size > 1 ? 's' : ''} failed to save.
+            Please check your connection before submitting.
+          </p>
         </div>
       )}
 

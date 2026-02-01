@@ -17,6 +17,7 @@ import { publishQuiz, unpublishQuiz } from '@/actions/quiz';
 import { QuestionEditor } from '@/components/questions/question-editor';
 import { MathText } from '@/components/quiz/math-display';
 import type { QuestionOptions } from '@/lib/questions/types';
+import type { QuizStatusValue, ShowResultsOptionValue } from '@/lib/enums';
 
 interface QuizQuestion {
   id: string;
@@ -38,12 +39,12 @@ interface QuizData {
   id: string;
   title: string;
   description: string | null;
-  status: string;
+  status: QuizStatusValue;
   teacherPreviewedAt: string | null;
   publishedAt: string | null;
   timeLimit: number | null;
   shuffleQuestions: boolean;
-  showResults: string;
+  showResults: ShowResultsOptionValue;
 }
 
 interface QuizDetailClientProps {

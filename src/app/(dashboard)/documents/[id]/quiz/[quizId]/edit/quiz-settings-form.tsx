@@ -9,6 +9,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateQuizSettings } from '@/actions/quiz';
+import type { ShowResultsOptionValue } from '@/lib/enums';
 
 interface QuizSettingsFormProps {
   quiz: {
@@ -17,7 +18,7 @@ interface QuizSettingsFormProps {
     description: string | null;
     timeLimit: number | null;
     shuffleQuestions: boolean;
-    showResults: string;
+    showResults: ShowResultsOptionValue;
   };
   documentId: string;
 }
@@ -34,7 +35,7 @@ export function QuizSettingsForm({ quiz, documentId }: QuizSettingsFormProps) {
     quiz.timeLimit ? String(quiz.timeLimit) : ''
   );
   const [shuffleQuestions, setShuffleQuestions] = useState(quiz.shuffleQuestions);
-  const [showResults, setShowResults] = useState(quiz.showResults);
+  const [showResults, setShowResults] = useState<ShowResultsOptionValue>(quiz.showResults);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +59,7 @@ export function QuizSettingsForm({ quiz, documentId }: QuizSettingsFormProps) {
         description: description.trim() || null,
         timeLimit: parsedTimeLimit,
         shuffleQuestions,
-        showResults: showResults as 'after_submit' | 'after_due' | 'manual',
+        showResults,
       });
 
       if (!result.success) {
@@ -162,7 +163,7 @@ export function QuizSettingsForm({ quiz, documentId }: QuizSettingsFormProps) {
               name="showResults"
               value="after_submit"
               checked={showResults === 'after_submit'}
-              onChange={(e) => setShowResults(e.target.value)}
+              onChange={(e) => setShowResults(e.target.value as ShowResultsOptionValue)}
               className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <span className="text-sm text-gray-700">
@@ -175,7 +176,7 @@ export function QuizSettingsForm({ quiz, documentId }: QuizSettingsFormProps) {
               name="showResults"
               value="after_due"
               checked={showResults === 'after_due'}
-              onChange={(e) => setShowResults(e.target.value)}
+              onChange={(e) => setShowResults(e.target.value as ShowResultsOptionValue)}
               className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <span className="text-sm text-gray-700">
@@ -188,7 +189,7 @@ export function QuizSettingsForm({ quiz, documentId }: QuizSettingsFormProps) {
               name="showResults"
               value="manual"
               checked={showResults === 'manual'}
-              onChange={(e) => setShowResults(e.target.value)}
+              onChange={(e) => setShowResults(e.target.value as ShowResultsOptionValue)}
               className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <span className="text-sm text-gray-700">

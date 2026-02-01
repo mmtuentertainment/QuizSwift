@@ -9,7 +9,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import {
   getImageUploadUrl,
+  isValidImageExtension,
   ALLOWED_IMAGE_TYPES,
+  ALLOWED_IMAGE_EXTENSIONS,
   MAX_IMAGE_SIZE,
 } from '@/lib/storage/images';
 
@@ -44,6 +46,14 @@ export async function POST(request: NextRequest) {
     if (!fileName || !contentType || typeof fileSize !== 'number') {
       return NextResponse.json(
         { error: 'Missing required fields: fileName, contentType, fileSize' },
+        { status: 400 }
+      );
+    }
+
+    // Validate file extension
+    if (!isValidImageExtension(fileName)) {
+      return NextResponse.json(
+        { error: `Invalid file extension. Allowed: ${ALLOWED_IMAGE_EXTENSIONS.join(', ')}` },
         { status: 400 }
       );
     }

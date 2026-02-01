@@ -42,6 +42,14 @@ export function ImageUpload({
   const [preview, setPreview] = useState<string | null>(currentImageUrl || null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isMountedRef = useRef(true);
+
+  // Track mount state for async cleanup
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Sync preview state when currentImageUrl prop changes (external system sync)
   useEffect(() => {
@@ -70,7 +78,17 @@ export function ImageUpload({
 
       // Show preview immediately for better UX
       const reader = new FileReader();
-      reader.onload = (e) => setPreview(e.target?.result as string);
+      reader.onload = (e) => {
+        // Only update state if component is still mounted
+        if (isMountedRef.current) {
+          setPreview(e.target?.result as string);
+        }
+      };
+      reader.onerror = () => {
+        if (isMountedRef.current) {
+          setError('Failed to read file');
+        }
+      };
       reader.readAsDataURL(file);
 
       setUploading(true);
@@ -116,12 +134,17 @@ export function ImageUpload({
         setUploadProgress(100);
         onUpload(storageKey);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Upload failed');
-        // Revert preview on error
-        setPreview(currentImageUrl || null);
+        // Only update state if still mounted
+        if (isMountedRef.current) {
+          setError(err instanceof Error ? err.message : 'Upload failed');
+          // Revert preview on error
+          setPreview(currentImageUrl || null);
+        }
       } finally {
-        setUploading(false);
-        setUploadProgress(0);
+        if (isMountedRef.current) {
+          setUploading(false);
+          setUploadProgress(0);
+        }
       }
     },
     [currentImageUrl, onUpload]

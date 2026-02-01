@@ -78,24 +78,33 @@ export function QuizBuilder({ documentId, availableQuestions }: QuizBuilderProps
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="quiz-title"
+              className="block text-sm font-medium text-gray-700"
+            >
               Title *
             </label>
             <input
+              id="quiz-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
               placeholder="Chapter 5 Quiz"
               required
+              aria-required="true"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="quiz-description"
+              className="block text-sm font-medium text-gray-700"
+            >
               Description
             </label>
             <textarea
+              id="quiz-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
@@ -106,10 +115,14 @@ export function QuizBuilder({ documentId, availableQuestions }: QuizBuilderProps
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="quiz-time-limit"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Time Limit (minutes)
               </label>
               <input
+                id="quiz-time-limit"
                 type="number"
                 value={timeLimit ?? ''}
                 onChange={(e) =>
@@ -119,7 +132,11 @@ export function QuizBuilder({ documentId, availableQuestions }: QuizBuilderProps
                 min={1}
                 max={300}
                 placeholder="No limit"
+                aria-describedby="time-limit-hint"
               />
+              <span id="time-limit-hint" className="sr-only">
+                Leave empty for no time limit
+              </span>
             </div>
 
             <div className="flex items-center pt-6">
@@ -163,6 +180,7 @@ export function QuizBuilder({ documentId, availableQuestions }: QuizBuilderProps
                   checked={selectedIds.has(question.id)}
                   onChange={() => toggleQuestion(question.id)}
                   className="mt-1 h-4 w-4"
+                  aria-label={`Select question ${idx + 1}: ${question.questionText.slice(0, 50)}${question.questionText.length > 50 ? '...' : ''}`}
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">

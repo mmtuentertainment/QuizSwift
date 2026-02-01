@@ -17,6 +17,8 @@ import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { handlePrismaError } from '@/lib/prisma-errors';
+import { cuidSchema } from '@/lib/action-utils';
+import { QuizStatus, ShowResultsOption } from '@/generated/prisma/client';
 
 const CreateQuizSchema = z.object({
   documentId: z.string().cuid(),
@@ -33,15 +35,21 @@ export async function createQuiz(formData: FormData) {
     return { error: 'Unauthorized' };
   }
 
-  // Parse questionIds with error handling
-  let questionIds: string[] = [];
+  // Parse and validate questionIds from FormData
+  const rawQuestionIds = formData.get('questionIds');
+  let parsedIds: unknown;
   try {
-    const rawQuestionIds = formData.get('questionIds');
-    questionIds = rawQuestionIds ? JSON.parse(rawQuestionIds as string) : [];
-  } catch (error) {
-    console.error('[createQuiz] Failed to parse questionIds:', error);
-    return { error: 'Invalid question IDs format' };
+    parsedIds = rawQuestionIds ? JSON.parse(rawQuestionIds as string) : [];
+  } catch {
+    return { error: 'Invalid question IDs format: malformed JSON' };
   }
+
+  const questionIdsResult = z.array(z.string()).safeParse(parsedIds);
+  if (!questionIdsResult.success) {
+    console.error('[createQuiz] Invalid questionIds:', questionIdsResult.error.flatten());
+    return { error: 'Invalid question IDs format: expected array of strings' };
+  }
+  const questionIds = questionIdsResult.data;
 
   const parsed = CreateQuizSchema.safeParse({
     documentId: formData.get('documentId'),
@@ -76,7 +84,7 @@ export async function createQuiz(formData: FormData) {
         timeLimit: parsed.data.timeLimit,
         shuffleQuestions: parsed.data.shuffleQuestions ?? false,
         createdById: session.user.id,
-        status: 'draft',
+        status: QuizStatus.draft,
         questions: {
           create: parsed.data.questionIds.map((questionId, idx) => ({
             questionId,
@@ -116,6 +124,10 @@ export type GetQuizzesResult =
   | { success: false; error: string };
 
 export async function getQuizzesForDocument(documentId: string): Promise<GetQuizzesResult> {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(documentId);
+  if (!idCheck.success) return { success: false, error: 'Invalid document ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'Authentication required' };
@@ -148,9 +160,13 @@ async function fetchQuizWithQuestions(quizId: string) {
 
 export type GetQuizWithQuestionsResult =
   | { success: true; quiz: QuizWithQuestions }
-  | { success: false; error: 'unauthenticated' | 'not_found' | 'access_denied' };
+  | { success: false; error: 'unauthenticated' | 'not_found' | 'access_denied' | 'database_error' };
 
 export async function getQuizWithQuestions(quizId: string): Promise<GetQuizWithQuestionsResult> {
+  // Validate CUID format - return 'not_found' for consistency with existing error types
+  const idCheck = cuidSchema.safeParse(quizId);
+  if (!idCheck.success) return { success: false, error: 'not_found' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'unauthenticated' };
@@ -168,9 +184,10 @@ export async function getQuizWithQuestions(quizId: string): Promise<GetQuizWithQ
     }
 
     return { success: true, quiz };
-  } catch {
-    // Database error - treat as not found to avoid leaking error details
-    return { success: false, error: 'not_found' };
+  } catch (error) {
+    // Log full error for debugging, return appropriate error type
+    console.error('[getQuizWithQuestions] Database error:', error);
+    return { success: false, error: 'database_error' };
   }
 }
 
@@ -178,12 +195,12 @@ export async function getQuizWithQuestions(quizId: string): Promise<GetQuizWithQ
 // Quiz Settings Update
 // =============================================================================
 
-const UpdateQuizSettingsSchema = z.object({
+export const UpdateQuizSettingsSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(500).nullable().optional(),
   timeLimit: z.number().int().min(1).max(300).nullable().optional(),
   shuffleQuestions: z.boolean().optional(),
-  showResults: z.enum(['after_submit', 'after_due', 'manual']).optional(),
+  showResults: z.nativeEnum(ShowResultsOption).optional(),
 });
 
 export type UpdateQuizSettingsInput = z.infer<typeof UpdateQuizSettingsSchema>;
@@ -195,6 +212,10 @@ export async function updateQuizSettings(
   quizId: string,
   data: UpdateQuizSettingsInput
 ): Promise<{ success: boolean; error?: string }> {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(quizId);
+  if (!idCheck.success) return { success: false, error: 'Invalid quiz ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'Unauthorized' };
@@ -246,6 +267,10 @@ export async function updateQuizSettings(
 export async function publishQuiz(
   quizId: string
 ): Promise<{ success: boolean; error?: string }> {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(quizId);
+  if (!idCheck.success) return { success: false, error: 'Invalid quiz ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'Unauthorized' };
@@ -270,8 +295,12 @@ export async function publishQuiz(
     return { success: false, error: 'Access denied' };
   }
 
-  if (quiz.status === 'published') {
+  if (quiz.status === QuizStatus.published) {
     return { success: false, error: 'Quiz is already published' };
+  }
+
+  if (quiz.status === QuizStatus.archived) {
+    return { success: false, error: 'Archived quizzes cannot be published' };
   }
 
   // CONT-06: Enforce preview requirement
@@ -287,7 +316,7 @@ export async function publishQuiz(
     await prisma.quiz.update({
       where: { id: quizId },
       data: {
-        status: 'published',
+        status: QuizStatus.published,
         publishedAt: new Date(),
       },
     });
@@ -305,6 +334,10 @@ export async function publishQuiz(
 export async function unpublishQuiz(
   quizId: string
 ): Promise<{ success: boolean; error?: string }> {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(quizId);
+  if (!idCheck.success) return { success: false, error: 'Invalid quiz ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'Unauthorized' };
@@ -319,7 +352,7 @@ export async function unpublishQuiz(
     return { success: false, error: 'Quiz not found or access denied' };
   }
 
-  if (quiz.status !== 'published') {
+  if (quiz.status !== QuizStatus.published) {
     return { success: false, error: 'Quiz is not published' };
   }
 
@@ -327,7 +360,7 @@ export async function unpublishQuiz(
     await prisma.quiz.update({
       where: { id: quizId },
       data: {
-        status: 'draft',
+        status: QuizStatus.draft,
         publishedAt: null,
       },
     });
@@ -345,6 +378,10 @@ export async function unpublishQuiz(
 export async function archiveQuiz(
   quizId: string
 ): Promise<{ success: boolean; error?: string }> {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(quizId);
+  if (!idCheck.success) return { success: false, error: 'Invalid quiz ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: 'Unauthorized' };
@@ -362,7 +399,7 @@ export async function archiveQuiz(
   try {
     await prisma.quiz.update({
       where: { id: quizId },
-      data: { status: 'archived' },
+      data: { status: QuizStatus.archived },
     });
 
     revalidatePath(`/documents/${quiz.documentId}/quiz/${quizId}`);

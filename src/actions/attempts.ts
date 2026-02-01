@@ -14,13 +14,22 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { gradeAnswer, isAutoGradable } from '@/lib/questions/grading';
-import type { AnswerData, QuestionOptions } from '@/lib/questions/types';
+import type { AnswerData } from '@/lib/questions/types';
+import { isValidQuestionType } from '@/lib/questions/types';
+import { parseQuestionOptions } from '@/lib/questions/schemas';
+import { answerDataSchema } from '@/lib/questions/validation';
 import { handlePrismaError } from '@/lib/prisma-errors';
+import { cuidSchema } from '@/lib/action-utils';
+import { AttemptStatus, QuizStatus } from '@/generated/prisma/client';
 
 /**
  * Start or retrieve an existing quiz attempt for the current user
  */
 export async function startAttempt(quizId: string) {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(quizId);
+  if (!idCheck.success) return { error: 'Invalid quiz ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { error: 'Unauthorized' };
@@ -58,7 +67,7 @@ export async function startAttempt(quizId: string) {
       create: {
         quizId,
         userId: session.user.id,
-        status: 'in_progress',
+        status: AttemptStatus.in_progress,
       },
     });
 
@@ -75,25 +84,32 @@ export async function startAttempt(quizId: string) {
 export async function submitAnswer(
   attemptId: string,
   questionId: string,
-  answerData: AnswerData
+  answerData: unknown
 ) {
+  // Validate CUID formats
+  const attemptCheck = cuidSchema.safeParse(attemptId);
+  if (!attemptCheck.success) return { error: 'Invalid attempt ID format' };
+  const questionCheck = cuidSchema.safeParse(questionId);
+  if (!questionCheck.success) return { error: 'Invalid question ID format' };
+
+  // Validate answerData structure
+  const answerCheck = answerDataSchema.safeParse(answerData);
+  if (!answerCheck.success) return { error: 'Invalid answer format' };
+  const validatedAnswer = answerCheck.data;
+
   const session = await auth();
   if (!session?.user?.id) {
     return { error: 'Unauthorized' };
   }
 
-  // Verify attempt ownership and get question details
+  // Query 1: Verify attempt ownership and status (targeted query)
   const attempt = await prisma.quizAttempt.findUnique({
     where: { id: attemptId },
-    include: {
-      quiz: {
-        include: {
-          questions: {
-            where: { questionId },
-            include: { question: true },
-          },
-        },
-      },
+    select: {
+      id: true,
+      userId: true,
+      status: true,
+      quizId: true,
     },
   });
 
@@ -101,11 +117,21 @@ export async function submitAnswer(
     return { error: 'Attempt not found' };
   }
 
-  if (attempt.status !== 'in_progress') {
+  if (attempt.status !== AttemptStatus.in_progress) {
     return { error: 'Attempt already submitted' };
   }
 
-  const quizQuestion = attempt.quiz.questions[0];
+  // Query 2: Get the specific quiz question with its curated question
+  const quizQuestion = await prisma.quizQuestion.findFirst({
+    where: {
+      quizId: attempt.quizId,
+      questionId: questionId,
+    },
+    include: {
+      question: true,
+    },
+  });
+
   if (!quizQuestion) {
     return { error: 'Question not in quiz' };
   }
@@ -115,13 +141,23 @@ export async function submitAnswer(
 
   // Grade if auto-gradable
   let gradeResult = null;
-  if (isAutoGradable(question.questionType)) {
-    gradeResult = gradeAnswer(
-      question.questionType,
-      question.options as QuestionOptions | null,
-      answerData,
-      points
-    );
+  const questionType = question.questionType;
+
+  // Validate question options from database JSON before grading
+  const validatedOptions = parseQuestionOptions(question.options);
+
+  if (isValidQuestionType(questionType) && isAutoGradable(questionType)) {
+    if (!validatedOptions) {
+      console.warn(`[submitAnswer] Invalid options for question ${questionId}, skipping auto-grade`);
+    } else {
+      // Cast to AnswerData - Zod schema validates the structure matches
+      gradeResult = gradeAnswer(
+        questionType,
+        validatedOptions,
+        validatedAnswer as AnswerData,
+        points
+      );
+    }
   }
 
   // Upsert answer (update if already exists)
@@ -136,13 +172,13 @@ export async function submitAnswer(
       create: {
         attemptId,
         questionId,
-        answerData: answerData as object,
+        answerData: validatedAnswer as object,
         isCorrect: gradeResult?.isCorrect ?? null,
         pointsEarned: gradeResult?.pointsEarned ?? null,
         feedback: gradeResult?.feedback ?? null,
       },
       update: {
-        answerData: answerData as object,
+        answerData: validatedAnswer as object,
         isCorrect: gradeResult?.isCorrect ?? null,
         pointsEarned: gradeResult?.pointsEarned ?? null,
         feedback: gradeResult?.feedback ?? null,
@@ -160,6 +196,10 @@ export async function submitAnswer(
  * Complete a quiz attempt and calculate the final score
  */
 export async function completeAttempt(attemptId: string) {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(attemptId);
+  if (!idCheck.success) return { error: 'Invalid attempt ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { error: 'Unauthorized' };
@@ -181,7 +221,7 @@ export async function completeAttempt(attemptId: string) {
     return { error: 'Attempt not found' };
   }
 
-  if (attempt.status !== 'in_progress') {
+  if (attempt.status !== AttemptStatus.in_progress) {
     return { error: 'Attempt already submitted' };
   }
 
@@ -200,7 +240,7 @@ export async function completeAttempt(attemptId: string) {
     await prisma.quizAttempt.update({
       where: { id: attemptId },
       data: {
-        status: 'submitted',
+        status: AttemptStatus.submitted,
         submittedAt: new Date(),
         score: totalScore,
         maxScore,
@@ -220,6 +260,10 @@ export async function completeAttempt(attemptId: string) {
  * Required before quiz can be published (CONT-06 workflow requirement)
  */
 export async function markQuizPreviewed(quizId: string) {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(quizId);
+  if (!idCheck.success) return { error: 'Invalid quiz ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { error: 'Unauthorized' };
@@ -244,7 +288,7 @@ export async function markQuizPreviewed(quizId: string) {
       data: {
         teacherPreviewedAt: new Date(),
         // After preview, quiz can now be published
-        status: quiz.status === 'draft' ? 'preview_required' : quiz.status,
+        status: quiz.status === QuizStatus.draft ? QuizStatus.preview_required : quiz.status,
       },
     });
 
@@ -260,6 +304,10 @@ export async function markQuizPreviewed(quizId: string) {
  * Get an existing attempt with all answers for resuming
  */
 export async function getAttemptWithAnswers(quizId: string) {
+  // Validate CUID format
+  const idCheck = cuidSchema.safeParse(quizId);
+  if (!idCheck.success) return { error: 'Invalid quiz ID format' };
+
   const session = await auth();
   if (!session?.user?.id) {
     return { error: 'Unauthorized' };
