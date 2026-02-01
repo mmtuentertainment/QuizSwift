@@ -26,6 +26,22 @@ const ollamaProvider = createOllama({
 });
 
 /**
+ * Branded type for Ollama language model.
+ * Actual type is LanguageModelV1 but incompatible across providers.
+ * @see STATE.md decision: "Any type for AI models"
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type OllamaLanguageModel = any;
+
+/**
+ * Branded type for Ollama embedding model.
+ * Actual type is EmbeddingModelV1 but incompatible across providers.
+ * @see STATE.md decision: "Any type for AI models"
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type OllamaEmbeddingModel = any;
+
+/**
  * AI Provider availability error with troubleshooting instructions
  */
 export class AIProviderUnavailableError extends Error {
@@ -57,8 +73,7 @@ const CACHE_TTL_MS = 30000;
  * Note: Returns any type for flexibility with AI SDK.
  * Using ai-sdk-ollama v3+ (v2 spec compatible with AI SDK v6).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getExtractionModel(): any {
+export function getExtractionModel(): OllamaLanguageModel {
   // Hermes 2 Pro with extended 32K context for complex schema generation
   return ollamaProvider('hermes2pro-32k');
 }
@@ -71,8 +86,7 @@ export function getExtractionModel(): any {
  *   - 1,024 dimensions, only 1.2GB VRAM
  *   - Best accuracy for document retrieval and grounding verification
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getEmbeddingModel(): any {
+export function getEmbeddingModel(): OllamaEmbeddingModel {
   // mxbai-embed-large: highest MTEB score (64.68), 1.2GB VRAM
   // Outperforms commercial models on retrieval tasks
   return ollamaProvider.embedding('mxbai-embed-large');
@@ -121,7 +135,7 @@ export async function ensureOllamaAvailable(): Promise<void> {
  * Get extraction model with availability check
  * Call this instead of getExtractionModel() when you need guaranteed availability
  */
-export async function getExtractionModelSafe(): Promise<ReturnType<typeof getExtractionModel>> {
+export async function getExtractionModelSafe(): Promise<OllamaLanguageModel> {
   await ensureOllamaAvailable();
   return getExtractionModel();
 }
@@ -130,7 +144,7 @@ export async function getExtractionModelSafe(): Promise<ReturnType<typeof getExt
  * Get embedding model with availability check
  * Call this instead of getEmbeddingModel() when you need guaranteed availability
  */
-export async function getEmbeddingModelSafe(): Promise<ReturnType<typeof getEmbeddingModel>> {
+export async function getEmbeddingModelSafe(): Promise<OllamaEmbeddingModel> {
   await ensureOllamaAvailable();
   return getEmbeddingModel();
 }
