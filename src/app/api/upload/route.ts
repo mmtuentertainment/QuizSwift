@@ -96,10 +96,27 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Upload error:', error);
 
+    // Sanitize error messages - never expose internal paths or stack traces
+    const safeErrorMessages: Record<string, string> = {
+      'File too large': 'File too large. Maximum size is 10MB.',
+      'Invalid file type': 'Invalid file type. Only PDF files are allowed.',
+      'No file provided': 'No file provided',
+      'Question count must be': 'Question count must be between 5 and 50',
+    };
+
     if (error instanceof Error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      // Check for known safe error patterns
+      for (const [pattern, message] of Object.entries(safeErrorMessages)) {
+        if (error.message.includes(pattern)) {
+          return NextResponse.json({ error: message }, { status: 400 });
+        }
+      }
     }
 
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    // Generic error for anything else - don't leak internal details
+    return NextResponse.json(
+      { error: 'Upload failed. Please try again.' },
+      { status: 500 }
+    );
   }
 }
