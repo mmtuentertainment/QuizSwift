@@ -26,9 +26,8 @@ interface QuizTakerProps {
   questions: CuratedQuestion[];
   isPreview?: boolean;
   onComplete?: (score: number, maxScore: number) => void;
-  // TODO(QUIZ-TIMER): Implement quiz timer with countdown and auto-submit
-  // Tracked in: .planning/STATE.md pending_todos
-  timeLimit?: number | null;
+  // TODO(QUIZ-TIMER): Add timeLimit prop when implementing quiz timer
+  // See: .planning/STATE.md pending_todos
 }
 
 /**
@@ -154,8 +153,6 @@ export function QuizTaker({
   questions,
   isPreview = false,
   onComplete,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  timeLimit: _timeLimit,
 }: QuizTakerProps) {
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);

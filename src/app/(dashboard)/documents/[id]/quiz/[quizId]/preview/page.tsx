@@ -108,11 +108,11 @@ export default async function TeacherPreviewPage({
       </div>
 
       {/* Quiz taker component with preview callback */}
+      {/* TODO(QUIZ-TIMER): Pass timeLimit={quiz.timeLimit} when implementing quiz timer */}
       <TeacherPreviewWrapper
         quizId={quizId}
         documentId={documentId}
         questions={questions}
-        timeLimit={quiz.timeLimit}
       />
     </div>
   );

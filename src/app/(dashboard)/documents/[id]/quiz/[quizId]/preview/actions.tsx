@@ -17,14 +17,14 @@ interface TeacherPreviewWrapperProps {
   quizId: string;
   documentId: string;
   questions: CuratedQuestion[];
-  timeLimit: number | null;
+  // TODO(QUIZ-TIMER): Add timeLimit prop when implementing quiz timer
+  // See: .planning/STATE.md pending_todos
 }
 
 export function TeacherPreviewWrapper({
   quizId,
   documentId,
   questions,
-  timeLimit,
 }: TeacherPreviewWrapperProps) {
   const router = useRouter();
   const [completionState, setCompletionState] = useState<{
@@ -60,7 +60,6 @@ export function TeacherPreviewWrapper({
         questions={questions}
         isPreview={true}
         onComplete={handleComplete}
-        timeLimit={timeLimit ?? undefined}
       />
 
       {/* Preview error warning */}

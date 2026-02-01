@@ -190,8 +190,15 @@ export async function getQuizWithQuestions(quizId: string): Promise<GetQuizWithQ
 
     return { success: true, quiz };
   } catch (error) {
-    // Log full error for debugging, return appropriate error type
-    console.error('[getQuizWithQuestions] Database error:', error);
+    // Log full error with request context for debugging
+    // TODO(ERROR-TRACKING): Consider Sentry integration for production error tracking
+    // Pattern: Use @sentry/nextjs with global-error.tsx for App Router
+    // See: https://docs.sentry.io/platforms/javascript/guides/nextjs/
+    console.error('[getQuizWithQuestions] Database error:', {
+      error,
+      quizId,
+      userId: session?.user?.id,
+    });
     return { success: false, error: 'database_error' };
   }
 }
