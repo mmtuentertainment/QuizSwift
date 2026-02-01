@@ -3,9 +3,16 @@
  *
  * Provides consistent error handling across all server actions
  * that interact with Prisma.
+ *
+ * Note: ActionResult type is re-exported from action-utils.ts for convenience.
+ * The canonical definition is in action-utils.ts.
  */
 
 import { Prisma } from '@/generated/prisma/client';
+import type { ActionResult } from './action-utils';
+
+// Re-export ActionResult for backward compatibility
+export type { ActionResult } from './action-utils';
 
 /**
  * Handle Prisma errors and return user-friendly messages.
@@ -22,13 +29,6 @@ export function handlePrismaError(error: unknown): string {
   }
   return 'Database operation failed. Please try again.';
 }
-
-/**
- * Type-safe result pattern for server actions
- */
-export type ActionResult<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string };
 
 /**
  * Create a success result
