@@ -135,15 +135,17 @@ export const processPdf = inngest.createFunction(
     });
 
     // Step 7: Generate embeddings for all chunks
-    const chunkEmbeddings = await step.run('generate-embeddings', async () => {
-      if (chunks.length === 0) return [];
+    const embeddingResult = await step.run('generate-embeddings', async () => {
+      if (chunks.length === 0) return { embeddings: [] as number[][], failedIndexes: [] as number[] };
 
       // Extract chunk contents for batch embedding
       const chunkTexts = chunks.map((c) => c.content);
 
       // Generate embeddings in batch using Ollama mxbai-embed-large
+      // Returns { embeddings, failedIndexes } for failure tracking
       return embedBatch(chunkTexts);
     });
+    const chunkEmbeddings = embeddingResult.embeddings;
 
     // Step 8: Store chunks with embeddings in database
     const storedChunks = await step.run('store-chunks', async () => {
@@ -239,6 +241,7 @@ export const processPdf = inngest.createFunction(
       ocrNeeded: ocrAnalysis.isScanned,
       pagesOcrd: ocrAnalysis.pagesNeedingOcr.length,
       embeddingsGenerated: chunkEmbeddings.length,
+      embeddingsFailed: embeddingResult.failedIndexes.length,
     };
   }
 );

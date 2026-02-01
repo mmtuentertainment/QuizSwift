@@ -147,7 +147,10 @@ export async function submitAnswer(
 
   if (isValidQuestionType(questionType) && isAutoGradable(questionType)) {
     if (!validatedOptions) {
-      console.warn(`[submitAnswer] Invalid options for question ${questionId}, skipping auto-grade`);
+      const optionsPreview = JSON.stringify(question.options).slice(0, 100);
+      console.warn(
+        `[submitAnswer] Invalid options for question ${questionId} (type: ${questionType}): ${optionsPreview}`
+      );
     } else {
       // Cast to AnswerData - Zod schema validates the structure matches
       gradeResult = gradeAnswer(
