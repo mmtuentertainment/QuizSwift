@@ -289,7 +289,8 @@ export async function markQuizPreviewed(quizId: string) {
       where: { id: quizId },
       data: {
         teacherPreviewedAt: new Date(),
-        // After preview, quiz can now be published
+        // Mark as preview_required if still in draft (teacher must complete preview to unlock publish)
+        // Status workflow: draft -> preview_required -> (teacher can publish) -> published
         status: quiz.status === QuizStatus.draft ? QuizStatus.preview_required : quiz.status,
       },
     });
