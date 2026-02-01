@@ -9,7 +9,7 @@ export const ExtractedQuestionSchema = z.object({
     .enum([
       'multiple_choice',
       'true_false',
-      'fill_blank',
+      'fill_in_blank',
       'short_answer',
       'matching',
       'show_work',

@@ -32,6 +32,16 @@ enum AttemptStatus {
   graded
 }
 
+enum QuestionType {
+  multiple_choice
+  true_false
+  fill_in_blank
+  matching
+  essay
+  short_answer
+  show_work
+}
+
 model User {
   id            String        @id @default(cuid())
   name          String?
@@ -151,10 +161,10 @@ model SourceChunk {
 }
 
 model ExtractedQuestion {
-  id                String   @id @default(cuid())
+  id                String       @id @default(cuid())
   documentId        String
   questionText      String
-  questionType      String
+  questionType      QuestionType
   options           Json?
   correctAnswer     String
   explanation       String?
@@ -176,12 +186,12 @@ model ExtractedQuestion {
 }
 
 model CuratedQuestion {
-  id                     String   @id @default(cuid())
+  id                     String       @id @default(cuid())
   documentId             String
 
   // Question content
   questionText           String
-  questionType           String   // multiple_choice, short_answer, show_work, etc.
+  questionType           QuestionType
   bloomLevel             String   // understand, apply, analyze, evaluate
   difficulty             String   // easy, medium, hard
 

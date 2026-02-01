@@ -16,6 +16,7 @@ import { z } from 'zod';
 import { handlePrismaError } from '@/lib/prisma-errors';
 import { cuidSchema } from '@/lib/action-utils';
 import { questionOptionsSchema } from '@/lib/questions/validation';
+import { QuestionType } from '@/generated/prisma/client';
 
 export interface QuestionFilters {
   documentId?: string;
@@ -72,7 +73,7 @@ export async function getQuestions(filters: QuestionFilters = {}): Promise<Quest
     document: { uploadedById: string };
     teacherSelected: boolean;
     documentId?: string;
-    questionType?: string;
+    questionType?: QuestionType;
     bloomLevel?: string;
     questionText?: { contains: string; mode: 'insensitive' };
   } = {
@@ -86,8 +87,8 @@ export async function getQuestions(filters: QuestionFilters = {}): Promise<Quest
     where.documentId = documentId;
   }
 
-  if (questionType) {
-    where.questionType = questionType;
+  if (questionType && Object.values(QuestionType).includes(questionType as QuestionType)) {
+    where.questionType = questionType as QuestionType;
   }
 
   if (bloomLevel) {
