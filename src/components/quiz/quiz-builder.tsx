@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { createQuiz } from '@/actions/quiz';
 import type { CuratedQuestion } from '@/generated/prisma/client';
+import { QUIZ_TIME_LIMIT } from '@/lib/questions/validation';
 
 interface QuizBuilderProps {
   documentId: string;
@@ -129,8 +130,8 @@ export function QuizBuilder({ documentId, availableQuestions }: QuizBuilderProps
                   setTimeLimit(e.target.value ? parseInt(e.target.value) : null)
                 }
                 className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
-                min={1}
-                max={300}
+                min={QUIZ_TIME_LIMIT.MIN}
+                max={QUIZ_TIME_LIMIT.MAX}
                 placeholder="No limit"
                 aria-describedby="time-limit-hint"
               />

@@ -9,6 +9,25 @@
 import { z } from 'zod';
 
 // =============================================================================
+// Validation Constants
+// =============================================================================
+
+/** Quiz time limit bounds (in minutes) */
+export const QUIZ_TIME_LIMIT = {
+  MIN: 1,
+  MAX: 300,
+} as const;
+
+/** Quiz title length bounds */
+export const QUIZ_TITLE_LENGTH = {
+  MIN: 1,
+  MAX: 200,
+} as const;
+
+/** Quiz description max length */
+export const QUIZ_DESCRIPTION_MAX_LENGTH = 500;
+
+// =============================================================================
 // Question Options Schemas
 // =============================================================================
 
@@ -235,3 +254,49 @@ export type FillBlankAnswerSchema = z.infer<typeof fillBlankAnswerSchema>;
 export type MatchingAnswerSchema = z.infer<typeof matchingAnswerSchema>;
 export type EssayAnswerSchema = z.infer<typeof essayAnswerSchema>;
 export type ShowWorkAnswerSchema = z.infer<typeof showWorkAnswerSchema>;
+
+// =============================================================================
+// Validation Helper Functions
+// =============================================================================
+
+export type ValidatedQuestionOptions = z.infer<typeof questionOptionsSchema>;
+
+/**
+ * Safely parse question options from database JSON.
+ * Returns null if validation fails (graceful degradation).
+ *
+ * @example
+ * ```typescript
+ * const options = parseQuestionOptions(question.options);
+ * if (!options) {
+ *   console.warn('Invalid question options');
+ *   return;
+ * }
+ * // options is now typed as ValidatedQuestionOptions
+ * ```
+ */
+export function parseQuestionOptions(data: unknown): ValidatedQuestionOptions | null {
+  const result = questionOptionsSchema.safeParse(data);
+  return result.success ? result.data : null;
+}
+
+export type ValidatedAnswerData = z.infer<typeof answerDataSchema>;
+
+/**
+ * Safely parse answer data from database JSON.
+ * Returns null if validation fails.
+ *
+ * @example
+ * ```typescript
+ * const answer = parseAnswerData(questionAnswer.answerData);
+ * if (!answer) {
+ *   console.warn('Invalid answer data');
+ *   return;
+ * }
+ * // answer is now typed as ValidatedAnswerData
+ * ```
+ */
+export function parseAnswerData(data: unknown): ValidatedAnswerData | null {
+  const result = answerDataSchema.safeParse(data);
+  return result.success ? result.data : null;
+}

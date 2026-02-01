@@ -58,13 +58,19 @@ export interface ShowWorkOptions {
   workingSteps: string[];  // Already used in Phase 2.1
 }
 
+export interface ShortAnswerOptions {
+  type: 'short_answer';
+  // Short answer questions have no special options - just text input
+}
+
 export type QuestionOptions =
   | MultipleChoiceOptions
   | TrueFalseOptions
   | FillInBlankOptions
   | MatchingOptions
   | EssayOptions
-  | ShowWorkOptions;
+  | ShowWorkOptions
+  | ShortAnswerOptions;
 
 // =============================================================================
 // Canonical Question Types
@@ -282,6 +288,21 @@ export function isEssayOptions(options: QuestionOptions): options is EssayOption
  */
 export function isShowWorkOptions(options: QuestionOptions): options is ShowWorkOptions {
   return options.type === 'show_work';
+}
+
+/**
+ * Type guard for short answer question options.
+ * Narrows QuestionOptions to ShortAnswerOptions.
+ *
+ * @example
+ * ```typescript
+ * if (isShortAnswerOptions(options)) {
+ *   // Short answer has no special options
+ * }
+ * ```
+ */
+export function isShortAnswerOptions(options: QuestionOptions): options is ShortAnswerOptions {
+  return options.type === 'short_answer';
 }
 
 // =============================================================================

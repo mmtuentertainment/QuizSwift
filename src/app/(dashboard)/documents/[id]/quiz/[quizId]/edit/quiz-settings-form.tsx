@@ -10,6 +10,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateQuizSettings } from '@/actions/quiz';
 import type { ShowResultsOptionValue } from '@/lib/enums';
+import { QUIZ_TIME_LIMIT } from '@/lib/questions/validation';
 
 interface QuizSettingsFormProps {
   quiz: {
@@ -48,8 +49,8 @@ export function QuizSettingsForm({ quiz, documentId }: QuizSettingsFormProps) {
     }
 
     const parsedTimeLimit = timeLimit ? parseInt(timeLimit, 10) : null;
-    if (timeLimit && (isNaN(parsedTimeLimit!) || parsedTimeLimit! < 1 || parsedTimeLimit! > 300)) {
-      setError('Time limit must be between 1 and 300 minutes');
+    if (timeLimit && (isNaN(parsedTimeLimit!) || parsedTimeLimit! < QUIZ_TIME_LIMIT.MIN || parsedTimeLimit! > QUIZ_TIME_LIMIT.MAX)) {
+      setError(`Time limit must be between ${QUIZ_TIME_LIMIT.MIN} and ${QUIZ_TIME_LIMIT.MAX} minutes`);
       return;
     }
 
@@ -126,8 +127,8 @@ export function QuizSettingsForm({ quiz, documentId }: QuizSettingsFormProps) {
             id="timeLimit"
             value={timeLimit}
             onChange={(e) => setTimeLimit(e.target.value)}
-            min={1}
-            max={300}
+            min={QUIZ_TIME_LIMIT.MIN}
+            max={QUIZ_TIME_LIMIT.MAX}
             className="w-32 rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             placeholder="None"
           />

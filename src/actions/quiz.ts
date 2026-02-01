@@ -19,13 +19,18 @@ import { z } from 'zod';
 import { handlePrismaError } from '@/lib/prisma-errors';
 import { cuidSchema } from '@/lib/action-utils';
 import { QuizStatus, ShowResultsOption } from '@/generated/prisma/client';
+import {
+  QUIZ_TIME_LIMIT,
+  QUIZ_TITLE_LENGTH,
+  QUIZ_DESCRIPTION_MAX_LENGTH,
+} from '@/lib/questions/validation';
 
 const CreateQuizSchema = z.object({
   documentId: z.string().cuid(),
-  title: z.string().min(1).max(200),
-  description: z.string().max(500).optional(),
+  title: z.string().min(QUIZ_TITLE_LENGTH.MIN).max(QUIZ_TITLE_LENGTH.MAX),
+  description: z.string().max(QUIZ_DESCRIPTION_MAX_LENGTH).optional(),
   questionIds: z.array(z.string().cuid()).min(1),
-  timeLimit: z.number().int().min(1).max(300).nullable().optional(),
+  timeLimit: z.number().int().min(QUIZ_TIME_LIMIT.MIN).max(QUIZ_TIME_LIMIT.MAX).nullable().optional(),
   shuffleQuestions: z.boolean().optional(),
 });
 
@@ -196,9 +201,9 @@ export async function getQuizWithQuestions(quizId: string): Promise<GetQuizWithQ
 // =============================================================================
 
 export const UpdateQuizSettingsSchema = z.object({
-  title: z.string().min(1).max(200).optional(),
-  description: z.string().max(500).nullable().optional(),
-  timeLimit: z.number().int().min(1).max(300).nullable().optional(),
+  title: z.string().min(QUIZ_TITLE_LENGTH.MIN).max(QUIZ_TITLE_LENGTH.MAX).optional(),
+  description: z.string().max(QUIZ_DESCRIPTION_MAX_LENGTH).nullable().optional(),
+  timeLimit: z.number().int().min(QUIZ_TIME_LIMIT.MIN).max(QUIZ_TIME_LIMIT.MAX).nullable().optional(),
   shuffleQuestions: z.boolean().optional(),
   showResults: z.nativeEnum(ShowResultsOption).optional(),
 });
