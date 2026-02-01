@@ -14,7 +14,7 @@ commits: 4
 ## Tasks Completed
 
 | # | Task | Commit | Files |
-|---|------|--------|-------|
+| --- | ------ | -------- | ------- |
 | 1 | Fix silent failure and logging issues | 62a1320 | embed.ts, attempts.ts, process-pdf.ts |
 | 2 | Add type function tests | 7e35dda | types.test.ts (new) |
 | 3 | Fix misleading comment and add cross-reference | ab0c2e2 | attempts.ts, question-generation.ts |

@@ -140,6 +140,7 @@ export async function submitAnswer(
 
   // Grade if auto-gradable
   let gradeResult = null;
+  let gradingSkipped: 'invalid_options' | 'not_auto_gradable' | null = null;
   const questionType = question.questionType;
 
   // Validate question options from database JSON before grading
@@ -151,6 +152,7 @@ export async function submitAnswer(
       console.warn(
         `[submitAnswer] Invalid options for question ${questionId} (type: ${questionType}): ${optionsPreview}`
       );
+      gradingSkipped = 'invalid_options';
     } else {
       // Cast to AnswerData - Zod schema validates the structure matches
       gradeResult = gradeAnswer(
@@ -160,6 +162,8 @@ export async function submitAnswer(
         points
       );
     }
+  } else {
+    gradingSkipped = 'not_auto_gradable';
   }
 
   // Upsert answer (update if already exists)
@@ -188,7 +192,7 @@ export async function submitAnswer(
       },
     });
 
-    return { success: true, gradeResult };
+    return { success: true, gradeResult, gradingSkipped };
   } catch (error) {
     return { error: handlePrismaError(error) };
   }

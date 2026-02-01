@@ -57,6 +57,12 @@ export async function embedBatch(texts: string[]): Promise<BatchEmbeddingResult>
         model,
         values: batch,
       });
+      // Guard against provider returning fewer embeddings than requested
+      if (embeddings.length !== batch.length) {
+        throw new Error(
+          `[embedBatch] embedMany returned ${embeddings.length}/${batch.length} embeddings`
+        );
+      }
       allEmbeddings.push(...embeddings);
     } catch (error) {
       console.error(
