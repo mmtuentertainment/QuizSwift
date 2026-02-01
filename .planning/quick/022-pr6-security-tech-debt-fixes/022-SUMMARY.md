@@ -7,7 +7,7 @@ tags: [rate-limiting, error-handling, type-safety, api]
 # Dependency graph
 requires:
   - phase: quick-021
-    provides: Security and tech debt audit identifying HIGH priority issues
+    provides: Security and tech debt audit identifying high-priority issues
 provides:
   - Rate limiting on image upload endpoint
   - Sanitized error messages preventing path leakage
