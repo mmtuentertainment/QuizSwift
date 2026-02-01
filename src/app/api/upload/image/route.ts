@@ -14,6 +14,7 @@ import {
   ALLOWED_IMAGE_EXTENSIONS,
   MAX_IMAGE_SIZE,
 } from '@/lib/storage/images';
+import { checkRateLimit, rateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 
 interface UploadRequest {
   fileName: string;
@@ -28,6 +29,22 @@ export async function POST(request: NextRequest) {
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Rate limiting: use same limit as PDF upload
+    const rateLimitResult = checkRateLimit(`upload:${session.user.id}`, RATE_LIMITS.upload);
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Too many uploads. Please try again later.',
+          retryAfter: rateLimitResult.resetAt - Math.floor(Date.now() / 1000),
+        },
+        {
+          status: 429,
+          headers: rateLimitHeaders(rateLimitResult),
+        }
+      );
     }
 
     // Parse request body
