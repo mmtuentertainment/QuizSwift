@@ -1,7 +1,7 @@
 # Project State: QuizSwift
 
 **Last Updated:** 2026-02-01
-**Session:** Quick-021 Complete - Final PR #6 Security, Tech Debt & PR Review
+**Session:** Quick-022 Complete - PR #6 Security & Tech Debt Fixes
 
 ## Project Reference
 
@@ -14,7 +14,7 @@
 **Phase:** 3.1 of 8 - Convert Prisma Status Enums
 **Plan:** 5 of 5 complete
 **Status:** COMPLETE (verified 11/11 must-haves)
-**Last activity:** 2026-02-01 - Completed quick-021: Final PR #6 review (security, tech debt, PR readiness) - APPROVED for merge
+**Last activity:** 2026-02-01 - Completed quick-022: PR #6 security & tech debt fixes (rate limiting, error sanitization, type docs)
 
 **Progress:**
 Phase 1: 100% (5/5 plans)     [========================================]
@@ -96,6 +96,9 @@ Overall: 74%                  [======================================  ]
 | ActionResult<T> discriminated union | Consistent success/error pattern for server actions | quick-018 |
 | Validation constants in validation.ts | QUIZ_TIME_LIMIT, QUIZ_TITLE_LENGTH eliminate magic numbers | quick-018 |
 | Consolidate schemas.ts into validation.ts | Single source for Zod schemas, removes duplication | quick-018 |
+| Shared upload rate limit key | Both PDF and image uploads count toward same 10/hour limit | quick-022 |
+| Error message sanitization pattern | Map known patterns to safe messages, generic fallback for unknowns | quick-022 |
+| Branded any types for AI models | Document intent with OllamaLanguageModel/OllamaEmbeddingModel aliases | quick-022 |
 
 ### Roadmap Evolution
 
@@ -158,6 +161,7 @@ Overall: 74%                  [======================================  ]
 | 019 | PR #6 migration for QuestionType + redirect() fix | 2026-02-01 | bc3fd2e | [019-pr6-migration-redirect-fixes](./quick/019-pr6-migration-redirect-fixes/) |
 | 020 | PR #6 review findings (failure tracking, tests, comments, dedup) | 2026-02-01 | 606ba7c | [020-fix-pr6-review-findings](./quick/020-fix-pr6-review-findings/) |
 | 021 | Final PR #6 security, tech debt & PR review (3 agents) | 2026-02-01 | - | [021-final-pr6-security-debt-review](./quick/021-final-pr6-security-debt-review/) |
+| 022 | PR #6 security & tech debt fixes (rate limiting, error sanitization, type docs) | 2026-02-01 | c564cd3 | [022-pr6-security-tech-debt-fixes](./quick/022-pr6-security-tech-debt-fixes/) |
 
 ### Pending TODOs
 
@@ -187,30 +191,33 @@ Overall: 74%                  [======================================  ]
 
 ### What Just Happened
 
-Quick-020 completed - PR #6 review findings fix:
+Quick-022 completed - PR #6 security & tech debt fixes:
 
 **Tasks Executed:**
-1. Added failure tracking to embedBatch with BatchEmbeddingResult interface
-2. Created types.test.ts with 14 tests for type utility functions
-3. Fixed misleading comment in attempts.ts and added JSDoc cross-reference in question-generation.ts
-4. Removed duplicate ActionResult type from prisma-errors.ts (re-exports from action-utils.ts)
+1. Added rate limiting to image upload endpoint (matching PDF upload pattern)
+2. Sanitized error messages in PDF upload endpoint (prevents path leakage)
+3. Added documented branded types for AI model functions (OllamaLanguageModel/OllamaEmbeddingModel)
 
 **Files Modified:**
-- `src/lib/ai/embed.ts` - BatchEmbeddingResult interface, enhanced logging
-- `src/inngest/functions/process-pdf.ts` - Updated to use new return type
-- `src/actions/attempts.ts` - Improved logging, fixed comment
-- `src/lib/questions/__tests__/types.test.ts` (new) - 14 tests
-- `src/lib/ai/schemas/question-generation.ts` - Added JSDoc
-- `src/lib/prisma-errors.ts` - Re-export instead of duplicate
+- `src/app/api/upload/image/route.ts` - Rate limiting after auth, before JSON parsing
+- `src/app/api/upload/route.ts` - Safe error message mapping with generic fallback
+- `src/lib/ai/providers.ts` - Branded type aliases with JSDoc references
+
+**Verification:**
+- 0 TypeScript errors
+- Linting passes
+- All 74 tests pass
 
 ### What Happens Next
 
-PR #6 review items fully addressed. Options:
-1. **Phase 3 Plan 09** - Final integration and navigation (completes Phase 3)
-2. **Phase 4** - Quiz Delivery & Student Experience
-3. **Address any new PR comments** - If more CodeRabbit feedback
+**PR #6 Security Hardening Complete.** All HIGH priority issues from quick-021 audit addressed.
+
+Options:
+1. **Merge PR #6** - Security hardened, tech debt addressed, ready for production
+2. **Phase 3 Plan 09** - Final integration and navigation (completes Phase 3)
+3. **Phase 4** - Quiz Delivery & Student Experience
 
 ---
 
 *State captured: 2026-02-01*
-*Next command: /gsd:execute-phase 03 plan 09 OR /gsd:plan-phase 4*
+*Next command: Merge PR #6 OR /gsd:execute-phase 03 plan 09 OR /gsd:plan-phase 4*
