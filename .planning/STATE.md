@@ -1,7 +1,7 @@
 # Project State: QuizSwift
 
 **Last Updated:** 2026-02-01
-**Session:** Quick-019 Complete - PR #6 Migration + Redirect Fix
+**Session:** Quick-020 Complete - PR #6 Review Findings Fix
 
 ## Project Reference
 
@@ -14,7 +14,7 @@
 **Phase:** 3.1 of 8 - Convert Prisma Status Enums
 **Plan:** 5 of 5 complete
 **Status:** COMPLETE (verified 11/11 must-haves)
-**Last activity:** 2026-02-01 - Completed quick-019: PR #6 migration for QuestionType enum + redirect() outside try/catch fix
+**Last activity:** 2026-02-01 - Completed quick-020: PR #6 review findings (failure tracking, tests, comments, dedup)
 
 **Progress:**
 Phase 1: 100% (5/5 plans)     [========================================]
@@ -156,6 +156,7 @@ Overall: 74%                  [======================================  ]
 | 017 | Fix PR #5 CodeRabbit nitpicks (file count, query optimization) | 2026-01-31 | 35dcc57 | [017-fix-pr5-coderabbit-nitpicks](./quick/017-fix-pr5-coderabbit-nitpicks/) |
 | 018 | PR #6 CodeRabbit fixes (QuestionType enum, validation constants) | 2026-02-01 | ade9f34 | [018-pr6-coderabbit-fixes](./quick/018-pr6-coderabbit-fixes/) |
 | 019 | PR #6 migration for QuestionType + redirect() fix | 2026-02-01 | bc3fd2e | [019-pr6-migration-redirect-fixes](./quick/019-pr6-migration-redirect-fixes/) |
+| 020 | PR #6 review findings (failure tracking, tests, comments, dedup) | 2026-02-01 | 606ba7c | [020-fix-pr6-review-findings](./quick/020-fix-pr6-review-findings/) |
 
 ### Pending TODOs
 
@@ -185,29 +186,30 @@ Overall: 74%                  [======================================  ]
 
 ### What Just Happened
 
-Quick-019 completed - PR #6 Migration + Redirect fixes:
+Quick-020 completed - PR #6 review findings fix:
 
 **Tasks Executed:**
-1. Created migration `20260201_convert_questiontype_to_enum` for QuestionType enum
-   - Preflight validation for ExtractedQuestion and CuratedQuestion tables
-   - Converts questionType fields from TEXT to PostgreSQL enum
-2. Fixed redirect() inside try/catch in quiz.ts createQuiz function
-   - Moved redirect() outside try/catch to prevent NEXT_REDIRECT error being caught
+1. Added failure tracking to embedBatch with BatchEmbeddingResult interface
+2. Created types.test.ts with 14 tests for type utility functions
+3. Fixed misleading comment in attempts.ts and added JSDoc cross-reference in question-generation.ts
+4. Removed duplicate ActionResult type from prisma-errors.ts (re-exports from action-utils.ts)
 
 **Files Modified:**
-- `prisma/migrations/20260201_convert_questiontype_to_enum/migration.sql` (new)
-- `src/actions/quiz.ts` (edited - createQuiz function)
-- `.planning/STATE.md` (updated)
-- `.planning/quick/019-pr6-migration-redirect-fixes/` (new directory with PLAN.md and SUMMARY.md)
+- `src/lib/ai/embed.ts` - BatchEmbeddingResult interface, enhanced logging
+- `src/inngest/functions/process-pdf.ts` - Updated to use new return type
+- `src/actions/attempts.ts` - Improved logging, fixed comment
+- `src/lib/questions/__tests__/types.test.ts` (new) - 14 tests
+- `src/lib/ai/schemas/question-generation.ts` - Added JSDoc
+- `src/lib/prisma-errors.ts` - Re-export instead of duplicate
 
 ### What Happens Next
 
-PR #6 CodeRabbit review items addressed. Options:
-1. **Address remaining PR #6 items** - If any more CodeRabbit comments
-2. **Phase 3 Plan 09** - Final integration and navigation (completes Phase 3)
-3. **Phase 4** - Quiz Delivery & Student Experience
+PR #6 review items fully addressed. Options:
+1. **Phase 3 Plan 09** - Final integration and navigation (completes Phase 3)
+2. **Phase 4** - Quiz Delivery & Student Experience
+3. **Address any new PR comments** - If more CodeRabbit feedback
 
 ---
 
 *State captured: 2026-02-01*
-*Next command: Address PR #6 comments OR /gsd:execute-phase 03 plan 09 OR /gsd:plan-phase 4*
+*Next command: /gsd:execute-phase 03 plan 09 OR /gsd:plan-phase 4*
