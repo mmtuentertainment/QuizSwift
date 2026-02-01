@@ -45,7 +45,9 @@ completed: 2026-02-01
 
 # Quick-022: PR #6 Security & Tech Debt Fixes Summary
 
-**Rate limiting, error sanitization, and type documentation hardening for PR #6 production readiness**
+## Overview
+
+Rate limiting, error sanitization, and type documentation hardening for PR #6 production readiness.
 
 ## Performance
 
@@ -106,8 +108,9 @@ None - no external service configuration required.
 
 ## Next Phase Readiness
 
-**PR #6 Security Hardening Complete:**
-- All HIGH priority security issues from quick-021 audit addressed
+### PR #6 Security Hardening Complete
+
+- All high-priority security issues from quick-021 audit addressed
 - Rate limiting: Image uploads protected (matching PDF pattern)
 - Error handling: Path leakage prevented via message sanitization
 - Type safety: AI model functions documented with branded types

@@ -11,14 +11,14 @@ context: PR #6 final review - security issues and tech debt from quick-021 secur
 
 ## Objective
 
-Fix HIGH PRIORITY security issues and tech debt identified in quick-021 review:
+Fix high-priority security issues and tech debt identified in quick-021 review:
 1. Add rate limiting to image upload endpoint (missing while PDF upload has it)
 2. Sanitize error messages in PDF upload to prevent internal path leakage
 3. Add proper return types to `getExtractionModel()` and `getEmbeddingModel()` functions
 
 ## Context
 
-```
+```text
 @src/app/api/upload/image/route.ts  # Missing rate limiting
 @src/app/api/upload/route.ts        # Error message leakage (line 100)
 @src/lib/ai/providers.ts            # any return types (lines 61, 75)
@@ -36,23 +36,24 @@ Fix HIGH PRIORITY security issues and tech debt identified in quick-021 review:
     1. Add imports: `import { checkRateLimit, rateLimitHeaders, RATE_LIMITS } from '@/lib/rate-limit';`
 
     2. Add rate limit check after auth check (before JSON parsing):
-       ```typescript
-       // Rate limiting: use same limit as PDF upload
-       const rateLimitResult = checkRateLimit(`upload:${session.user.id}`, RATE_LIMITS.upload);
 
-       if (!rateLimitResult.allowed) {
-         return NextResponse.json(
-           {
-             error: 'Too many uploads. Please try again later.',
-             retryAfter: rateLimitResult.resetAt - Math.floor(Date.now() / 1000),
-           },
-           {
-             status: 429,
-             headers: rateLimitHeaders(rateLimitResult),
-           }
-         );
-       }
-       ```
+    ```typescript
+    // Rate limiting: use same limit as PDF upload
+    const rateLimitResult = checkRateLimit(`upload:${session.user.id}`, RATE_LIMITS.upload);
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Too many uploads. Please try again later.',
+          retryAfter: rateLimitResult.resetAt - Math.floor(Date.now() / 1000),
+        },
+        {
+          status: 429,
+          headers: rateLimitHeaders(rateLimitResult),
+        }
+      );
+    }
+    ```
 
     Note: Both PDF and image uploads share the same `upload:{userId}` key, so they count toward
     the same 10 uploads/hour limit. This is intentional - total upload rate is what matters.
@@ -74,34 +75,34 @@ Fix HIGH PRIORITY security issues and tech debt identified in quick-021 review:
 
     Replace the error handling with sanitized messages:
 
-    ```typescript
-    } catch (error) {
-      console.error('Upload error:', error);
+```typescript
+} catch (error) {
+  console.error('Upload error:', error);
 
-      // Sanitize error messages - never expose internal paths or stack traces
-      const safeErrorMessages: Record<string, string> = {
-        'File too large': 'File too large. Maximum size is 10MB.',
-        'Invalid file type': 'Invalid file type. Only PDF files are allowed.',
-        'No file provided': 'No file provided',
-        'Question count must be': 'Question count must be between 5 and 50',
-      };
+  // Sanitize error messages - never expose internal paths or stack traces
+  const safeErrorMessages: Record<string, string> = {
+    'File too large': 'File too large. Maximum size is 10MB.',
+    'Invalid file type': 'Invalid file type. Only PDF files are allowed.',
+    'No file provided': 'No file provided',
+    'Question count must be': 'Question count must be between 5 and 50',
+  };
 
-      if (error instanceof Error) {
-        // Check for known safe error patterns
-        for (const [pattern, message] of Object.entries(safeErrorMessages)) {
-          if (error.message.includes(pattern)) {
-            return NextResponse.json({ error: message }, { status: 400 });
-          }
-        }
+  if (error instanceof Error) {
+    // Check for known safe error patterns
+    for (const [pattern, message] of Object.entries(safeErrorMessages)) {
+      if (error.message.includes(pattern)) {
+        return NextResponse.json({ error: message }, { status: 400 });
       }
-
-      // Generic error for anything else - don't leak internal details
-      return NextResponse.json(
-        { error: 'Upload failed. Please try again.' },
-        { status: 500 }
-      );
     }
-    ```
+  }
+
+  // Generic error for anything else - don't leak internal details
+  return NextResponse.json(
+    { error: 'Upload failed. Please try again.' },
+    { status: 500 }
+  );
+}
+```
 
     This ensures:
     - Known validation errors get user-friendly messages
@@ -126,51 +127,51 @@ Fix HIGH PRIORITY security issues and tech debt identified in quick-021 review:
 
     Update the function signatures to use branded types that preserve intent:
 
-    ```typescript
-    // Add these type aliases near the top of the file (after imports):
+```typescript
+// Add these type aliases near the top of the file (after imports):
 
-    /**
-     * Branded type for Ollama language model.
-     * Actual type is LanguageModelV1 but incompatible across providers.
-     * @see STATE.md decision: "Any type for AI models"
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    export type OllamaLanguageModel = any;
+/**
+ * Branded type for Ollama language model.
+ * Actual type is LanguageModelV1 but incompatible across providers.
+ * @see STATE.md decision: "Any type for AI models"
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type OllamaLanguageModel = any;
 
-    /**
-     * Branded type for Ollama embedding model.
-     * Actual type is EmbeddingModelV1 but incompatible across providers.
-     * @see STATE.md decision: "Any type for AI models"
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    export type OllamaEmbeddingModel = any;
-    ```
+/**
+ * Branded type for Ollama embedding model.
+ * Actual type is EmbeddingModelV1 but incompatible across providers.
+ * @see STATE.md decision: "Any type for AI models"
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type OllamaEmbeddingModel = any;
+```
 
     Then update the function signatures:
 
-    ```typescript
-    export function getExtractionModel(): OllamaLanguageModel {
-      return ollamaProvider('hermes2pro-32k');
-    }
+```typescript
+export function getExtractionModel(): OllamaLanguageModel {
+  return ollamaProvider('hermes2pro-32k');
+}
 
-    export function getEmbeddingModel(): OllamaEmbeddingModel {
-      return ollamaProvider.embedding('mxbai-embed-large');
-    }
-    ```
+export function getEmbeddingModel(): OllamaEmbeddingModel {
+  return ollamaProvider.embedding('mxbai-embed-large');
+}
+```
 
     Also update the safe variants:
 
-    ```typescript
-    export async function getExtractionModelSafe(): Promise<OllamaLanguageModel> {
-      await ensureOllamaAvailable();
-      return getExtractionModel();
-    }
+```typescript
+export async function getExtractionModelSafe(): Promise<OllamaLanguageModel> {
+  await ensureOllamaAvailable();
+  return getExtractionModel();
+}
 
-    export async function getEmbeddingModelSafe(): Promise<OllamaEmbeddingModel> {
-      await ensureOllamaAvailable();
-      return getEmbeddingModel();
-    }
-    ```
+export async function getEmbeddingModelSafe(): Promise<OllamaEmbeddingModel> {
+  await ensureOllamaAvailable();
+  return getEmbeddingModel();
+}
+```
 
     This approach:
     - Documents WHY we use any (with @see reference)
