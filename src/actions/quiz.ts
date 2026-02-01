@@ -80,8 +80,11 @@ export async function createQuiz(formData: FormData) {
   }
 
   // Create quiz with questions
+  // Note: redirect() must be called outside try/catch because it throws
+  // a special NEXT_REDIRECT error that would otherwise be caught
+  let createdQuiz: { id: string } | null = null;
   try {
-    const quiz = await prisma.quiz.create({
+    createdQuiz = await prisma.quiz.create({
       data: {
         documentId: parsed.data.documentId,
         title: parsed.data.title,
@@ -99,12 +102,12 @@ export async function createQuiz(formData: FormData) {
         },
       },
     });
-
-    revalidatePath(`/documents/${parsed.data.documentId}/quiz`);
-    redirect(`/documents/${parsed.data.documentId}/quiz/${quiz.id}`);
   } catch (error) {
     return { error: handlePrismaError(error) };
   }
+
+  revalidatePath(`/documents/${parsed.data.documentId}/quiz`);
+  redirect(`/documents/${parsed.data.documentId}/quiz/${createdQuiz.id}`);
 }
 
 type QuizListItem = Awaited<ReturnType<typeof fetchQuizzesForDocument>>[number];

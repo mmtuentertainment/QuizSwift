@@ -1,7 +1,7 @@
 # Project State: QuizSwift
 
 **Last Updated:** 2026-02-01
-**Session:** Quick-018 Complete - PR #6 CodeRabbit Fixes (QuestionType enum, ActionResult, constants)
+**Session:** Quick-019 Complete - PR #6 Migration + Redirect Fix
 
 ## Project Reference
 
@@ -14,7 +14,7 @@
 **Phase:** 3.1 of 8 - Convert Prisma Status Enums
 **Plan:** 5 of 5 complete
 **Status:** COMPLETE (verified 11/11 must-haves)
-**Last activity:** 2026-02-01 - Completed quick-018: PR #6 CodeRabbit fixes (QuestionType enum, validation constants, consolidate schemas)
+**Last activity:** 2026-02-01 - Completed quick-019: PR #6 migration for QuestionType enum + redirect() outside try/catch fix
 
 **Progress:**
 Phase 1: 100% (5/5 plans)     [========================================]
@@ -155,6 +155,7 @@ Overall: 74%                  [======================================  ]
 | 016 | Address PR #5 CodeRabbit review (markdown formatting) | 2026-01-31 | 4c444c1 | [016-address-pr5-coderabbit-review](./quick/016-address-pr5-coderabbit-review/) |
 | 017 | Fix PR #5 CodeRabbit nitpicks (file count, query optimization) | 2026-01-31 | 35dcc57 | [017-fix-pr5-coderabbit-nitpicks](./quick/017-fix-pr5-coderabbit-nitpicks/) |
 | 018 | PR #6 CodeRabbit fixes (QuestionType enum, validation constants) | 2026-02-01 | ade9f34 | [018-pr6-coderabbit-fixes](./quick/018-pr6-coderabbit-fixes/) |
+| 019 | PR #6 migration for QuestionType + redirect() fix | 2026-02-01 | bc3fd2e | [019-pr6-migration-redirect-fixes](./quick/019-pr6-migration-redirect-fixes/) |
 
 ### Pending TODOs
 
@@ -178,31 +179,26 @@ Overall: 74%                  [======================================  ]
 - PostgreSQL USING clause required for TEXT to ENUM migration - Prisma will not generate it automatically
 - Shadow databases on Neon may not have pgvector extension - manual migration creation may be required
 - Prisma 7 generates client module in client.ts not index.ts - import from @/generated/prisma/client
+- Next.js redirect() throws NEXT_REDIRECT error - must be called outside try/catch blocks
 
 ## Session Continuity
 
 ### What Just Happened
 
-Quick-018 completed - PR #6 CodeRabbit fixes:
+Quick-019 completed - PR #6 Migration + Redirect fixes:
 
 **Tasks Executed:**
-1. Added `QuestionType` Prisma enum with 7 canonical types
-2. Added `ActionResult<T>` and `ActionResultVoid` types
-3. Added validation constants (`QUIZ_TIME_LIMIT`, etc.)
-4. Consolidated schemas.ts into validation.ts
-5. Removed unused timeLimit prop, added production-safe logging
-
-**Commits:**
-- b2b8486: feat(quick-018): add QuestionType Prisma enum and ActionResult type
-- d8509e2: refactor(quick-018): add validation constants and consolidate schemas
-- ade9f34: fix(quick-018): cleanup - remove unused timeLimit prop, production-safe logging
+1. Created migration `20260201_convert_questiontype_to_enum` for QuestionType enum
+   - Preflight validation for ExtractedQuestion and CuratedQuestion tables
+   - Converts questionType fields from TEXT to PostgreSQL enum
+2. Fixed redirect() inside try/catch in quiz.ts createQuiz function
+   - Moved redirect() outside try/catch to prevent NEXT_REDIRECT error being caught
 
 **Files Modified:**
-- prisma/schema.prisma, action-utils.ts, enums.ts, types.ts, validation.ts
-- quiz.ts, questions.ts, attempts.ts, quiz-builder.tsx, quiz-taker.tsx
-- quiz-settings-form.tsx, fill-in-blank.tsx, preview/actions.tsx, preview/page.tsx
-- AI schemas: extract-questions.ts, question-generation.ts
-- Deleted: src/lib/questions/schemas.ts
+- `prisma/migrations/20260201_convert_questiontype_to_enum/migration.sql` (new)
+- `src/actions/quiz.ts` (edited - createQuiz function)
+- `.planning/STATE.md` (updated)
+- `.planning/quick/019-pr6-migration-redirect-fixes/` (new directory with PLAN.md and SUMMARY.md)
 
 ### What Happens Next
 
