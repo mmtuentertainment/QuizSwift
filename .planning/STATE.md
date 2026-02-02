@@ -14,7 +14,7 @@
 **Phase:** 3.1 of 8 - Convert Prisma Status Enums
 **Plan:** 5 of 5 complete
 **Status:** COMPLETE (verified 11/11 must-haves)
-**Last activity:** 2026-02-01 - Completed quick-023: Question format validation (3-layer validation, deleted 3 malformed questions)
+**Last activity:** 2026-02-01 - Completed quick-025: PR7 CodeRabbit fixes (single correct choice, normalization warnings)
 
 **Progress:**
 Phase 1: 100% (5/5 plans)     [========================================]
@@ -168,6 +168,7 @@ Overall: 74%                  [======================================  ]
 | 021 | Final PR #6 security, tech debt & PR review (3 agents) | 2026-02-01 | - | [021-final-pr6-security-debt-review](./quick/021-final-pr6-security-debt-review/) |
 | 022 | PR #6 security & tech debt fixes (rate limiting, error sanitization, type docs) | 2026-02-01 | c564cd3 | [022-pr6-security-tech-debt-fixes](./quick/022-pr6-security-tech-debt-fixes/) |
 | 023 | Question format validation (3-layer: Zod, filter, Pass 4) + delete 3 bad questions | 2026-02-01 | 545bd84 | [023-question-format-validation](./quick/023-question-format-validation/) |
+| 025 | PR7 CodeRabbit fixes (single correct choice, normalization warnings) | 2026-02-01 | bc52793 | [025-pr7-coderabbit-fixes](./quick/025-pr7-coderabbit-fixes/) |
 
 ### Pending TODOs
 
