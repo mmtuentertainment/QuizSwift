@@ -25,6 +25,7 @@ import {
   isShowWorkOptions as isSW,
   normalizeQuestionType,
 } from '@/lib/questions/types';
+import { normalizeQuestionOptions } from '@/lib/questions/normalize';
 
 /**
  * Union type for answer data in the UI layer.
@@ -126,10 +127,18 @@ export function QuestionRenderer({
     // Normalize legacy type aliases to canonical types
     const normalizedType = normalizeQuestionType(questionType);
 
+    // Normalize options from legacy array format to structured format
+    // This handles AI-generated questions that store options as string arrays
+    const normalizedOptions = normalizeQuestionOptions(
+      normalizedType,
+      options,
+      correctAnswer
+    );
+
     switch (normalizedType) {
       case 'multiple_choice': {
         // Check if options match MultipleChoiceOptions structure
-        if (!options || !isMC(options)) {
+        if (!normalizedOptions || !isMC(normalizedOptions)) {
           return (
             <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-yellow-800">
               No options available for this question.
@@ -142,7 +151,7 @@ export function QuestionRenderer({
         return (
           <MultipleChoice
             options={{
-              choices: options.choices.map((c) => ({
+              choices: normalizedOptions.choices.map((c) => ({
                 id: c.id,
                 text: c.text,
                 isCorrect: c.isCorrect,
@@ -164,15 +173,15 @@ export function QuestionRenderer({
 
         // Try to get options, or derive from correctAnswer
         let correctBool = false;
-        if (options && isTF(options)) {
-          correctBool = options.correctAnswer;
+        if (normalizedOptions && isTF(normalizedOptions)) {
+          correctBool = normalizedOptions.correctAnswer;
         } else if (correctAnswer) {
           correctBool = correctAnswer.toLowerCase() === 'true';
         }
 
         // Get justification from options if available (TrueFalseOptions has optional justification)
-        const justification = (options && isTF(options))
-          ? options.justification
+        const justification = (normalizedOptions && isTF(normalizedOptions))
+          ? normalizedOptions.justification
           : undefined;
 
         return (
@@ -203,8 +212,8 @@ export function QuestionRenderer({
           caseSensitive?: boolean;
         }> = [];
 
-        if (options && isFIB(options)) {
-          blanksConfig = options.blanks.map((b, idx) => ({
+        if (normalizedOptions && isFIB(normalizedOptions)) {
+          blanksConfig = normalizedOptions.blanks.map((b, idx) => ({
             id: String(idx),
             correctAnswer: b.acceptedAnswers[0] || '',
             acceptableVariants: b.acceptedAnswers.slice(1),
@@ -245,12 +254,12 @@ export function QuestionRenderer({
           guidelines?: string;
         } = {};
 
-        if (options && isEss(options)) {
+        if (normalizedOptions && isEss(normalizedOptions)) {
           essayConfig = {
-            minWords: options.minWords,
-            maxWords: options.maxWords,
-            rubric: options.rubric,
-            guidelines: options.guidelines,
+            minWords: normalizedOptions.minWords,
+            maxWords: normalizedOptions.maxWords,
+            rubric: normalizedOptions.rubric,
+            guidelines: normalizedOptions.guidelines,
           };
         }
 
@@ -277,8 +286,8 @@ export function QuestionRenderer({
 
         // Get working steps from options
         let workingSteps: string[] | undefined;
-        if (options && isSW(options)) {
-          workingSteps = options.workingSteps;
+        if (normalizedOptions && isSW(normalizedOptions)) {
+          workingSteps = normalizedOptions.workingSteps;
         }
 
         return (
@@ -294,7 +303,7 @@ export function QuestionRenderer({
       }
 
       case 'matching': {
-        if (!options || !isMatch(options)) {
+        if (!normalizedOptions || !isMatch(normalizedOptions)) {
           return (
             <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-yellow-800">
               No matching pairs available for this question.
@@ -306,7 +315,7 @@ export function QuestionRenderer({
 
         return (
           <Matching
-            options={options}
+            options={normalizedOptions}
             answer={matchAnswer ? { type: 'matching', pairs: matchAnswer.pairs } : null}
             onAnswer={(matchingAnswer) =>
               onAnswer({ type: 'matching', pairs: matchingAnswer.pairs })

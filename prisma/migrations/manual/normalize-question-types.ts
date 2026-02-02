@@ -58,23 +58,30 @@ async function main() {
   console.log('ExtractedQuestion:', extractedBefore.rows);
   console.log('');
 
-  // Perform migrations
-  for (const [legacy, canonical] of Object.entries(LEGACY_MAPPINGS)) {
-    console.log(`Migrating '${legacy}' -> '${canonical}'...`);
+  // Perform migrations in a transaction for atomicity
+  await pool.query('BEGIN');
+  try {
+    for (const [legacy, canonical] of Object.entries(LEGACY_MAPPINGS)) {
+      console.log(`Migrating '${legacy}' -> '${canonical}'...`);
 
-    // CuratedQuestion
-    const curatedResult = await pool.query(
-      `UPDATE "CuratedQuestion" SET "questionType" = $1 WHERE "questionType" = $2`,
-      [canonical, legacy]
-    );
-    console.log(`  CuratedQuestion: ${curatedResult.rowCount} rows updated`);
+      // CuratedQuestion
+      const curatedResult = await pool.query(
+        `UPDATE "CuratedQuestion" SET "questionType" = $1 WHERE "questionType" = $2`,
+        [canonical, legacy]
+      );
+      console.log(`  CuratedQuestion: ${curatedResult.rowCount} rows updated`);
 
-    // ExtractedQuestion
-    const extractedResult = await pool.query(
-      `UPDATE "ExtractedQuestion" SET "questionType" = $1 WHERE "questionType" = $2`,
-      [canonical, legacy]
-    );
-    console.log(`  ExtractedQuestion: ${extractedResult.rowCount} rows updated`);
+      // ExtractedQuestion
+      const extractedResult = await pool.query(
+        `UPDATE "ExtractedQuestion" SET "questionType" = $1 WHERE "questionType" = $2`,
+        [canonical, legacy]
+      );
+      console.log(`  ExtractedQuestion: ${extractedResult.rowCount} rows updated`);
+    }
+    await pool.query('COMMIT');
+  } catch (error) {
+    await pool.query('ROLLBACK');
+    throw error;
   }
 
   console.log('\nMigration complete. Verifying...\n');
@@ -118,8 +125,8 @@ async function main() {
 }
 
 main()
-  .catch(e => {
+  .then(() => process.exit(0))
+  .catch((e) => {
     console.error('Migration failed:', e);
     process.exit(1);
-  })
-  .finally(() => process.exit(0));
+  });

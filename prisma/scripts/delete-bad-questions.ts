@@ -88,8 +88,8 @@ async function main() {
 }
 
 main()
+  .then(() => process.exit(0))
   .catch((e) => {
     console.error('Script failed:', e);
     process.exit(1);
-  })
-  .finally(() => process.exit(0));
+  });

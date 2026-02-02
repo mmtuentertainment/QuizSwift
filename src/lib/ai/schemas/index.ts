@@ -15,8 +15,11 @@ export {
   QuestionType,
   CuratedQuestionSchema,
   QuestionGenerationSchema,
+  TRUE_FALSE_ANTI_PATTERNS,
+  ValidatedQuestionSchema,
   type CuratedQuestion,
   type QuestionGeneration,
+  type ValidatedQuestion,
 } from './question-generation';
 
 // Pass 4: Question Evaluation

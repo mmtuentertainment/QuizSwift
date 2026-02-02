@@ -6,6 +6,7 @@ import {
   QuestionGenerationSchema,
   QuestionEvaluationSchema,
   FinalSelectionSchema,
+  TRUE_FALSE_ANTI_PATTERNS,
   type ContentAnalysis,
   type ConceptExtraction,
   type QuestionGeneration,
@@ -59,22 +60,6 @@ export interface PassResult<T> {
   durationMs: number;
   tokens: number;
 }
-
-/**
- * Anti-patterns that indicate a True/False question is actually a comparison/preference question.
- * Duplicated from schemas for runtime validation without Zod overhead.
- */
-const TRUE_FALSE_ANTI_PATTERNS = [
-  'which is better',
-  'which one',
-  'compare',
-  'prefer',
-  'would you rather',
-  'what is your',
-  'which do you',
-  'opinion',
-  'favorite',
-];
 
 /**
  * Validate that a CuratedQuestion's fields conform to the requirements for its declared `questionType`.

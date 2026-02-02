@@ -101,8 +101,11 @@ export type QuestionGeneration = z.infer<typeof QuestionGenerationSchema>;
 /**
  * Anti-patterns that indicate a True/False question is actually a comparison/preference question.
  * These questions cannot be answered with True/False and should be a different type.
+ *
+ * Exported for use in both Zod schema refinements and runtime validation.
+ * @see validateQuestionFormat in curate-questions.ts
  */
-const TRUE_FALSE_ANTI_PATTERNS = [
+export const TRUE_FALSE_ANTI_PATTERNS = [
   'which is better',
   'which one',
   'compare',
