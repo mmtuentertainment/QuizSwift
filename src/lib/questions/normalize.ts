@@ -278,9 +278,11 @@ function addTypeToOptions(
   const optionsType = typeMap[questionType];
   if (!optionsType) return null;
 
+  // Spread options first, then set canonical type to ensure it always wins
+  // This prevents legacy options.type from overriding the mapped canonical type
   return {
-    type: optionsType,
     ...options,
+    type: optionsType,
   } as QuestionOptions;
 }
 

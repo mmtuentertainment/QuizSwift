@@ -234,6 +234,23 @@ export async function updateQuestion(
     return { success: false, error: 'Question not found or access denied' };
   }
 
+  // Guard against structured options with mismatched type
+  // If options is an object (not array) with a type field that doesn't match questionType, reject
+  if (
+    parsed.data.options !== undefined &&
+    typeof parsed.data.options === 'object' &&
+    parsed.data.options !== null &&
+    !Array.isArray(parsed.data.options) &&
+    'type' in parsed.data.options &&
+    (parsed.data.options as { type: unknown }).type !== question.questionType
+  ) {
+    return {
+      success: false,
+      error: `Options type mismatch: options.type "${(parsed.data.options as { type: unknown }).type}" does not match question type "${question.questionType}"`,
+      fieldErrors: { options: ['Options type must match question type'] },
+    };
+  }
+
   // Normalize options from legacy array format to structured format
   // This handles questions that store options as string arrays from AI generation
   const normalizedOptions = parsed.data.options !== undefined

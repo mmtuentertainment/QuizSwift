@@ -64,29 +64,33 @@ async function main() {
   console.log('');
 
   // Perform migrations in a transaction for atomicity
-  await pool.query('BEGIN');
+  // Use dedicated client to ensure all queries run on the same connection
+  const client = await pool.connect();
   try {
+    await client.query('BEGIN');
     for (const [legacy, canonical] of Object.entries(LEGACY_MAPPINGS)) {
       console.log(`Migrating '${legacy}' -> '${canonical}'...`);
 
       // CuratedQuestion
-      const curatedResult = await pool.query(
+      const curatedResult = await client.query(
         `UPDATE "CuratedQuestion" SET "questionType" = $1 WHERE "questionType" = $2`,
         [canonical, legacy]
       );
       console.log(`  CuratedQuestion: ${curatedResult.rowCount} rows updated`);
 
       // ExtractedQuestion
-      const extractedResult = await pool.query(
+      const extractedResult = await client.query(
         `UPDATE "ExtractedQuestion" SET "questionType" = $1 WHERE "questionType" = $2`,
         [canonical, legacy]
       );
       console.log(`  ExtractedQuestion: ${extractedResult.rowCount} rows updated`);
     }
-    await pool.query('COMMIT');
+    await client.query('COMMIT');
   } catch (error) {
-    await pool.query('ROLLBACK');
+    await client.query('ROLLBACK');
     throw error;
+  } finally {
+    client.release();
   }
 
   console.log('\nMigration complete. Verifying...\n');
