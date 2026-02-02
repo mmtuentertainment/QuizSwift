@@ -36,9 +36,14 @@ async function main() {
     throw new Error('DATABASE_URL not set');
   }
 
+  // Use SSL with certificate verification (Neon provides valid certificates)
+  // Set DISABLE_SSL_VERIFICATION=true only for local development with self-signed certs
   const pool = new Pool({
     connectionString,
-    ssl: { rejectUnauthorized: false },
+    ssl:
+      process.env.DISABLE_SSL_VERIFICATION === 'true'
+        ? { rejectUnauthorized: false }
+        : true,
   });
 
   console.log('Deleting malformed questions...');

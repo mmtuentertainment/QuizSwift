@@ -97,7 +97,7 @@ metrics:
 
 The 3-layer validation architecture:
 
-```
+```text
 Layer 1: ValidatedQuestionSchema (Zod refinements)
   - Compile-time type checking
   - Parse-time validation for post-generation use

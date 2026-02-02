@@ -246,9 +246,22 @@ export async function runPass3QuestionGeneration(
     essay: 0,
   };
 
+  // Recalculate bloom distribution after filtering
+  const bloomDistribution = {
+    remember: 0,
+    understand: 0,
+    apply: 0,
+    analyze: 0,
+    evaluate: 0,
+    create: 0,
+  };
+
   for (const q of validQuestions) {
     if (q.questionType in typeDistribution) {
       typeDistribution[q.questionType as keyof typeof typeDistribution]++;
+    }
+    if (q.bloomLevel in bloomDistribution) {
+      bloomDistribution[q.bloomLevel as keyof typeof bloomDistribution]++;
     }
   }
 
@@ -264,6 +277,7 @@ export async function runPass3QuestionGeneration(
       ...result.output,
       questions: validQuestions,
       typeDistribution,
+      bloomDistribution,
     },
     durationMs: Date.now() - start,
     tokens: result.usage?.totalTokens ?? 0,
