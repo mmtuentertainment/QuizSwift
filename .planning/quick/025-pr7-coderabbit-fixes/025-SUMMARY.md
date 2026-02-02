@@ -51,7 +51,7 @@ if (options.length % 2 !== 0) {
 
 ## Files Modified
 
-| File | Changes |
-|------|---------|
+| File                             | Changes                                                 |
+| -------------------------------- | ------------------------------------------------------- |
 | `src/lib/questions/normalize.ts` | Fixed transformToMultipleChoice, added matching warning |
-| `src/actions/questions.ts` | Added normalization failure warning |
+| `src/actions/questions.ts`       | Added normalization failure warning                     |
