@@ -40,6 +40,32 @@ Is this appropriate for ${pass1.gradeLevel} level ${pass1.subjectArea}?
 - 4: Well-calibrated challenge
 - 5: Perfectly pitched for target audience
 
+### 5. Format Compliance (1-5)
+Does the question format match its declared type?
+- 1: Format completely wrong for question type
+- 2: Format has significant issues
+- 3: Format mostly correct with minor issues
+- 4: Format correct with room for improvement
+- 5: Format perfectly matches question type requirements
+
+Format Requirements by Type:
+- fill_in_blank: MUST have ___ or [BLANK] marker in question text
+- true_false: MUST be a declarative statement answerable with True/False (NOT comparison, preference, or opinion)
+- multiple_choice: MUST have 3-5 distinct options with exactly one correct
+- matching: MUST have clear left and right column items
+- short_answer: MUST have clear expected answer format
+- show_work: MUST require step-by-step solution
+- essay: MUST be open-ended requiring extended response
+
+## Format Examples (Reference)
+
+fill_in_blank correct: "The capital of France is ___."
+fill_in_blank WRONG: "What is the capital of France?"
+
+true_false correct: "Water boils at 100 degrees Celsius at sea level."
+true_false WRONG: "Which is better, water or juice?"
+true_false WRONG: "Compare the boiling points of water and ethanol."
+
 ## Questions to Evaluate
 ${JSON.stringify(
   pass3.questions.map((q) => ({
@@ -56,8 +82,8 @@ ${JSON.stringify(
 
 ## Output
 For each question:
-1. Provide scores for all 4 criteria
-2. Calculate overall score (average)
+1. Provide scores for all 5 criteria (Comprehension, Clarity, Answerability, Difficulty, Format Compliance)
+2. Calculate overall score (average of all 5)
 3. List specific strengths
 4. List specific weaknesses
 5. If score < 3.5, provide a suggested rewrite
