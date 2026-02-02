@@ -1,0 +1,44 @@
+20:54:55.682 Running "npm run build"    ./src/lib/prisma.ts
+    ./src/actions/attempts.ts
+  #3 [Server Component]:
+    ./src/lib/prisma.ts
+    ./src/app/(dashboard)/documents/[id]/curate/page.tsx
+https://nextjs.org/docs/messages/module-not-found
+    at <unknown> (./src/actions/attempts.ts:22:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/actions/questions.ts:19:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/actions/quiz.ts:21:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/lib/prisma-errors.ts:11:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./src/lib/prisma.ts:1:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+Error: Command "npm run build" exited with 1
+Deployment Summary
+Deployment Checks
+Assigning Custom Domains
+Runtime Logs
+
+View and debug runtime logs & errors
+
+Observability
+
+Monitor app health & performance
+
+Speed Insights
+
+Not Enabled
+Performance metrics from real users
+
+Web Analytics
+
+Not Enabled
+Analyze visitors & traffic in real-time
+
+Home
+Docs
+Knowledge Base
+Academy
+Help
+Contact
