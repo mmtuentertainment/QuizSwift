@@ -77,10 +77,14 @@ const TRUE_FALSE_ANTI_PATTERNS = [
 ];
 
 /**
- * Validates question format matches its declared type.
+ * Validate that a CuratedQuestion's fields conform to the requirements for its declared `questionType`.
  *
- * @param question - The question to validate
- * @returns Validation result with reason if invalid
+ * Checks performed:
+ * - For `fill_in_blank`: `questionText` must contain `___` or `[BLANK]`.
+ * - For `true_false`: `correctAnswer` must be `"True"` or `"False"` (case-insensitive) and `questionText` must not use comparison/preference phrasing (e.g., "which is better", "compare", "opinion").
+ *
+ * @param question - The CuratedQuestion to validate
+ * @returns `{ valid: true }` if the question satisfies type-specific rules; otherwise `{ valid: false, reason: string }` with a short explanation
  */
 export function validateQuestionFormat(question: CuratedQuestion): {
   valid: boolean;
@@ -125,11 +129,10 @@ export function validateQuestionFormat(question: CuratedQuestion): {
 }
 
 /**
- * Filters questions to only those with valid format.
- * Logs rejected questions for debugging.
+ * Return only questions that pass runtime format validation; logs each rejected question and a summary count.
  *
- * @param questions - Array of questions to filter
- * @returns Array of valid questions
+ * @param questions - The array of curated questions to validate and filter
+ * @returns The subset of `questions` that passed validation
  */
 export function filterValidQuestions(questions: CuratedQuestion[]): CuratedQuestion[] {
   const validQuestions: CuratedQuestion[] = [];
@@ -214,6 +217,16 @@ export async function runPass2ConceptExtraction(
   };
 }
 
+/**
+ * Generate candidate questions for the document using prior pass outputs, filter malformed items, and update type distribution.
+ *
+ * @param documentText - Source document text to generate questions from
+ * @param pass1 - Content analysis output from pass 1
+ * @param pass2 - Concept extraction output from pass 2
+ * @param requestedCount - Desired number of questions to request from the model
+ * @returns The pass result containing `QuestionGeneration` output where `questions` have been sanitized (malformed questions removed) and `typeDistribution` recalculated, along with `durationMs` and `tokens` usage
+ * @throws Error if the model generation does not produce an output
+ */
 export async function runPass3QuestionGeneration(
   documentText: string,
   pass1: ContentAnalysis,

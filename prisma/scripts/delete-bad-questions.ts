@@ -20,6 +20,15 @@ const BAD_QUESTION_IDS = [
   'cmkttd7pa0007swceju7ag4ds', // Missing blank marker
 ];
 
+/**
+ * Delete the predefined malformed questions from the CuratedQuestion table in the database.
+ *
+ * Connects to the database using DATABASE_URL, logs any matching rows found, deletes the
+ * questions with the IDs specified in BAD_QUESTION_IDS, verifies deletion, and closes the
+ * database connection.
+ *
+ * @throws If the `DATABASE_URL` environment variable is not set.
+ */
 async function main() {
   const connectionString = process.env.DATABASE_URL;
 

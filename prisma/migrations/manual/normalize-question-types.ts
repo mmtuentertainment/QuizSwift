@@ -18,6 +18,15 @@ const LEGACY_MAPPINGS: Record<string, string> = {
   fill_blank: 'fill_in_blank',
 };
 
+/**
+ * Perform a manual migration that normalizes legacy questionType values to their canonical forms in the database.
+ *
+ * Connects to the Postgres database using the `DATABASE_URL` environment variable, logs current distributions of
+ * question types for CuratedQuestion and ExtractedQuestion, updates legacy values according to LEGACY_MAPPINGS,
+ * re-verifies distributions after the updates, reports any remaining legacy values, and closes the database connection.
+ *
+ * @throws Error if `DATABASE_URL` is not set in the environment.
+ */
 async function main() {
   const connectionString = process.env.DATABASE_URL;
 

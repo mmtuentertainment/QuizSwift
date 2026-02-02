@@ -1,5 +1,16 @@
 import type { QuestionGeneration, ContentAnalysis } from '../schemas';
 
+/**
+ * Builds a comprehensive evaluator prompt that instructs a reviewer to critically assess generated quiz questions.
+ *
+ * The prompt defines five evaluation criteria (Comprehension Depth, Clarity, Answerability, Difficulty Appropriateness, and Format Compliance),
+ * includes per-type format requirements and examples, embeds a JSON "Questions to Evaluate" derived from `pass3.questions` (fields: `id`, `text`, `type`, `bloom`, `answer`, `rationale`),
+ * and specifies the required output for each question (scores for all 5 criteria, overall average, strengths, weaknesses, optional rewrite when score < 3.5, and a final recommendation).
+ *
+ * @param pass1 - Content analysis metadata; `gradeLevel` and `subjectArea` are used to contextualize the Difficulty Appropriateness criterion.
+ * @param pass3 - Question generation output; `questions` are serialized into the embedded JSON and must contain fields used in the evaluation block.
+ * @returns A prompt string that directs a critical evaluation of each generated quiz question, ready to be sent to an evaluator or LLM.
+ */
 export function buildPass4Prompt(pass1: ContentAnalysis, pass3: QuestionGeneration): string {
   return `You are a critical evaluator of educational quiz questions.
 
