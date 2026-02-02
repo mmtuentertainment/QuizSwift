@@ -12,6 +12,7 @@ import {
   type QuestionEvaluation,
   type FinalSelection,
   type StorableCuratedQuestion,
+  type CuratedQuestion,
 } from './schemas';
 import {
   buildPass1Prompt,
@@ -57,6 +58,105 @@ export interface PassResult<T> {
   output: T;
   durationMs: number;
   tokens: number;
+}
+
+/**
+ * Anti-patterns that indicate a True/False question is actually a comparison/preference question.
+ * Duplicated from schemas for runtime validation without Zod overhead.
+ */
+const TRUE_FALSE_ANTI_PATTERNS = [
+  'which is better',
+  'which one',
+  'compare',
+  'prefer',
+  'would you rather',
+  'what is your',
+  'which do you',
+  'opinion',
+  'favorite',
+];
+
+/**
+ * Validates question format matches its declared type.
+ *
+ * @param question - The question to validate
+ * @returns Validation result with reason if invalid
+ */
+export function validateQuestionFormat(question: CuratedQuestion): {
+  valid: boolean;
+  reason?: string;
+} {
+  // Fill-in-blank: must have blank marker
+  if (question.questionType === 'fill_in_blank') {
+    const hasMarker =
+      question.questionText.includes('___') || question.questionText.includes('[BLANK]');
+    if (!hasMarker) {
+      return {
+        valid: false,
+        reason: 'Fill-in-blank question missing ___ or [BLANK] marker',
+      };
+    }
+  }
+
+  // True/False: answer must be True or False
+  if (question.questionType === 'true_false') {
+    const normalized = question.correctAnswer.trim().toLowerCase();
+    if (normalized !== 'true' && normalized !== 'false') {
+      return {
+        valid: false,
+        reason: `True/False answer must be "True" or "False", got "${question.correctAnswer}"`,
+      };
+    }
+
+    // True/False: must not be comparison/preference question
+    const lowerText = question.questionText.toLowerCase();
+    const matchedPattern = TRUE_FALSE_ANTI_PATTERNS.find((pattern) =>
+      lowerText.includes(pattern)
+    );
+    if (matchedPattern) {
+      return {
+        valid: false,
+        reason: `True/False question contains anti-pattern "${matchedPattern}" - should be different type`,
+      };
+    }
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Filters questions to only those with valid format.
+ * Logs rejected questions for debugging.
+ *
+ * @param questions - Array of questions to filter
+ * @returns Array of valid questions
+ */
+export function filterValidQuestions(questions: CuratedQuestion[]): CuratedQuestion[] {
+  const validQuestions: CuratedQuestion[] = [];
+  const rejectedCount = { fill_in_blank: 0, true_false: 0 };
+
+  for (const question of questions) {
+    const result = validateQuestionFormat(question);
+    if (result.valid) {
+      validQuestions.push(question);
+    } else {
+      console.warn(
+        `[Pass 3 Filter] Rejected question ${question.id} (${question.questionType}): ${result.reason}`
+      );
+      if (question.questionType === 'fill_in_blank') rejectedCount.fill_in_blank++;
+      if (question.questionType === 'true_false') rejectedCount.true_false++;
+    }
+  }
+
+  const totalRejected = questions.length - validQuestions.length;
+  if (totalRejected > 0) {
+    console.warn(
+      `[Pass 3 Filter] Filtered ${totalRejected} malformed questions: ` +
+        `${rejectedCount.fill_in_blank} fill_in_blank, ${rejectedCount.true_false} true_false`
+    );
+  }
+
+  return validQuestions;
 }
 
 /**
@@ -133,8 +233,40 @@ export async function runPass3QuestionGeneration(
     throw new Error('Pass 3 (Question Generation) failed to produce output');
   }
 
+  // Filter malformed questions before returning
+  const originalCount = result.output.questions.length;
+  const validQuestions = filterValidQuestions(result.output.questions);
+
+  // Recalculate type distribution after filtering
+  const typeDistribution = {
+    multiple_choice: 0,
+    short_answer: 0,
+    true_false: 0,
+    show_work: 0,
+    matching: 0,
+    fill_in_blank: 0,
+    essay: 0,
+  };
+
+  for (const q of validQuestions) {
+    if (q.questionType in typeDistribution) {
+      typeDistribution[q.questionType as keyof typeof typeDistribution]++;
+    }
+  }
+
+  const filteredCount = originalCount - validQuestions.length;
+  if (filteredCount > 0) {
+    console.warn(
+      `[Pass 3] Filtered ${filteredCount}/${originalCount} malformed questions before Pass 4`
+    );
+  }
+
   return {
-    output: result.output,
+    output: {
+      ...result.output,
+      questions: validQuestions,
+      typeDistribution,
+    },
     durationMs: Date.now() - start,
     tokens: result.usage?.totalTokens ?? 0,
   };
