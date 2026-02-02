@@ -2,7 +2,7 @@ import { auth } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
 /**
- * Route protection middleware
+ * Route protection proxy (formerly middleware)
  *
  * Protects:
  * - /api/documents/* - Document management APIs
@@ -14,7 +14,7 @@ import { NextResponse } from 'next/server';
  * - /api/auth/* - Auth.js routes
  * - Public pages (/, /login, etc.)
  */
-export default auth((req) => {
+export const proxy = auth((req) => {
   const { pathname } = req.nextUrl;
 
   // Skip auth for Inngest webhook (has its own signing key verification)

@@ -97,3 +97,75 @@ export const QuestionGenerationSchema = z.object({
 
 export type CuratedQuestion = z.infer<typeof CuratedQuestionSchema>;
 export type QuestionGeneration = z.infer<typeof QuestionGenerationSchema>;
+
+/**
+ * Anti-patterns that indicate a True/False question is actually a comparison/preference question.
+ * These questions cannot be answered with True/False and should be a different type.
+ *
+ * Exported for use in both Zod schema refinements and runtime validation.
+ * @see validateQuestionFormat in curate-questions.ts
+ */
+export const TRUE_FALSE_ANTI_PATTERNS = [
+  'which is better',
+  'which one',
+  'compare',
+  'prefer',
+  'would you rather',
+  'what is your',
+  'which do you',
+  'opinion',
+  'favorite',
+];
+
+/**
+ * Validated question schema with format-specific refinements.
+ *
+ * Use this schema for POST-generation validation. The base CuratedQuestionSchema
+ * is intentionally loose to avoid over-constraining AI output during generation.
+ *
+ * Refinements:
+ * - fill_in_blank: questionText must contain '___' or '[BLANK]' marker
+ * - true_false: correctAnswer must be 'True' or 'False' (case insensitive)
+ * - true_false: questionText must NOT be a comparison/preference question
+ */
+export const ValidatedQuestionSchema = CuratedQuestionSchema.refine(
+  (q) => {
+    if (q.questionType === 'fill_in_blank') {
+      return q.questionText.includes('___') || q.questionText.includes('[BLANK]');
+    }
+    return true;
+  },
+  {
+    message: 'Fill-in-blank questions must contain ___ or [BLANK] marker',
+    path: ['questionText'],
+  }
+)
+  .refine(
+    (q) => {
+      if (q.questionType === 'true_false') {
+        const normalized = q.correctAnswer.trim().toLowerCase();
+        return normalized === 'true' || normalized === 'false';
+      }
+      return true;
+    },
+    {
+      message: 'True/False questions must have True or False as the correct answer',
+      path: ['correctAnswer'],
+    }
+  )
+  .refine(
+    (q) => {
+      if (q.questionType === 'true_false') {
+        const lowerText = q.questionText.toLowerCase();
+        return !TRUE_FALSE_ANTI_PATTERNS.some((pattern) => lowerText.includes(pattern));
+      }
+      return true;
+    },
+    {
+      message:
+        'True/False questions cannot be comparison, preference, or opinion questions',
+      path: ['questionText'],
+    }
+  );
+
+export type ValidatedQuestion = z.infer<typeof ValidatedQuestionSchema>;

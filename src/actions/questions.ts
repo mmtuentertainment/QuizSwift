@@ -15,7 +15,7 @@ import { auth } from '@/lib/auth';
 import { z } from 'zod';
 import { handlePrismaError } from '@/lib/prisma-errors';
 import { cuidSchema } from '@/lib/action-utils';
-import { questionOptionsSchema } from '@/lib/questions/validation';
+import { normalizeQuestionOptions } from '@/lib/questions/normalize';
 import { QuestionType } from '@/generated/prisma/client';
 
 export interface QuestionFilters {
@@ -168,12 +168,13 @@ export async function getTeacherDocuments(): Promise<TeacherDocumentsResult> {
 // Question Update with Zod Validation
 // =============================================================================
 
+// Schema accepts any options format - normalization happens after fetching question type
 const UpdateQuestionSchema = z.object({
   questionText: z.string().min(1, 'Question text cannot be empty').max(5000).optional(),
   correctAnswer: z.string().min(1, 'Correct answer cannot be empty').max(2000).optional(),
   explanation: z.string().max(5000).optional(),
   sourceEvidence: z.string().max(5000).optional(),
-  options: questionOptionsSchema.nullable().optional(),
+  options: z.unknown().optional(), // Accept any format, normalize later
   imageUrl: z.string().nullable().optional(),
   imageAltText: z.string().max(500).nullable().optional(),
 });
@@ -233,12 +234,38 @@ export async function updateQuestion(
     return { success: false, error: 'Question not found or access denied' };
   }
 
-  // Validate options.type matches questionType if options provided
-  if (parsed.data.options && parsed.data.options.type !== question.questionType) {
+  // Guard against structured options with mismatched type
+  // If options is an object (not array) with a type field that doesn't match questionType, reject
+  if (
+    parsed.data.options !== undefined &&
+    typeof parsed.data.options === 'object' &&
+    parsed.data.options !== null &&
+    !Array.isArray(parsed.data.options) &&
+    'type' in parsed.data.options &&
+    (parsed.data.options as { type: unknown }).type !== question.questionType
+  ) {
     return {
       success: false,
-      error: `Options type '${parsed.data.options.type}' does not match question type '${question.questionType}'`,
+      error: `Options type mismatch: options.type "${(parsed.data.options as { type: unknown }).type}" does not match question type "${question.questionType}"`,
+      fieldErrors: { options: ['Options type must match question type'] },
     };
+  }
+
+  // Normalize options from legacy array format to structured format
+  // This handles questions that store options as string arrays from AI generation
+  const normalizedOptions = parsed.data.options !== undefined
+    ? normalizeQuestionOptions(
+        question.questionType,
+        parsed.data.options,
+        parsed.data.correctAnswer ?? question.correctAnswer
+      )
+    : undefined;
+
+  // Warn if options were provided but couldn't be normalized (unrecognized type)
+  if (parsed.data.options !== undefined && normalizedOptions === null) {
+    console.warn(
+      `[updateQuestion] Failed to normalize options for question type: ${question.questionType}`
+    );
   }
 
   // Build update data declaratively - only include fields that were provided
@@ -247,16 +274,20 @@ export async function updateQuestion(
     'correctAnswer',
     'explanation',
     'sourceEvidence',
-    'options',
     'imageUrl',
     'imageAltText',
   ] as const;
 
-  const updateData = Object.fromEntries(
+  const updateData: Record<string, unknown> = Object.fromEntries(
     updateFields
       .filter((key) => parsed.data[key] !== undefined)
       .map((key) => [key, parsed.data[key]])
   );
+
+  // Add normalized options if provided
+  if (normalizedOptions !== undefined) {
+    updateData.options = normalizedOptions;
+  }
 
   // Guard against empty updateData
   if (Object.keys(updateData).length === 0) {

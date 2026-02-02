@@ -5,6 +5,8 @@ import { authConfig } from './auth.config';
 // PrismaAdapter creates Account/Session records not used with JWT sessions
 // JWT strategy required for Edge middleware compatibility
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // Required for Vercel/reverse proxy deployments to trust X-Forwarded-Host header
+  trustHost: true,
   session: { strategy: 'jwt' },
   ...authConfig,
   callbacks: {

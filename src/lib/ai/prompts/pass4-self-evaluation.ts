@@ -1,5 +1,16 @@
 import type { QuestionGeneration, ContentAnalysis } from '../schemas';
 
+/**
+ * Builds a comprehensive evaluator prompt that instructs a reviewer to critically assess generated quiz questions.
+ *
+ * The prompt defines five evaluation criteria (Comprehension Depth, Clarity, Answerability, Difficulty Appropriateness, and Format Compliance),
+ * includes per-type format requirements and examples, embeds a JSON "Questions to Evaluate" derived from `pass3.questions` (fields: `id`, `text`, `type`, `bloom`, `answer`, `rationale`),
+ * and specifies the required output for each question (scores for all 5 criteria, overall average, strengths, weaknesses, optional rewrite when score < 3.5, and a final recommendation).
+ *
+ * @param pass1 - Content analysis metadata; `gradeLevel` and `subjectArea` are used to contextualize the Difficulty Appropriateness criterion.
+ * @param pass3 - Question generation output; `questions` are serialized into the embedded JSON and must contain fields used in the evaluation block.
+ * @returns A prompt string that directs a critical evaluation of each generated quiz question, ready to be sent to an evaluator or LLM.
+ */
 export function buildPass4Prompt(pass1: ContentAnalysis, pass3: QuestionGeneration): string {
   return `You are a critical evaluator of educational quiz questions.
 
@@ -40,6 +51,32 @@ Is this appropriate for ${pass1.gradeLevel} level ${pass1.subjectArea}?
 - 4: Well-calibrated challenge
 - 5: Perfectly pitched for target audience
 
+### 5. Format Compliance (1-5)
+Does the question format match its declared type?
+- 1: Format completely wrong for question type
+- 2: Format has significant issues
+- 3: Format mostly correct with minor issues
+- 4: Format correct with room for improvement
+- 5: Format perfectly matches question type requirements
+
+Format Requirements by Type:
+- fill_in_blank: MUST have ___ or [BLANK] marker in question text
+- true_false: MUST be a declarative statement answerable with True/False (NOT comparison, preference, or opinion)
+- multiple_choice: MUST have 3-5 distinct options with exactly one correct
+- matching: MUST have clear left and right column items
+- short_answer: MUST have clear expected answer format
+- show_work: MUST require step-by-step solution
+- essay: MUST be open-ended requiring extended response
+
+## Format Examples (Reference)
+
+fill_in_blank correct: "The capital of France is ___."
+fill_in_blank WRONG: "What is the capital of France?"
+
+true_false correct: "Water boils at 100 degrees Celsius at sea level."
+true_false WRONG: "Which is better, water or juice?"
+true_false WRONG: "Compare the boiling points of water and ethanol."
+
 ## Questions to Evaluate
 ${JSON.stringify(
   pass3.questions.map((q) => ({
@@ -56,8 +93,8 @@ ${JSON.stringify(
 
 ## Output
 For each question:
-1. Provide scores for all 4 criteria
-2. Calculate overall score (average)
+1. Provide scores for all 5 criteria (Comprehension, Clarity, Answerability, Difficulty, Format Compliance)
+2. Calculate overall score (average of all 5)
 3. List specific strengths
 4. List specific weaknesses
 5. If score < 3.5, provide a suggested rewrite

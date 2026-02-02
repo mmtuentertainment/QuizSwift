@@ -1,7 +1,7 @@
 # Project State: QuizSwift
 
 **Last Updated:** 2026-02-01
-**Session:** Quick-022 Complete - PR #6 Security & Tech Debt Fixes
+**Session:** Quick-025 Complete - PR7 CodeRabbit Fixes
 
 ## Project Reference
 
@@ -14,7 +14,7 @@
 **Phase:** 3.1 of 8 - Convert Prisma Status Enums
 **Plan:** 5 of 5 complete
 **Status:** COMPLETE (verified 11/11 must-haves)
-**Last activity:** 2026-02-01 - Completed quick-022: PR #6 security & tech debt fixes (rate limiting, error sanitization, type docs)
+**Last activity:** 2026-02-01 - Completed Quick-025: PR7 CodeRabbit fixes (single correct choice, normalization warnings)
 
 **Progress:**
 Phase 1: 100% (5/5 plans)     [========================================]
@@ -99,6 +99,9 @@ Overall: 74%                  [======================================  ]
 | Shared upload rate limit key | Both PDF and image uploads count toward same 10/hour limit | quick-022 |
 | Error message sanitization pattern | Map known patterns to safe messages, generic fallback for unknowns | quick-022 |
 | Branded any types for AI models | Document intent with OllamaLanguageModel/OllamaEmbeddingModel aliases | quick-022 |
+| Dual schema pattern for AI validation | CuratedQuestionSchema (loose) for generation, ValidatedQuestionSchema (strict) for post-gen | quick-023 |
+| Filter before Pass 4 | Remove malformed questions after Pass 3, before evaluation | quick-023 |
+| T/F anti-pattern detection | List of comparison/preference phrases that indicate wrong question type | quick-023 |
 
 ### Roadmap Evolution
 
@@ -135,6 +138,8 @@ Overall: 74%                  [======================================  ]
 - Prisma enum definition: enum Name { value1 value2 } for type-safe status fields
 - PostgreSQL TEXT to ENUM: DROP DEFAULT, ALTER TYPE USING, SET DEFAULT pattern
 - Centralized enums.ts: re-export Prisma enums + string literal types + display labels
+- Multi-layer validation: Zod refinements (ValidatedQuestionSchema) + runtime filter + AI evaluation
+- Post-generation filtering: validateQuestionFormat() before Pass 4 evaluation
 
 ### Quick Tasks Completed
 
@@ -162,6 +167,8 @@ Overall: 74%                  [======================================  ]
 | 020 | PR #6 review findings (failure tracking, tests, comments, dedup) | 2026-02-01 | 606ba7c | [020-fix-pr6-review-findings](./quick/020-fix-pr6-review-findings/) |
 | 021 | Final PR #6 security, tech debt & PR review (3 agents) | 2026-02-01 | - | [021-final-pr6-security-debt-review](./quick/021-final-pr6-security-debt-review/) |
 | 022 | PR #6 security & tech debt fixes (rate limiting, error sanitization, type docs) | 2026-02-01 | c564cd3 | [022-pr6-security-tech-debt-fixes](./quick/022-pr6-security-tech-debt-fixes/) |
+| 023 | Question format validation (3-layer: Zod, filter, Pass 4) + delete 3 bad questions | 2026-02-01 | 545bd84 | [023-question-format-validation](./quick/023-question-format-validation/) |
+| 025 | PR7 CodeRabbit fixes (single correct choice, normalization warnings) | 2026-02-01 | bc52793 | [025-pr7-coderabbit-fixes](./quick/025-pr7-coderabbit-fixes/) |
 
 ### Pending TODOs
 
@@ -191,26 +198,37 @@ Overall: 74%                  [======================================  ]
 
 ### What Just Happened
 
-Quick-022 completed - PR #6 security & tech debt fixes:
+Quick-023 completed - Question format validation:
 
 **Tasks Executed:**
-1. Added rate limiting to image upload endpoint (matching PDF upload pattern)
-2. Sanitized error messages in PDF upload endpoint (prevents path leakage)
-3. Added documented branded types for AI model functions (OllamaLanguageModel/OllamaEmbeddingModel)
+1. Added ValidatedQuestionSchema with Zod refinements for fill_in_blank and true_false
+2. Added validateQuestionFormat() and filterValidQuestions() for runtime validation
+3. Updated runPass3QuestionGeneration to filter malformed questions before Pass 4
+4. Added Format Compliance (1-5) as 5th criterion in Pass 4 evaluation
+5. Deleted 3 malformed questions from database
 
 **Files Modified:**
-- `src/app/api/upload/image/route.ts` - Rate limiting after auth, before JSON parsing
-- `src/app/api/upload/route.ts` - Safe error message mapping with generic fallback
-- `src/lib/ai/providers.ts` - Branded type aliases with JSDoc references
+- `src/lib/ai/schemas/question-generation.ts` - ValidatedQuestionSchema with refinements
+- `src/lib/ai/curate-questions.ts` - validateQuestionFormat, filterValidQuestions, updated Pass 3
+- `src/lib/ai/prompts/pass4-self-evaluation.ts` - 5th criterion + format examples
+
+**Files Created:**
+- `prisma/scripts/delete-bad-questions.ts` - One-time cleanup script
+
+**Commits:**
+- b95ad34: Zod refinements + format filter
+- d239ab1: Pass 4 format compliance criterion
+- 545bd84: Delete bad questions script
 
 **Verification:**
 - 0 TypeScript errors
 - Linting passes
 - All 74 tests pass
+- 3 malformed questions deleted from DB
 
 ### What Happens Next
 
-**PR #6 Security Hardening Complete.** All HIGH priority issues from quick-021 audit addressed.
+**Question format validation complete.** AI pipeline now has 3-layer protection against malformed questions.
 
 Options:
 1. **Merge PR #6** - Security hardened, tech debt addressed, ready for production

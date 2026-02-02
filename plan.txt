@@ -1,0 +1,45 @@
+In @.planning/quick/023-question-format-validation/023-SUMMARY.md:
+- Around line 100-114: The fenced code block summarizing the three validation
+layers lacks a language identifier; update the opening fence to include a
+language tag (e.g., ```text) so markdownlint MD040 is satisfied, ensure the
+closing fence remains ``` and do this in the block that contains "Layer 1:
+ValidatedQuestionSchema (Zod refinements)", "filterValidQuestions()", and "Pass
+4 Format Compliance (AI evaluation)".
+
+In `@prisma/migrations/manual/normalize-question-types.ts`:
+- Around line 28-31: The Pool is being constructed with ssl: {
+rejectUnauthorized: false } which disables TLS certificate verification; update
+the Pool creation (the Pool constructor call using connectionString and ssl) to
+enable certificate validation by removing the ssl override or setting
+rejectUnauthorized: true, and for environments with self-signed certs provide
+the CA via ssl.ca (or an equivalent tls option) so the client verifies the
+server certificate instead of disabling verification.
+
+In `@src/lib/ai/curate-questions.ts`:
+- Around line 236-269: Recompute the bloomDistribution using the filtered
+question set (validQuestions) so it matches typeDistribution; after calling
+filterValidQuestions and building typeDistribution, iterate over validQuestions
+and increment the bloomDistribution buckets (the same keys used earlier) based
+on q.bloomLevel (or q.bloom) and then replace the bloomDistribution in the
+returned output object (in the return { output: { ...result.output, questions:
+validQuestions, typeDistribution, bloomDistribution } }) so downstream metrics
+use the post-filtered counts.
+
+src/lib/ai/schemas/question-generation.ts (1)
+105-166: Centralize TRUE_FALSE_ANTI_PATTERNS to avoid drift.
+
+The same list is duplicated in src/lib/ai/curate-questions.ts. Consider exporting it from a shared module so schema and runtime validation stay in sync.
+
+♻️ Minimal step toward sharing
+-const TRUE_FALSE_ANTI_PATTERNS = [
++export const TRUE_FALSE_ANTI_PATTERNS = [
+  'which is better',
+  'which one',
+  'compare',
+  'prefer',
+  'would you rather',
+  'what is your',
+  'which do you',
+  'opinion',
+  'favorite',
+];

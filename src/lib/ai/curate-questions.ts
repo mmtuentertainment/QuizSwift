@@ -6,12 +6,14 @@ import {
   QuestionGenerationSchema,
   QuestionEvaluationSchema,
   FinalSelectionSchema,
+  TRUE_FALSE_ANTI_PATTERNS,
   type ContentAnalysis,
   type ConceptExtraction,
   type QuestionGeneration,
   type QuestionEvaluation,
   type FinalSelection,
   type StorableCuratedQuestion,
+  type CuratedQuestion,
 } from './schemas';
 import {
   buildPass1Prompt,
@@ -57,6 +59,92 @@ export interface PassResult<T> {
   output: T;
   durationMs: number;
   tokens: number;
+}
+
+/**
+ * Validate that a CuratedQuestion's fields conform to the requirements for its declared `questionType`.
+ *
+ * Checks performed:
+ * - For `fill_in_blank`: `questionText` must contain `___` or `[BLANK]`.
+ * - For `true_false`: `correctAnswer` must be `"True"` or `"False"` (case-insensitive) and `questionText` must not use comparison/preference phrasing (e.g., "which is better", "compare", "opinion").
+ *
+ * @param question - The CuratedQuestion to validate
+ * @returns `{ valid: true }` if the question satisfies type-specific rules; otherwise `{ valid: false, reason: string }` with a short explanation
+ */
+export function validateQuestionFormat(question: CuratedQuestion): {
+  valid: boolean;
+  reason?: string;
+} {
+  // Fill-in-blank: must have blank marker
+  if (question.questionType === 'fill_in_blank') {
+    const hasMarker =
+      question.questionText.includes('___') || question.questionText.includes('[BLANK]');
+    if (!hasMarker) {
+      return {
+        valid: false,
+        reason: 'Fill-in-blank question missing ___ or [BLANK] marker',
+      };
+    }
+  }
+
+  // True/False: answer must be True or False
+  if (question.questionType === 'true_false') {
+    const normalized = question.correctAnswer.trim().toLowerCase();
+    if (normalized !== 'true' && normalized !== 'false') {
+      return {
+        valid: false,
+        reason: `True/False answer must be "True" or "False", got "${question.correctAnswer}"`,
+      };
+    }
+
+    // True/False: must not be comparison/preference question
+    const lowerText = question.questionText.toLowerCase();
+    const matchedPattern = TRUE_FALSE_ANTI_PATTERNS.find((pattern) =>
+      lowerText.includes(pattern)
+    );
+    if (matchedPattern) {
+      return {
+        valid: false,
+        reason: `True/False question contains anti-pattern "${matchedPattern}" - should be different type`,
+      };
+    }
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Return only questions that pass runtime format validation; logs each rejected question and a summary count.
+ *
+ * @param questions - The array of curated questions to validate and filter
+ * @returns The subset of `questions` that passed validation
+ */
+export function filterValidQuestions(questions: CuratedQuestion[]): CuratedQuestion[] {
+  const validQuestions: CuratedQuestion[] = [];
+  const rejectedCount = { fill_in_blank: 0, true_false: 0 };
+
+  for (const question of questions) {
+    const result = validateQuestionFormat(question);
+    if (result.valid) {
+      validQuestions.push(question);
+    } else {
+      console.warn(
+        `[Pass 3 Filter] Rejected question ${question.id} (${question.questionType}): ${result.reason}`
+      );
+      if (question.questionType === 'fill_in_blank') rejectedCount.fill_in_blank++;
+      if (question.questionType === 'true_false') rejectedCount.true_false++;
+    }
+  }
+
+  const totalRejected = questions.length - validQuestions.length;
+  if (totalRejected > 0) {
+    console.warn(
+      `[Pass 3 Filter] Filtered ${totalRejected} malformed questions: ` +
+        `${rejectedCount.fill_in_blank} fill_in_blank, ${rejectedCount.true_false} true_false`
+    );
+  }
+
+  return validQuestions;
 }
 
 /**
@@ -114,6 +202,16 @@ export async function runPass2ConceptExtraction(
   };
 }
 
+/**
+ * Generate candidate questions for the document using prior pass outputs, filter malformed items, and update type distribution.
+ *
+ * @param documentText - Source document text to generate questions from
+ * @param pass1 - Content analysis output from pass 1
+ * @param pass2 - Concept extraction output from pass 2
+ * @param requestedCount - Desired number of questions to request from the model
+ * @returns The pass result containing `QuestionGeneration` output where `questions` have been sanitized (malformed questions removed) and `typeDistribution` recalculated, along with `durationMs` and `tokens` usage
+ * @throws Error if the model generation does not produce an output
+ */
 export async function runPass3QuestionGeneration(
   documentText: string,
   pass1: ContentAnalysis,
@@ -133,8 +231,54 @@ export async function runPass3QuestionGeneration(
     throw new Error('Pass 3 (Question Generation) failed to produce output');
   }
 
+  // Filter malformed questions before returning
+  const originalCount = result.output.questions.length;
+  const validQuestions = filterValidQuestions(result.output.questions);
+
+  // Recalculate type distribution after filtering
+  const typeDistribution = {
+    multiple_choice: 0,
+    short_answer: 0,
+    true_false: 0,
+    show_work: 0,
+    matching: 0,
+    fill_in_blank: 0,
+    essay: 0,
+  };
+
+  // Recalculate bloom distribution after filtering
+  const bloomDistribution = {
+    remember: 0,
+    understand: 0,
+    apply: 0,
+    analyze: 0,
+    evaluate: 0,
+    create: 0,
+  };
+
+  for (const q of validQuestions) {
+    if (q.questionType in typeDistribution) {
+      typeDistribution[q.questionType as keyof typeof typeDistribution]++;
+    }
+    if (q.bloomLevel in bloomDistribution) {
+      bloomDistribution[q.bloomLevel as keyof typeof bloomDistribution]++;
+    }
+  }
+
+  const filteredCount = originalCount - validQuestions.length;
+  if (filteredCount > 0) {
+    console.warn(
+      `[Pass 3] Filtered ${filteredCount}/${originalCount} malformed questions before Pass 4`
+    );
+  }
+
   return {
-    output: result.output,
+    output: {
+      ...result.output,
+      questions: validQuestions,
+      typeDistribution,
+      bloomDistribution,
+    },
     durationMs: Date.now() - start,
     tokens: result.usage?.totalTokens ?? 0,
   };
