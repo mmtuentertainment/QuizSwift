@@ -261,6 +261,13 @@ export async function updateQuestion(
       )
     : undefined;
 
+  // Warn if options were provided but couldn't be normalized (unrecognized type)
+  if (parsed.data.options !== undefined && normalizedOptions === null) {
+    console.warn(
+      `[updateQuestion] Failed to normalize options for question type: ${question.questionType}`
+    );
+  }
+
   // Build update data declaratively - only include fields that were provided
   const updateFields = [
     'questionText',

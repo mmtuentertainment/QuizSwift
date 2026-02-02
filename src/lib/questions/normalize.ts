@@ -108,33 +108,48 @@ function transformArrayToStructured(
 /**
  * Transforms array options to MultipleChoiceOptions
  * Matches actual type: { type, choices: [{id, text, isCorrect}] }
+ *
+ * Ensures exactly one choice is marked correct by computing correctIndex once
+ * using priority order: id match, exact text, case-insensitive text, index string.
  */
 function transformToMultipleChoice(
   options: unknown[],
   correctAnswer?: string | null
 ): MultipleChoiceOptions {
-  const choices = options.map((text, index) => {
-    const id = String.fromCharCode(65 + index); // A, B, C, D, ...
-    const textStr = String(text);
+  // Compute correctIndex once to ensure only one choice is marked correct
+  let correctIndex = 0; // Default to first option
 
-    // Determine if this choice is correct by matching:
-    // 1. ID matches (e.g., "A")
-    // 2. Full text matches
-    // 3. Text matches case-insensitively
-    // 4. Index matches (e.g., "0")
-    const isCorrect = correctAnswer
-      ? id === correctAnswer ||
-        textStr === correctAnswer ||
-        textStr.toLowerCase() === correctAnswer.toLowerCase() ||
-        index.toString() === correctAnswer
-      : index === 0; // Default first option as correct if no answer provided
+  if (correctAnswer != null && correctAnswer !== '') {
+    const answerLower = correctAnswer.toLowerCase();
 
-    return {
-      id,
-      text: textStr,
-      isCorrect,
-    };
-  });
+    // Find matching index in priority order
+    const matchIndex = options.findIndex((text, index) => {
+      const id = String.fromCharCode(65 + index); // A, B, C, D, ...
+      const textStr = String(text);
+
+      // Priority 1: ID match (e.g., "A", "B")
+      if (id === correctAnswer) return true;
+      // Priority 2: Exact text match
+      if (textStr === correctAnswer) return true;
+      // Priority 3: Case-insensitive text match
+      if (textStr.toLowerCase() === answerLower) return true;
+      // Priority 4: Index string match (e.g., "0", "1")
+      if (index.toString() === correctAnswer) return true;
+
+      return false;
+    });
+
+    if (matchIndex !== -1) {
+      correctIndex = matchIndex;
+    }
+    // If no match found, correctIndex remains 0 (first option)
+  }
+
+  const choices = options.map((text, index) => ({
+    id: String.fromCharCode(65 + index), // A, B, C, D, ...
+    text: String(text),
+    isCorrect: index === correctIndex,
+  }));
 
   return {
     type: 'multiple_choice' as const,
@@ -202,8 +217,19 @@ function transformToFillInBlank(
 /**
  * Transforms array options to MatchingOptions
  * Matches actual type: { type, pairs: [{id, left, right}] }
+ *
+ * Expects options to alternate: [left1, right1, left2, right2, ...]
+ * For odd-length arrays, the last element uses the same value for both left and right.
  */
 function transformToMatching(options: unknown[]): MatchingOptions {
+  // Warn if odd-length array - last pair will use same value for left and right
+  if (options.length % 2 !== 0) {
+    console.warn(
+      `[transformToMatching] Odd-length options array (${options.length}). ` +
+        `Last pair will use "${options[options.length - 1]}" for both left and right.`
+    );
+  }
+
   // Assume options alternate between left (term) and right (definition)
   const pairs: { id: string; left: string; right: string }[] = [];
 
